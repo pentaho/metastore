@@ -13,7 +13,10 @@ Finally, each element type can have a series of Elements.
 Each element has an ID and a set of key/value pairs (called "id" and "value") as child attributes. All attributes can have children of their own.
 An element has security information: an owner and a set of owner-permissions describing who has which permission to use the element. (CRUD permissions)
 
+The hierarchy:
+--------------
+
 * Namespace
-**  Element Type
-*** Element
-**** Attributes
+* Element Type
+* Element
+* Attributes
