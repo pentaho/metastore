@@ -15,7 +15,7 @@ import javax.xml.transform.stream.StreamResult;
 import org.pentaho.metastore.api.IMetaStoreElement;
 import org.pentaho.metastore.api.exceptions.MetaStoreException;
 import org.pentaho.metastore.api.security.IMetaStoreElementOwner;
-import org.pentaho.metastore.api.security.IMetaStoreOwnerPermissions;
+import org.pentaho.metastore.api.security.MetaStoreOwnerPermissions;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 import org.w3c.dom.Node;
@@ -26,16 +26,16 @@ public class XmlMetaStoreElement extends XmlMetaStoreAttribute implements IMetaS
   public static final String XML_TAG = "element";
 
   private XmlMetaStoreElementOwner owner;
-  private List<IMetaStoreOwnerPermissions> ownerPermissionsList;
+  private List<MetaStoreOwnerPermissions> ownerPermissionsList;
 
   public XmlMetaStoreElement() {
     super();
-    this.ownerPermissionsList = new ArrayList<IMetaStoreOwnerPermissions>();
+    this.ownerPermissionsList = new ArrayList<MetaStoreOwnerPermissions>();
   }
   
   public XmlMetaStoreElement(String id, Object value) {
     super(id, value);
-    this.ownerPermissionsList = new ArrayList<IMetaStoreOwnerPermissions>();
+    this.ownerPermissionsList = new ArrayList<MetaStoreOwnerPermissions>();
   }
   
   @Override
@@ -123,12 +123,12 @@ public class XmlMetaStoreElement extends XmlMetaStoreAttribute implements IMetaS
     //
     Element oplElement = doc.createElement("owner-permissions-list");
     securityElement.appendChild(oplElement);
-    for (IMetaStoreOwnerPermissions ownerPermissions : ownerPermissionsList) {
+    for (MetaStoreOwnerPermissions ownerPermissions : ownerPermissionsList) {
       // <security><owner-permissions-list><owner-permissions>
       //
       Element opElement = doc.createElement("owner-permissions");
       oplElement.appendChild(opElement);
-      ((XmlMetaStoreOwnerPermissions)ownerPermissions).append(doc, opElement);
+      ((MetaStoreOwnerPermissions)ownerPermissions).append(doc, opElement);
     }    
   }
   
@@ -151,7 +151,7 @@ public class XmlMetaStoreElement extends XmlMetaStoreAttribute implements IMetaS
             for (int op=0;op<opNodes.getLength();op++) {
               Node opNode = opNodes.item(op);
               if ("owner-permissions".equals(opNode.getNodeName())) {
-                XmlMetaStoreOwnerPermissions ownerPermissions = new XmlMetaStoreOwnerPermissions(opNode);
+                MetaStoreOwnerPermissions ownerPermissions = new MetaStoreOwnerPermissions(opNode);
                 ownerPermissionsList.add(ownerPermissions);
               }
             }
@@ -167,12 +167,12 @@ public class XmlMetaStoreElement extends XmlMetaStoreAttribute implements IMetaS
    */
   public XmlMetaStoreElement(IMetaStoreElement element) {
     super(element);
-    this.ownerPermissionsList = new ArrayList<IMetaStoreOwnerPermissions>();
+    this.ownerPermissionsList = new ArrayList<MetaStoreOwnerPermissions>();
     if (element.getOwner()!=null) {
       this.owner = new XmlMetaStoreElementOwner(element.getOwner());
     }
-    for (IMetaStoreOwnerPermissions ownerPermissions : element.getOwnerPermissionsList()) {
-      this.getOwnerPermissionsList().add( new XmlMetaStoreOwnerPermissions(ownerPermissions.getOwner(), ownerPermissions.getPermissions()) );
+    for (MetaStoreOwnerPermissions ownerPermissions : element.getOwnerPermissionsList()) {
+      this.getOwnerPermissionsList().add( new MetaStoreOwnerPermissions(ownerPermissions.getOwner(), ownerPermissions.getPermissions()) );
     }
   }
 
@@ -192,11 +192,11 @@ public class XmlMetaStoreElement extends XmlMetaStoreAttribute implements IMetaS
   }
 
   @Override
-  public List<IMetaStoreOwnerPermissions> getOwnerPermissionsList() {
+  public List<MetaStoreOwnerPermissions> getOwnerPermissionsList() {
     return ownerPermissionsList;
   }
   
-  public void setOwnerPermissionsList(List<IMetaStoreOwnerPermissions> ownerPermissions) {
+  public void setOwnerPermissionsList(List<MetaStoreOwnerPermissions> ownerPermissions) {
     this.ownerPermissionsList = ownerPermissions;
   }
 }

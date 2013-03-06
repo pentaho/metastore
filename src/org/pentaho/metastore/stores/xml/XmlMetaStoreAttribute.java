@@ -36,15 +36,15 @@ public class XmlMetaStoreAttribute implements IMetaStoreAttribute {
 
   
   /**
-   * Duplicate the entity data into this structure.
-   * @param entity
+   * Duplicate the element data into this structure.
+   * @param element
    */
-  public XmlMetaStoreAttribute(IMetaStoreAttribute entity) {
+  public XmlMetaStoreAttribute(IMetaStoreAttribute element) {
     this();
-    id = entity.getId();
-    value = entity.getValue();
-    for (IMetaStoreAttribute childEntity : entity.getChildren()) {
-      addChild(new XmlMetaStoreAttribute(childEntity));
+    id = element.getId();
+    value = element.getValue();
+    for (IMetaStoreAttribute childElement : element.getChildren()) {
+      addChild(new XmlMetaStoreAttribute(childElement));
     }
   }
 
@@ -72,9 +72,9 @@ public class XmlMetaStoreAttribute implements IMetaStoreAttribute {
         for (int c=0;c<childNodes.getLength();c++) {
           Node childNode = childNodes.item(c);
           if (childNode.getNodeName().equals("child")) {
-            XmlMetaStoreAttribute childEntity = new XmlMetaStoreAttribute();
-            childEntity.loadElement(childNode);
-            getChildren().add(childEntity);
+            XmlMetaStoreAttribute childElement = new XmlMetaStoreAttribute();
+            childElement.loadElement(childNode);
+            getChildren().add(childElement);
           }
         }
       }
@@ -85,8 +85,8 @@ public class XmlMetaStoreAttribute implements IMetaStoreAttribute {
   public void deleteChild(String entityId) {
     Iterator<IMetaStoreAttribute> it = children.iterator();
     while (it.hasNext()) {
-      IMetaStoreAttribute entity= it.next();
-      if (entity.getId().equals(entityId)) {
+      IMetaStoreAttribute element= it.next();
+      if (element.getId().equals(entityId)) {
         it.remove();
         return;
       }
@@ -138,8 +138,8 @@ public class XmlMetaStoreAttribute implements IMetaStoreAttribute {
     this.children = children;
   }
 
-  public void addChild(IMetaStoreAttribute entity) {
-    children.add(entity);
+  public void addChild(IMetaStoreAttribute element) {
+    children.add(element);
   }
 
   /**
@@ -156,26 +156,26 @@ public class XmlMetaStoreAttribute implements IMetaStoreAttribute {
     this.filename = filename;
   }
 
-  protected void appendElement(IMetaStoreAttribute entity, Document doc, Element parentElement) {
+  protected void appendElement(IMetaStoreAttribute element, Document doc, Element parentElement) {
     Element idElement = doc.createElement("id");
-    idElement.appendChild(doc.createTextNode(entity.getId()));
+    idElement.appendChild(doc.createTextNode(element.getId()));
     parentElement.appendChild(idElement);
     
     Element valueElement = doc.createElement("value");
-    valueElement.appendChild(doc.createTextNode(entity.getValue()!=null ? entity.getValue().toString() : ""));
+    valueElement.appendChild(doc.createTextNode(element.getValue()!=null ? element.getValue().toString() : ""));
     parentElement.appendChild(valueElement);
     
     Element typeElement = doc.createElement("type");
-    typeElement.appendChild(doc.createTextNode(getType(entity.getValue())));
+    typeElement.appendChild(doc.createTextNode(getType(element.getValue())));
     parentElement.appendChild(typeElement);
     
-    if (!entity.getChildren().isEmpty()) {
+    if (!element.getChildren().isEmpty()) {
       Element childrenElement = doc.createElement("children");
       parentElement.appendChild(childrenElement);
-      for (IMetaStoreAttribute childEntity : entity.getChildren()) {
-        Element childElement = doc.createElement("child");
-        childrenElement.appendChild(childElement);
-        appendElement(childEntity, doc, childElement);
+      for (IMetaStoreAttribute childElement : element.getChildren()) {
+        Element child = doc.createElement("child");
+        childrenElement.appendChild(child);
+        appendElement(childElement, doc, child);
       }
     }
   }

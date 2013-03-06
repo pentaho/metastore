@@ -2,8 +2,8 @@ package org.pentaho.metastore.api;
 
 import java.util.List;
 
-import org.pentaho.metastore.api.security.IMetaStoreOwnerPermissions;
 import org.pentaho.metastore.api.security.IMetaStoreElementOwner;
+import org.pentaho.metastore.api.security.MetaStoreOwnerPermissions;
 
 
 /**
@@ -17,7 +17,7 @@ public interface IMetaStoreElement extends IMetaStoreAttribute {
   public IMetaStoreElementOwner getOwner();
   public void setOwner(IMetaStoreElementOwner owner);
   
-  public List<IMetaStoreOwnerPermissions> getOwnerPermissionsList(); 
-  public void setOwnerPermissionsList(List<IMetaStoreOwnerPermissions> ownerPermissions);
+  public List<MetaStoreOwnerPermissions> getOwnerPermissionsList(); 
+  public void setOwnerPermissionsList(List<MetaStoreOwnerPermissions> ownerPermissions);
   
 }

@@ -1,5 +1,6 @@
 package org.pentaho.metastore.stores.memory;
 
+import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
 
@@ -11,6 +12,24 @@ public class MemoryMetaStoreAttribute implements IMetaStoreAttribute {
   protected Object value;
 
   protected List<IMetaStoreAttribute> children;
+
+  public MemoryMetaStoreAttribute() {
+    this(null, null);
+  }
+  
+  public MemoryMetaStoreAttribute(String id, Object value) {
+    this.id = id;
+    this.value = value;
+    children = new ArrayList<IMetaStoreAttribute>();
+  }
+
+  public MemoryMetaStoreAttribute(IMetaStoreAttribute attribute) {
+    this(attribute.getId(), attribute.getValue());
+
+    for (IMetaStoreAttribute childElement : attribute.getChildren()) {
+      addChild(new MemoryMetaStoreAttribute(childElement));
+    }
+  }
 
   /**
    * @return the id

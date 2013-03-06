@@ -13,7 +13,7 @@ import org.pentaho.metastore.api.exceptions.MetaStoreException;
 import org.pentaho.metastore.api.security.IMetaStoreElementOwner;
 import org.pentaho.metastore.api.security.MetaStoreElementOwnerType;
 import org.pentaho.metastore.api.security.MetaStoreObjectPermission;
-import org.pentaho.metastore.stores.xml.XmlMetaStoreOwnerPermissions;
+import org.pentaho.metastore.api.security.MetaStoreOwnerPermissions;
 
 public class BaseMetaStoreTest extends TestCase {
 
@@ -171,7 +171,7 @@ public class BaseMetaStoreTest extends TestCase {
     // The users role has read/write permissions
     //
     IMetaStoreElementOwner usersRole = metaStore.newElementOwner("users", MetaStoreElementOwnerType.ROLE);
-    XmlMetaStoreOwnerPermissions usersRoleOwnerPermissions = new XmlMetaStoreOwnerPermissions(usersRole, MetaStoreObjectPermission.READ, MetaStoreObjectPermission.UPDATE);
+    MetaStoreOwnerPermissions usersRoleOwnerPermissions = new MetaStoreOwnerPermissions(usersRole, MetaStoreObjectPermission.READ, MetaStoreObjectPermission.UPDATE);
     element.getOwnerPermissionsList().add( usersRoleOwnerPermissions );
     
     return element;

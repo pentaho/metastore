@@ -1,31 +1,30 @@
-package org.pentaho.metastore.stores.xml;
+package org.pentaho.metastore.api.security;
 
 import java.util.ArrayList;
 import java.util.List;
 
 import org.pentaho.metastore.api.exceptions.MetaStoreException;
-import org.pentaho.metastore.api.security.IMetaStoreElementOwner;
-import org.pentaho.metastore.api.security.MetaStoreObjectPermission;
-import org.pentaho.metastore.api.security.IMetaStoreOwnerPermissions;
+import org.pentaho.metastore.stores.xml.XmlMetaStoreElementOwner;
+import org.pentaho.metastore.stores.xml.XmlUtil;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
 
-public class XmlMetaStoreOwnerPermissions implements IMetaStoreOwnerPermissions {
+public class MetaStoreOwnerPermissions {
 
   private IMetaStoreElementOwner owner;
   private List<MetaStoreObjectPermission> permissions;
 
-  public XmlMetaStoreOwnerPermissions() {
+  public MetaStoreOwnerPermissions() {
     this((IMetaStoreElementOwner)null);
   }
   
-  public XmlMetaStoreOwnerPermissions(IMetaStoreElementOwner owner) {
+  public MetaStoreOwnerPermissions(IMetaStoreElementOwner owner) {
     this(owner, new ArrayList<MetaStoreObjectPermission>());
   }
   
-  public XmlMetaStoreOwnerPermissions(IMetaStoreElementOwner owner, MetaStoreObjectPermission...permissions) {
+  public MetaStoreOwnerPermissions(IMetaStoreElementOwner owner, MetaStoreObjectPermission...permissions) {
     super();
     this.permissions=new ArrayList<MetaStoreObjectPermission>();
     if (owner!=null) {
@@ -36,7 +35,7 @@ public class XmlMetaStoreOwnerPermissions implements IMetaStoreOwnerPermissions 
     }
   }
   
-  public XmlMetaStoreOwnerPermissions(IMetaStoreElementOwner owner, List<MetaStoreObjectPermission> permissions) {
+  public MetaStoreOwnerPermissions(IMetaStoreElementOwner owner, List<MetaStoreObjectPermission> permissions) {
     super();
     this.permissions=new ArrayList<MetaStoreObjectPermission>();
     if (owner!=null) {
@@ -47,7 +46,7 @@ public class XmlMetaStoreOwnerPermissions implements IMetaStoreOwnerPermissions 
     }
   }
 
-  public XmlMetaStoreOwnerPermissions(Node opNode) throws MetaStoreException {
+  public MetaStoreOwnerPermissions(Node opNode) throws MetaStoreException {
     this();
     NodeList childNodes = opNode.getChildNodes();
     for (int c=0;c<childNodes.getLength();c++) {
@@ -89,12 +88,10 @@ public class XmlMetaStoreOwnerPermissions implements IMetaStoreOwnerPermissions 
   } 
 
   
-  @Override
   public IMetaStoreElementOwner getOwner() {
     return owner;
   }
 
-  @Override
   public List<MetaStoreObjectPermission> getPermissions() {
     return permissions;
   }

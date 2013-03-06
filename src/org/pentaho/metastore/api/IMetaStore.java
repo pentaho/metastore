@@ -2,13 +2,13 @@ package org.pentaho.metastore.api;
 
 import java.util.List;
 
-import org.pentaho.metastore.api.exceptions.MetaStoreElementTypeExistsException;
 import org.pentaho.metastore.api.exceptions.MetaStoreDependenciesExistsException;
 import org.pentaho.metastore.api.exceptions.MetaStoreElementExistException;
+import org.pentaho.metastore.api.exceptions.MetaStoreElementTypeExistsException;
 import org.pentaho.metastore.api.exceptions.MetaStoreException;
 import org.pentaho.metastore.api.exceptions.MetaStoreNamespaceExistsException;
-import org.pentaho.metastore.api.listeners.MetaStoreElementTypeListener;
 import org.pentaho.metastore.api.listeners.MetaStoreElementListener;
+import org.pentaho.metastore.api.listeners.MetaStoreElementTypeListener;
 import org.pentaho.metastore.api.security.IMetaStoreElementOwner;
 import org.pentaho.metastore.api.security.MetaStoreElementOwnerType;
 
@@ -41,7 +41,7 @@ public interface IMetaStore {
    * @throws MetaStoreException in case there is a problem in the underlying store 
    * @throws MetaStoreDependenciesExistsException In case the namespace is not empty and contains element types. The exception contains the namespaces as dependencies in that case.
    */
-  public void deleteNamespace(String namespace) throws MetaStoreException;
+  public void deleteNamespace(String namespace) throws MetaStoreException, MetaStoreDependenciesExistsException;
   
   
   
@@ -179,14 +179,11 @@ public interface IMetaStore {
    * 
    * @param name The owner name
    * @param ownerType The owner type
-   * @return A newly generated element
+   * @return A newly generated element owner
    * @throws MetaStoreException In case something unexpected happens in a bad way.
    */
   public IMetaStoreElementOwner newElementOwner(String name, MetaStoreElementOwnerType ownerType) throws MetaStoreException;
-  
-  
-  
-  
+    
   /**
    * @return The name of the meta store
    * @throws MetaStoreException in case there is a problem in the underlying store
