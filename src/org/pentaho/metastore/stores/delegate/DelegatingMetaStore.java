@@ -5,6 +5,7 @@ import java.util.Iterator;
 import java.util.List;
 
 import org.pentaho.metastore.api.IMetaStore;
+import org.pentaho.metastore.api.IMetaStoreAttribute;
 import org.pentaho.metastore.api.IMetaStoreElement;
 import org.pentaho.metastore.api.IMetaStoreElementType;
 import org.pentaho.metastore.api.exceptions.MetaStoreDependenciesExistsException;
@@ -183,6 +184,16 @@ public class DelegatingMetaStore implements IMetaStore {
       return metaStore.getElementType(namespace, elementTypeId);
     }
   }
+  
+  @Override
+  public IMetaStoreElementType getElementTypeByName(String namespace, String elementTypeName) throws MetaStoreException {
+    for (IMetaStoreElementType elementType : getElementTypes(namespace)) {
+      if (elementType.getName().equalsIgnoreCase(elementTypeName)) {
+        return elementType;
+      }
+    }
+    return null;
+  }
 
   @Override
   public void createElementType(String namespace, IMetaStoreElementType elementType) throws MetaStoreException, MetaStoreElementTypeExistsException {
@@ -250,6 +261,26 @@ public class DelegatingMetaStore implements IMetaStore {
       return getActiveMetaStore().getElement(namespace, elementTypeId, elementId);
     }
   }
+  
+  @Override
+  public IMetaStoreElement getElementByName(String namespace, IMetaStoreElementType elementType, String name) throws MetaStoreException {
+    if (activeMetaStoreName==null) {
+      for (IMetaStore metaStore : metaStoreList) {
+        for (IMetaStoreElement element : metaStore.getElements(namespace, elementType.getId())) {
+          if (element.getName()!=null && element.getName().equalsIgnoreCase(name)) {
+            return element;
+          }
+        }
+      }
+    } else {
+      for (IMetaStoreElement element : getElements(namespace, elementType.getId())) {
+        if (element.getName()!=null && element.getName().equalsIgnoreCase(name)) {
+          return element;
+        }
+      }
+    }
+    return null;
+  }
 
   @Override
   public void createElement(String namespace, String elementTypeId, IMetaStoreElement element) throws MetaStoreException, MetaStoreElementExistException {
@@ -275,6 +306,11 @@ public class DelegatingMetaStore implements IMetaStore {
   public IMetaStoreElement newElement(String id, Object value) throws MetaStoreException {
     return getActiveMetaStore().newElement(id, value);
   }
+  
+  public IMetaStoreAttribute newAttribute(String id, Object value) throws MetaStoreException {
+    return getActiveMetaStore().newAttribute(id, value);
+  }
+
 
   @Override
   public IMetaStoreElementOwner newElementOwner(String name, MetaStoreElementOwnerType ownerType) throws MetaStoreException {

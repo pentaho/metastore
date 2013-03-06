@@ -2,13 +2,13 @@ package org.pentaho.metastore.api;
 
 import java.util.List;
 
-import org.pentaho.metastore.api.exceptions.MetaStoreElementTypeExistsException;
 import org.pentaho.metastore.api.exceptions.MetaStoreDependenciesExistsException;
 import org.pentaho.metastore.api.exceptions.MetaStoreElementExistException;
+import org.pentaho.metastore.api.exceptions.MetaStoreElementTypeExistsException;
 import org.pentaho.metastore.api.exceptions.MetaStoreException;
 import org.pentaho.metastore.api.exceptions.MetaStoreNamespaceExistsException;
-import org.pentaho.metastore.api.listeners.MetaStoreElementTypeListener;
 import org.pentaho.metastore.api.listeners.MetaStoreElementListener;
+import org.pentaho.metastore.api.listeners.MetaStoreElementTypeListener;
 import org.pentaho.metastore.api.security.IMetaStoreElementOwner;
 import org.pentaho.metastore.api.security.MetaStoreElementOwnerType;
 
@@ -41,7 +41,7 @@ public interface IMetaStore {
    * @throws MetaStoreException in case there is a problem in the underlying store 
    * @throws MetaStoreDependenciesExistsException In case the namespace is not empty and contains element types. The exception contains the namespaces as dependencies in that case.
    */
-  public void deleteNamespace(String namespace) throws MetaStoreException;
+  public void deleteNamespace(String namespace) throws MetaStoreException, MetaStoreDependenciesExistsException;
   
   
   
@@ -68,7 +68,15 @@ public interface IMetaStore {
    * @throws MetaStoreException in case there is a problem in the underlying store
    */
   public IMetaStoreElementType getElementType(String namespace, String elementTypeId) throws MetaStoreException;
-  
+
+  /**
+   * @return An element type or null if the type name couldn't be found.
+   * @param namespace the namespace to look in.
+   * @param elementTypeName the name of the element type to reference
+   * @throws MetaStoreException in case there is a problem in the underlying store
+   */
+  public IMetaStoreElementType getElementTypeByName(String namespace, String elementTypeName) throws MetaStoreException;
+
   /**
    * Create a new element type in the metastore
    * @param namespace The namespace to create the type in
@@ -129,6 +137,16 @@ public interface IMetaStore {
   public IMetaStoreElement getElement(String namespace, String elementTypeId, String elementId) throws MetaStoreException;
   
   /**
+   * Find an element in a namespace with a particular type, using its name
+   * @param namespace The namespace to reference
+   * @param elementType The element type to search
+   * @param name The name fo look for
+   * @return The first encountered element with the given name or null if no element name could be matched.
+   * @throws MetaStoreException in case there is a problem in the underlying store
+   */
+  public IMetaStoreElement getElementByName(String namespace, IMetaStoreElementType elementType, String name) throws MetaStoreException;
+
+  /**
    * Create a new element for a element type in a namespace
    * @param namespace The namespace to reference
    * @param elementTypeId The ID of the element type to use
@@ -166,7 +184,7 @@ public interface IMetaStore {
   public IMetaStoreElement newElement() throws MetaStoreException;
 
   /**
-   * Have the meta store generate a new element type for you with specified ID and value.
+   * Have the meta store generate a new element for you with specified ID and value.
    * @param id the id or key of the element
    * @param value the value of the element
    * @return A new element, to create it in a element type, use createElement() 
@@ -175,18 +193,24 @@ public interface IMetaStore {
   public IMetaStoreElement newElement(String id, Object value) throws MetaStoreException;
 
   /**
+   * Create a new element attribute
+   * @param id The attribute ID
+   * @param value The attribute value
+   * @return The new attribute
+   * @throws MetaStoreException
+   */
+  public IMetaStoreAttribute newAttribute(String id, Object value) throws MetaStoreException;
+  
+  /**
    * Have the meta store generate a new element owner for you with specified name and type.
    * 
    * @param name The owner name
    * @param ownerType The owner type
-   * @return A newly generated element
+   * @return A newly generated element owner
    * @throws MetaStoreException In case something unexpected happens in a bad way.
    */
   public IMetaStoreElementOwner newElementOwner(String name, MetaStoreElementOwnerType ownerType) throws MetaStoreException;
-  
-  
-  
-  
+    
   /**
    * @return The name of the meta store
    * @throws MetaStoreException in case there is a problem in the underlying store

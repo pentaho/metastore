@@ -14,6 +14,8 @@ import org.pentaho.metastore.api.IMetaStoreElementType;
 import org.pentaho.metastore.api.exceptions.MetaStoreException;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
+import org.w3c.dom.Node;
+import org.w3c.dom.NodeList;
 
 public class XmlMetaStoreElementType implements IMetaStoreElementType {
   
@@ -55,12 +57,24 @@ public class XmlMetaStoreElementType implements IMetaStoreElementType {
       DocumentBuilderFactory documentBuilderFactory = DocumentBuilderFactory.newInstance();
       DocumentBuilder documentBuilder = documentBuilderFactory.newDocumentBuilder();
       Document document = documentBuilder.parse(file);
-      Element dataTypeElement = document.getDocumentElement();
+      Element elementTypeElement = document.getDocumentElement();
       
-      name = dataTypeElement.getElementsByTagName("name").item(0).getNodeValue();
-      description = dataTypeElement.getElementsByTagName("description").item(0).getNodeValue();      
+      loadElementType(elementTypeElement);
     } catch(Exception e) {
-      throw new MetaStoreException("Unable to load XML metastore data type from file '"+filename+"'", e);
+      throw new MetaStoreException("Unable to load XML metastore element type from file '"+filename+"'", e);
+    }
+  }
+  
+  protected void loadElementType(Node elementTypeNode) {
+    NodeList childNodes = elementTypeNode.getChildNodes();
+    for (int e=0;e<childNodes.getLength();e++) {
+      Node childNode = childNodes.item(e);
+      if ("name".equals(childNode.getNodeName())) {
+        name = XmlUtil.getNodeValue(childNode);
+      }
+      if ("description".equals(childNode.getNodeName())) {
+        description = XmlUtil.getNodeValue(childNode);
+      }
     }
   }
   
@@ -71,22 +85,16 @@ public class XmlMetaStoreElementType implements IMetaStoreElementType {
       DocumentBuilder builder = factory.newDocumentBuilder();
       Document doc = builder.newDocument();
       
-      Element dataTypeElement = doc.createElement(XML_TAG);
-      doc.appendChild(dataTypeElement);
+      Element elementTypeElement = doc.createElement(XML_TAG);
+      doc.appendChild(elementTypeElement);
       
-      Element nameElement = doc.createElement("name");
-      nameElement.appendChild(doc.createTextNode(name));
-      dataTypeElement.appendChild(nameElement);
-      
-      Element descriptionElement = doc.createElement("description");
-      descriptionElement.appendChild(doc.createTextNode(description));
-      dataTypeElement.appendChild(descriptionElement);
+      appendElementType(doc, elementTypeElement);
       
       // Write the document content into the data type XML file
       //
       TransformerFactory transformerFactory = TransformerFactory.newInstance();
-      transformerFactory.setAttribute("indent-number", 2);
       Transformer transformer = transformerFactory.newTransformer();
+      transformer.setOutputProperty("{http://xml.apache.org/xslt}indent-amount", "2");
       transformer.setOutputProperty(OutputKeys.INDENT, "yes");
       
       DOMSource source = new DOMSource(doc);
@@ -101,6 +109,17 @@ public class XmlMetaStoreElementType implements IMetaStoreElementType {
 
 
 
+
+  protected void appendElementType(Document doc, Element elementTypeElement) {
+    Element nameElement = doc.createElement("name");
+    nameElement.appendChild(doc.createTextNode(name));
+    elementTypeElement.appendChild(nameElement);
+    
+    Element descriptionElement = doc.createElement("description");
+    descriptionElement.appendChild(doc.createTextNode(description));
+    elementTypeElement.appendChild(descriptionElement);
+
+  }
 
   /**
    * @return the namespace

@@ -7,15 +7,16 @@ import java.util.List;
 
 import org.pentaho.metastore.api.BaseMetaStore;
 import org.pentaho.metastore.api.IMetaStore;
-import org.pentaho.metastore.api.IMetaStoreElementType;
+import org.pentaho.metastore.api.IMetaStoreAttribute;
 import org.pentaho.metastore.api.IMetaStoreElement;
-import org.pentaho.metastore.api.exceptions.MetaStoreElementTypeExistsException;
+import org.pentaho.metastore.api.IMetaStoreElementType;
 import org.pentaho.metastore.api.exceptions.MetaStoreDependenciesExistsException;
 import org.pentaho.metastore.api.exceptions.MetaStoreElementExistException;
+import org.pentaho.metastore.api.exceptions.MetaStoreElementTypeExistsException;
 import org.pentaho.metastore.api.exceptions.MetaStoreException;
 import org.pentaho.metastore.api.exceptions.MetaStoreNamespaceExistsException;
-import org.pentaho.metastore.api.listeners.MetaStoreElementTypeListener;
 import org.pentaho.metastore.api.listeners.MetaStoreElementListener;
+import org.pentaho.metastore.api.listeners.MetaStoreElementTypeListener;
 import org.pentaho.metastore.api.security.IMetaStoreElementOwner;
 import org.pentaho.metastore.api.security.MetaStoreElementOwnerType;
 
@@ -127,11 +128,26 @@ public class XmlMetaStore extends BaseMetaStore implements IMetaStore {
   }
   
   @Override
-  public IMetaStoreElementType getElementType(String namespace, String dataTypeId) throws MetaStoreException {
+  public XmlMetaStoreElementType getElementType(String namespace, String dataTypeId) throws MetaStoreException {
     String dataTypeFile = XmlUtil.getElementTypeFile(rootFolder, namespace, dataTypeId);
     XmlMetaStoreElementType dataType = new XmlMetaStoreElementType(namespace, dataTypeFile);
     return dataType;
   }
+  
+  @Override
+  public XmlMetaStoreElementType getElementTypeByName(String namespace, String elementTypeName) throws MetaStoreException {
+    for (IMetaStoreElementType elementType : getElementTypes(namespace)) {
+      if (elementType.getName()!=null && elementType.getName().equalsIgnoreCase(elementTypeName)) {
+        return (XmlMetaStoreElementType)elementType;
+      }
+    }
+    return null;
+  }
+  
+  public IMetaStoreAttribute newAttribute(String id, Object value) throws MetaStoreException {
+    return new XmlMetaStoreAttribute(id, value);
+  }
+  
 
   @Override
   public void createElementType(String namespace, IMetaStoreElementType dataType) throws MetaStoreException, MetaStoreElementTypeExistsException {
@@ -265,6 +281,16 @@ public class XmlMetaStore extends BaseMetaStore implements IMetaStore {
       return null;
     }
     return new XmlMetaStoreElement(entityFilename);
+  }
+  
+  @Override
+  public IMetaStoreElement getElementByName(String namespace, IMetaStoreElementType elementType, String name) throws MetaStoreException {
+    for (IMetaStoreElement element : getElements(namespace, elementType.getId())) {
+      if (element.getName()!=null && element.getName().equalsIgnoreCase(name)) {
+        return element;
+      }
+    }
+    return null;
   }
   
   public void createElement(String namespace, String dataTypeId, IMetaStoreElement entity) throws MetaStoreException, MetaStoreElementExistException {

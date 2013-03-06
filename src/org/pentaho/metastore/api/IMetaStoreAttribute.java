@@ -37,4 +37,9 @@ public interface IMetaStoreAttribute {
    * @param attributeId The ID or key of the attribute to delete
    */
   public void deleteChild(String attributeId);
+  
+  /**
+   * Remove all child attributes
+   */
+  public void clearChildren();
 }

@@ -16,6 +16,7 @@ public class XmlMetaStoreTest extends BaseMetaStoreTest {
     FileUtil.cleanFolder(storeFolder, false);
 
     // Run the test against the XML metadata store.
+    //
     IMetaStore metaStore = new XmlMetaStore();
     super.testFunctionality(metaStore);
   }
