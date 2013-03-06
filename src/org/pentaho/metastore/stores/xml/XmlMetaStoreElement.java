@@ -37,6 +37,17 @@ public class XmlMetaStoreElement extends XmlMetaStoreAttribute implements IMetaS
     super(id, value);
     this.ownerPermissionsList = new ArrayList<IMetaStoreOwnerPermissions>();
   }
+  
+  @Override
+  public boolean equals(Object obj) {
+    if (this==obj) {
+      return true;
+    }
+    if (!(obj instanceof XmlMetaStoreElement)) {
+      return false;
+    }
+    return ((XmlMetaStoreElement)obj).id.equals(id);
+  }
 
   /**
    * Load element data recursively from an XML file...
@@ -49,7 +60,6 @@ public class XmlMetaStoreElement extends XmlMetaStoreAttribute implements IMetaS
     this.id = file.getName();
 
     try {
-      
       DocumentBuilderFactory documentBuilderFactory = DocumentBuilderFactory.newInstance();
       DocumentBuilder documentBuilder = documentBuilderFactory.newDocumentBuilder();
       Document document = documentBuilder.parse(file);

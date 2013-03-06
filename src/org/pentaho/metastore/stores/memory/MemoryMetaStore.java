@@ -7,11 +7,11 @@ import java.util.Map;
 
 import org.pentaho.metastore.api.BaseMetaStore;
 import org.pentaho.metastore.api.IMetaStore;
-import org.pentaho.metastore.api.IMetaStoreElementType;
 import org.pentaho.metastore.api.IMetaStoreElement;
-import org.pentaho.metastore.api.exceptions.MetaStoreElementTypeExistsException;
+import org.pentaho.metastore.api.IMetaStoreElementType;
 import org.pentaho.metastore.api.exceptions.MetaStoreDependenciesExistsException;
 import org.pentaho.metastore.api.exceptions.MetaStoreElementExistException;
+import org.pentaho.metastore.api.exceptions.MetaStoreElementTypeExistsException;
 import org.pentaho.metastore.api.exceptions.MetaStoreException;
 import org.pentaho.metastore.api.exceptions.MetaStoreNamespaceExistsException;
 import org.pentaho.metastore.api.security.IMetaStoreElementOwner;
@@ -29,7 +29,16 @@ public class MemoryMetaStore extends BaseMetaStore implements IMetaStore {
   public List<String> getNamespaces() throws MetaStoreException {
     return new ArrayList<String>(namespacesMap.keySet());
   }
-
+  
+  @Override
+  public boolean equals(Object obj) {
+    if (this==obj) return true;
+    if (!(obj instanceof MemoryMetaStore)) {
+      return false;
+    }
+    return ((MemoryMetaStore)obj).name.equalsIgnoreCase(name);
+  }
+  
   @Override
   public void createNamespace(String namespace) throws MetaStoreException, MetaStoreNamespaceExistsException {
     MemoryMetaStoreNamespace storeNamespace = namespacesMap.get(namespace);

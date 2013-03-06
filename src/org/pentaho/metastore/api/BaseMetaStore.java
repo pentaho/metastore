@@ -8,11 +8,11 @@ import org.pentaho.metastore.api.listeners.MetaStoreElementListener;
 
 public class BaseMetaStore {
   
-  private String name;
-  private String description;
-  private String lifeCycle;
-  private String customerName;
-  private String projectName;
+  protected String name;
+  protected String description;
+  protected String lifeCycle;
+  protected String customerName;
+  protected String projectName;
   
   protected List<MetaStoreElementTypeListener> dataTypeListeners;
   protected List<MetaStoreElementListener> entityListeners;

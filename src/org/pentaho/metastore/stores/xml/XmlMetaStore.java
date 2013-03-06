@@ -39,6 +39,15 @@ public class XmlMetaStore extends BaseMetaStore implements IMetaStore {
       }
     }
   }
+
+  @Override
+  public boolean equals(Object obj) {
+    if (this==obj) return true;
+    if (!(obj instanceof XmlMetaStore)) {
+      return false;
+    }
+    return ((XmlMetaStore)obj).name.equalsIgnoreCase(name);
+  }
   
   @Override
   public List<String> getNamespaces() throws MetaStoreException {

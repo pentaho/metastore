@@ -189,28 +189,33 @@ public interface IMetaStore {
   
   /**
    * @return The name of the meta store
+   * @throws MetaStoreException in case there is a problem in the underlying store
    */
-  public String getName();
+  public String getName() throws MetaStoreException;
   
   /**
    * @return The description of the meta store
+   * @throws MetaStoreException in case there is a problem in the underlying store
    */
-  public String getDescription();
+  public String getDescription() throws MetaStoreException;
   
   /**
    * @return The life cycle (Development, Test, User acceptance, Production, ...)
+   * @throws MetaStoreException in case there is a problem in the underlying store
    */
-  public String getLifeCycle();
+  public String getLifeCycle() throws MetaStoreException;
 
   /**
    * @return The project name
+   * @throws MetaStoreException in case there is a problem in the underlying store
    */
-  public String getCustomerName();
+  public String getCustomerName() throws MetaStoreException;
 
   /**
    * @return The project name
+   * @throws MetaStoreException in case there is a problem in the underlying store
    */
-  public String getProjectName();
+  public String getProjectName() throws MetaStoreException;
 
   
   
@@ -218,35 +223,41 @@ public interface IMetaStore {
   
   /**
    * Add a listener to get informed of all changes to an element type
+   * @throws MetaStoreException in case there is a problem in the underlying store
    * @param elementTypeListener
    */
-  public void addElementTypeListener(MetaStoreElementTypeListener elementTypeListener);
+  public void addElementTypeListener(MetaStoreElementTypeListener elementTypeListener) throws MetaStoreException;
   
   /**
    * @return All the element type listeners
+   * @throws MetaStoreException in case there is a problem in the underlying store
    */
-  public List<MetaStoreElementTypeListener> getElementTypeListeners();
+  public List<MetaStoreElementTypeListener> getElementTypeListeners() throws MetaStoreException;
   
   /**
    * Remove a element type listener
    * @param elementTypeListener The element type listener to be removed.
+   * @throws MetaStoreException in case there is a problem in the underlying store
    */
-  public void removeElementTypeListener(MetaStoreElementTypeListener elementTypeListener);
+  public void removeElementTypeListener(MetaStoreElementTypeListener elementTypeListener) throws MetaStoreException;
   
   /**
    * Add a listener to get informed of all changes to an element
+   * @throws MetaStoreException in case there is a problem in the underlying store
    * @param listener
    */
-  public void addElementListener(MetaStoreElementListener listener);
+  public void addElementListener(MetaStoreElementListener listener) throws MetaStoreException;
 
   /**
    * @return All the element listeners
+   * @throws MetaStoreException in case there is a problem in the underlying store
    */
-  public List<MetaStoreElementListener> getElementListeners();
+  public List<MetaStoreElementListener> getElementListeners() throws MetaStoreException;
   
   /**
    * Remove an element listener
    * @param elementListener The element listener to remove
+   * @throws MetaStoreException in case there is a problem in the underlying store
    */
-  public void removeElementListener(MetaStoreElementListener elementListener);
+  public void removeElementListener(MetaStoreElementListener elementListener) throws MetaStoreException;
 }
