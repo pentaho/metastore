@@ -1,17 +1,16 @@
-<project name="MaxMindGeoIPLookup" default="default" basedir=".">
+<project name="metastore" default="default" basedir=".">
 
 	  <description>
-	      MaxMindGeoIPLookup plugin build file
+	      metastore plugin build file
 	    </description>
 
 	  <tstamp prefix="start"/>
 
 	  <property file="override.properties"/>
-	  <property name="libswt" value="libswt"/>
-	  <property name="libext" value="libext"/>
+	  <property name="libext" value="lib"/>
 
 	  <!-- Plugin Name -->
-	  <property name= "plugin-name" value="MaxMindGeoIPLookup"/> 
+	  <property name= "plugin-name" value="metastore"/> 
 
 	  <!-- system properties to use -->
 	  <property name= "cr" value="${line.separator}"/> 
@@ -20,7 +19,6 @@
 	
 	  <property name="src"        			location="src"/> 
 	  <property name="classes"        		location="classes"/> 
-	  <property name="lib"        			location="lib"/>
 	  <property name="samples"        		location="samples"/>
 	  <property name="distrib"        		location="distrib"/>
 	
@@ -30,7 +28,6 @@
 	    <tstamp/>
 	    <mkdir dir="${classes}"/>
 	    <mkdir dir="${distrib}"/>
-	    <mkdir dir="${deploy}"/>
 	  </target>
 
 	  <!--
@@ -40,16 +37,14 @@
 	  -->
 
 	  <target name="compile" depends="init" description="compile the source " >
-	  	<echo>Compiling MaxMind GeoIP Lookup...</echo>
+	  	<echo>Compiling metastore project...</echo>
 	    <javac debug="true" srcdir="${src}" 
 	    	   destdir="${classes}"
                    includeantruntime="false"
                    >
 
 	    	<classpath id="cpath">
-				<fileset dir="${lib}" 		        includes="*.jar"/>
 				<fileset dir="${libext}" 		includes="*.jar"/>
-				<fileset dir="${libswt}" 		includes="*.jar"/>
 		  		</classpath>
 	    </javac>
 	  </target>
@@ -61,9 +56,6 @@
 
 	  <target name="copy" depends="compile" description="copy dependend libraries" >
 	  	<echo>Copying required libraries...</echo>
-	    <copy todir="${distrib}/lib"> <fileset dir="${lib}/" includes="**/*"/> </copy>
-	    <copy todir="${distrib}/samples"> <fileset dir="${samples}/" includes="**/*"/> </copy>
-	    <copy todir="${distrib}/"> <fileset dir="." includes="README.txt"/> </copy>
 	    <copy todir="${classes}"> <fileset dir="${src}" includes="**/*.png **/*.xml **/*.xsl **/*properties"/> </copy>
 	  </target>
 			
@@ -73,44 +65,20 @@
 	       ==========================
 	  -->
 		
-	  <target name="jar" depends="compile, copy" description="generate the MaxMind GeoIP Lookup library jar">
-	  	<echo>Generating the MaxMindGeoIPLookup library jar ...</echo>
+	  <target name="jar" depends="compile, copy" description="generate the metastore jar">
+	  	<echo>Generating the metastore jar ...</echo>
 	  	<jar 
-	    	jarfile="${distrib}/maxmindgeoiplookup.jar" 
+	    	jarfile="${distrib}/metastore.jar" 
 	    	basedir="${classes}" 
 	    	includes="**/*"/>	 
 	  </target>
 
-	  <!--
-	       ==========================
-	                Plugin ZIP
-	       ==========================
-	  -->
-		
-	  <target name="zip" depends="jar" description="generate the MaxMind GeoIP Lookup plugin zip">
-	  	<echo>Generating the MaxMindGeoIPLookup plugin zip ...</echo>
-	  	<zip 
-	    	zipfile="maxmindlookup.zip" 
-	    	basedir="${distrib}" 
-	    	includes="**/*"/>
-	  </target>
-
-	  <!-- ======================================
-	          Copy data to a deployment folder
-	       ======================================
-	  -->
-
-	  <target name="deploy" depends="zip" description="deploy as a Kettle plugin" >
-	  	<echo>Deploying as a Kettle plugin...</echo>
-	    <copy todir="${deploy}"> <fileset dir="${distrib}" includes="**/*"/> </copy>
-	  </target>
-			
 	<!--
 	       ==========================
 	          Default target: all
 	       ==========================
 	  -->
-	<target name="default" depends="deploy" description="default = build all"/>
+	<target name="default" depends="jar" description="default = build all"/>
 
 	<!--
 	       ==========================
@@ -121,8 +89,7 @@
 	  <target name="clean"  description="clean up generated files" >
 	    <delete dir="${classes}"/>
 	    <delete dir="${distrib}"/>
-	    <delete file="maxmindlookup.zip"/>
-	    <delete dir="${deploy}"/>
+	    <delete file="metastore.zip"/>
 	  </target>
 	
 </project>

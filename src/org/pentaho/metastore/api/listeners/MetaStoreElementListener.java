@@ -3,37 +3,37 @@ package org.pentaho.metastore.api.listeners;
 import org.pentaho.metastore.api.IMetaStoreElement;
 
 /**
- * Set of methods that are called in various parts of the meta store entity life-cycle.
+ * Set of methods that are called in various parts of the meta store element life-cycle.
  * @author matt
  *
  */
 public interface MetaStoreElementListener {
   
   /**
-   * This method is called after an entity was created in the store
+   * This method is called after an element was created in the store
    *
-   * @param namespace The namespace of the entity
-   * @param dataTypeId The data type ID of the entity
-   * @param entity The entity that was created
+   * @param namespace The namespace of the element
+   * @param elementTypeId The element type ID of the element
+   * @param element The element that was created
    */
-  public void entityCreated(String namespace, String dataTypeId, IMetaStoreElement entity);
+  public void elementCreated(String namespace, String elementTypeId, IMetaStoreElement element);
 
   /**
-   * This method is called when an entity is changed
+   * This method is called when an element is changed
    *
-   * @param namespace The namespace of the entity
-   * @param dataType The data type of the entity
-   * @param oldEntity The entity before the change
-   * @param newEntity The entity after the change 
+   * @param namespace The namespace of the element
+   * @param dataType The element type of the element
+   * @param oldElement The element before the change
+   * @param newElement The element after the change 
    */
-  public void entityUpdated(String namespace, String dataTypeId, IMetaStoreElement oldEntity, IMetaStoreElement newEntity);
+  public void elementUpdated(String namespace, String elementTypeId, IMetaStoreElement oldElement, IMetaStoreElement newElement);
 
   /**
-   * This method is called after an entity was deleted from the store
+   * This method is called after an element was deleted from the store
    *
-   * @param namespace The namespace of the entity
-   * @param dataType The data type ID of the entity
-   * @param entity The entity that was deleted
+   * @param namespace The namespace of the element
+   * @param dataType The element type ID of the element
+   * @param element The element that was deleted
    */
-  public void entityDeleted(String namespace, String dataTypeId, IMetaStoreElement entity);
+  public void elementDeleted(String namespace, String elementTypeId, IMetaStoreElement element);
 }

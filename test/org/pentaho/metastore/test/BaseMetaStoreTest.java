@@ -10,6 +10,10 @@ import org.pentaho.metastore.api.IMetaStoreElementType;
 import org.pentaho.metastore.api.exceptions.MetaStoreDependenciesExistsException;
 import org.pentaho.metastore.api.exceptions.MetaStoreElementTypeExistsException;
 import org.pentaho.metastore.api.exceptions.MetaStoreException;
+import org.pentaho.metastore.api.security.IMetaStoreElementOwner;
+import org.pentaho.metastore.api.security.MetaStoreElementOwnerType;
+import org.pentaho.metastore.api.security.MetaStoreObjectPermission;
+import org.pentaho.metastore.stores.xml.XmlMetaStoreOwnerPermissions;
 
 public class BaseMetaStoreTest extends TestCase {
 
@@ -53,7 +57,12 @@ public class BaseMetaStoreTest extends TestCase {
       assertEquals(DT_SHARED_DIMENSION_ID, dependencies.get(0));
     }
     
-    IMetaStoreElement customerDimension = generateCustomerDimensionEntity(metaStore, NS_PENTAHO, DT_SHARED_DIMENSION_ID); 
+    IMetaStoreElement customerDimension = generateCustomerDimensionElement(metaStore, NS_PENTAHO, DT_SHARED_DIMENSION_ID);
+    IMetaStoreElementOwner elementOwner = customerDimension.getOwner();
+    assertNotNull(elementOwner);
+    assertEquals("joe", elementOwner.getName());
+    assertEquals(MetaStoreElementOwnerType.USER, elementOwner.getOwnerType());
+    
     metaStore.createElement(NS_PENTAHO, DT_SHARED_DIMENSION_ID, customerDimension);
     List<IMetaStoreElement> entities = metaStore.getElements(NS_PENTAHO, DT_SHARED_DIMENSION_ID);
     assertEquals(1, entities.size());
@@ -88,16 +97,16 @@ public class BaseMetaStoreTest extends TestCase {
     assertEquals(0, namespaces.size());
   }
 
-  private IMetaStoreElement generateCustomerDimensionEntity(IMetaStore metaStore, String nsPentaho, String dtSharedDimension) throws MetaStoreException {
-    IMetaStoreElement entity = metaStore.newElement();
-    entity.setId(ET_CUSTOMER_DIMENSION_ID);
-    entity.setValue("Top element");
+  private IMetaStoreElement generateCustomerDimensionElement(IMetaStore metaStore, String nsPentaho, String dtSharedDimension) throws MetaStoreException {
+    IMetaStoreElement element = metaStore.newElement();
+    element.setId(ET_CUSTOMER_DIMENSION_ID);
+    element.setValue("Top element");
     
-    entity.addChild(metaStore.newElement("name", "Customer dimension"));
-    entity.addChild(metaStore.newElement("description", "This is the shared customer dimension"));
-    entity.addChild(metaStore.newElement("physical_table", "DIM_CUSTOMER"));
+    element.addChild(metaStore.newElement("name", "Customer dimension"));
+    element.addChild(metaStore.newElement("description", "This is the shared customer dimension"));
+    element.addChild(metaStore.newElement("physical_table", "DIM_CUSTOMER"));
     IMetaStoreElement fieldsEntity = metaStore.newElement("fields", null);
-    entity.addChild(fieldsEntity);
+    element.addChild(fieldsEntity);
   
     // A technical key
     //
@@ -155,7 +164,17 @@ public class BaseMetaStoreTest extends TestCase {
       fieldEntity.addChild(metaStore.newElement("field_kettle_type", "String"));
     }
     
-    return entity;
+    // Some security
+    //
+    element.setOwner(metaStore.newElementOwner("joe", MetaStoreElementOwnerType.USER));
+    
+    // The users role has read/write permissions
+    //
+    IMetaStoreElementOwner usersRole = metaStore.newElementOwner("users", MetaStoreElementOwnerType.ROLE);
+    XmlMetaStoreOwnerPermissions usersRoleOwnerPermissions = new XmlMetaStoreOwnerPermissions(usersRole, MetaStoreObjectPermission.READ, MetaStoreObjectPermission.UPDATE);
+    element.getOwnerPermissionsList().add( usersRoleOwnerPermissions );
+    
+    return element;
   }
 
 }

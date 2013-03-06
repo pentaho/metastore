@@ -11,15 +11,15 @@ import org.pentaho.metastore.api.IMetaStoreElement;
 public class MetaStoreEntityAdapter implements MetaStoreElementListener {
 
   @Override
-  public void entityUpdated(String namespace, String dataTypeId, IMetaStoreElement oldEntity, IMetaStoreElement newEntity) {
+  public void elementUpdated(String namespace, String dataTypeId, IMetaStoreElement oldEntity, IMetaStoreElement newEntity) {
   }
 
   @Override
-  public void entityCreated(String namespace, String dataTypeId, IMetaStoreElement entity) {
+  public void elementCreated(String namespace, String dataTypeId, IMetaStoreElement entity) {
   }
 
   @Override
-  public void entityDeleted(String namespace, String dataTypeId, IMetaStoreElement entity) {
+  public void elementDeleted(String namespace, String dataTypeId, IMetaStoreElement entity) {
   }
 
 }

@@ -14,6 +14,8 @@ import org.pentaho.metastore.api.exceptions.MetaStoreDependenciesExistsException
 import org.pentaho.metastore.api.exceptions.MetaStoreElementExistException;
 import org.pentaho.metastore.api.exceptions.MetaStoreException;
 import org.pentaho.metastore.api.exceptions.MetaStoreNamespaceExistsException;
+import org.pentaho.metastore.api.security.IMetaStoreElementOwner;
+import org.pentaho.metastore.api.security.MetaStoreElementOwnerType;
 
 public class MemoryMetaStore extends BaseMetaStore implements IMetaStore {
 
@@ -190,5 +192,10 @@ public class MemoryMetaStore extends BaseMetaStore implements IMetaStore {
     return null;
   }
 
+  @Override
+  public IMetaStoreElementOwner newElementOwner(String name, MetaStoreElementOwnerType ownerType)
+      throws MetaStoreException {
+    return new MemoryMetaStoreElementOwner(name, ownerType);
+  }
  
 }

@@ -9,6 +9,8 @@ import org.pentaho.metastore.api.exceptions.MetaStoreException;
 import org.pentaho.metastore.api.exceptions.MetaStoreNamespaceExistsException;
 import org.pentaho.metastore.api.listeners.MetaStoreElementTypeListener;
 import org.pentaho.metastore.api.listeners.MetaStoreElementListener;
+import org.pentaho.metastore.api.security.IMetaStoreElementOwner;
+import org.pentaho.metastore.api.security.MetaStoreElementOwnerType;
 
 /**
  * This interface describes how metadata can be stored and retrieved in a persistence agnostic way.<p>
@@ -151,15 +153,15 @@ public interface IMetaStore {
    * Have the meta store generate a new element type for you in the specified namespace  
    * @param namespace The namespace to create the element type in
    * @return The new element type.  To actually create it, use createElementType();
-   * @throws MetaStoreException in case something unexpected happens.
+   * @throws MetaStoreException in case something unexpected happens in a bad way.
    */
   public IMetaStoreElementType newElementType(String namespace) throws MetaStoreException;
   
 
   /**
    * Have the meta store generate a new empty element type for you
-   * @return A new element, to create it in a element type, use createEntity() 
-   * @throws MetaStoreException in case something unexpected happens.
+   * @return A new element, to create it in a element type, use createElement() 
+   * @throws MetaStoreException in case something unexpected happens in a bad way.
    */
   public IMetaStoreElement newElement() throws MetaStoreException;
 
@@ -167,12 +169,20 @@ public interface IMetaStore {
    * Have the meta store generate a new element type for you with specified ID and value.
    * @param id the id or key of the element
    * @param value the value of the element
-   * @return A new element, to create it in a element type, use createEntity() 
-   * @throws MetaStoreException in case something unexpected happens.
+   * @return A new element, to create it in a element type, use createElement() 
+   * @throws MetaStoreException in case something unexpected happens in a bad way.
    */
   public IMetaStoreElement newElement(String id, Object value) throws MetaStoreException;
 
-  
+  /**
+   * Have the meta store generate a new element owner for you with specified name and type.
+   * 
+   * @param name The owner name
+   * @param ownerType The owner type
+   * @return A newly generated element
+   * @throws MetaStoreException In case something unexpected happens in a bad way.
+   */
+  public IMetaStoreElementOwner newElementOwner(String name, MetaStoreElementOwnerType ownerType) throws MetaStoreException;
   
   
   
