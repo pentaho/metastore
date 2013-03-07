@@ -239,4 +239,5 @@ public class MemoryMetaStore extends BaseMetaStore implements IMetaStore {
       throws MetaStoreException {
     return new MemoryMetaStoreElementOwner(name, ownerType);
   }   
+   
 }
