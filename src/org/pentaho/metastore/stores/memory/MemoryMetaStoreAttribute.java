@@ -1,8 +1,10 @@
 package org.pentaho.metastore.stores.memory;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Map;
 
 import org.pentaho.metastore.api.IMetaStoreAttribute;
 
@@ -11,7 +13,7 @@ public class MemoryMetaStoreAttribute implements IMetaStoreAttribute {
   protected String id;
   protected Object value;
 
-  protected List<IMetaStoreAttribute> children;
+  protected Map<String, IMetaStoreAttribute> children;
 
   public MemoryMetaStoreAttribute() {
     this(null, null);
@@ -20,7 +22,7 @@ public class MemoryMetaStoreAttribute implements IMetaStoreAttribute {
   public MemoryMetaStoreAttribute(String id, Object value) {
     this.id = id;
     this.value = value;
-    children = new ArrayList<IMetaStoreAttribute>();
+    children = new HashMap<String, IMetaStoreAttribute>();
   }
 
   public MemoryMetaStoreAttribute(IMetaStoreAttribute attribute) {
@@ -63,27 +65,30 @@ public class MemoryMetaStoreAttribute implements IMetaStoreAttribute {
    * @return the children
    */
   public List<IMetaStoreAttribute> getChildren() {
-    return children;
+    return new ArrayList<IMetaStoreAttribute>(children.values());
   }
 
   /**
    * @param children the children to set
    */
   public void setChildren(List<IMetaStoreAttribute> children) {
-    this.children = children;
+    this.children.clear();
+    for (IMetaStoreAttribute child : children) {
+      this.children.put(child.getId(), child);
+    }
   }
 
   @Override
-  public void addChild(IMetaStoreAttribute entity) {
-    children.add(entity);
+  public void addChild(IMetaStoreAttribute attribute) {
+    children.put(attribute.getId(), attribute);
   }
 
   @Override
-  public void deleteChild(String entityId) {
-    Iterator<IMetaStoreAttribute> iterator = children.iterator();
+  public void deleteChild(String attributeId) {
+    Iterator<IMetaStoreAttribute> iterator = children.values().iterator();
     while (iterator.hasNext()) {
       IMetaStoreAttribute next = iterator.next();
-      if (next.getId().equals(entityId)) {
+      if (next.getId().equals(attributeId)) {
         iterator.remove();
         break;
       }
@@ -95,5 +100,9 @@ public class MemoryMetaStoreAttribute implements IMetaStoreAttribute {
    */
   public void clearChildren() {
     children.clear();
+  }
+  
+  public IMetaStoreAttribute getChild(String id) {
+    return children.get(id);
   }
 }

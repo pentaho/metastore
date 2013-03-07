@@ -42,4 +42,11 @@ public interface IMetaStoreAttribute {
    * Remove all child attributes
    */
   public void clearChildren();
+  
+  /**
+   * Retrieve the child attribute with a certain id
+   * @param id The id of the child attribute to retrieve
+   * @return The attribute value or null if the attribute doesn't exist.
+   */
+  public IMetaStoreAttribute getChild(String id);
 }

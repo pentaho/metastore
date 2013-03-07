@@ -1,8 +1,10 @@
 package org.pentaho.metastore.stores.xml;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Map;
 
 import org.pentaho.metastore.api.IMetaStoreAttribute;
 import org.pentaho.metastore.api.exceptions.MetaStoreException;
@@ -18,12 +20,12 @@ public class XmlMetaStoreAttribute implements IMetaStoreAttribute {
   protected String id;
   protected Object value;
 
-  protected List<IMetaStoreAttribute> children;
+  protected Map<String, IMetaStoreAttribute> children;
   
   protected String filename;
   
   public XmlMetaStoreAttribute() {
-    children = new ArrayList<IMetaStoreAttribute>();
+    children = new HashMap<String, IMetaStoreAttribute>();
     this.id = null;
     this.value = null;
   }
@@ -33,8 +35,6 @@ public class XmlMetaStoreAttribute implements IMetaStoreAttribute {
     this.id = id;
     this.value = value;
   }
-
-
   
   /**
    * Duplicate the element data into this structure.
@@ -84,7 +84,7 @@ public class XmlMetaStoreAttribute implements IMetaStoreAttribute {
 
   @Override
   public void deleteChild(String entityId) {
-    Iterator<IMetaStoreAttribute> it = children.iterator();
+    Iterator<IMetaStoreAttribute> it = children.values().iterator();
     while (it.hasNext()) {
       IMetaStoreAttribute element= it.next();
       if (element.getId().equals(entityId)) {
@@ -128,7 +128,7 @@ public class XmlMetaStoreAttribute implements IMetaStoreAttribute {
    * @return the children
    */
   public List<IMetaStoreAttribute> getChildren() {
-    return children;
+    return new ArrayList<IMetaStoreAttribute>(children.values());
   }
 
   /**
@@ -136,16 +136,24 @@ public class XmlMetaStoreAttribute implements IMetaStoreAttribute {
    *          the children to set
    */
   public void setChildren(List<IMetaStoreAttribute> children) {
-    this.children = children;
+    this.children.clear();
+    for (IMetaStoreAttribute child : children) {
+      this.children.put(child.getId(), child);
+    }
   }
 
   public void addChild(IMetaStoreAttribute element) {
-    children.add(element);
+    children.put(element.getId(), element);
   }
 
   @Override
   public void clearChildren() {
     children.clear();
+  }
+  
+  @Override
+  public IMetaStoreAttribute getChild(String id) {
+    return children.get(id);
   }
   
   /**
