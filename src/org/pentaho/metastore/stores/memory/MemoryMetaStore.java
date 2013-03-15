@@ -78,7 +78,7 @@ public class MemoryMetaStore extends BaseMetaStore implements IMetaStore {
   }
 
   @Override
-  public MemoryMetaStoreElementType getElementType(String namespace, String elementTypeId) throws MetaStoreException {
+  public IMetaStoreElementType getElementType(String namespace, String elementTypeId) throws MetaStoreException {
     MemoryMetaStoreNamespace storeNamespace = namespacesMap.get(namespace);
     if (storeNamespace!=null) {
       return storeNamespace.getTypeMap().get(elementTypeId);
@@ -87,7 +87,7 @@ public class MemoryMetaStore extends BaseMetaStore implements IMetaStore {
   }
   
   @Override
-  public MemoryMetaStoreElementType getElementTypeByName(String namespace, String elementTypeName) throws MetaStoreException {
+  public IMetaStoreElementType getElementTypeByName(String namespace, String elementTypeName) throws MetaStoreException {
     MemoryMetaStoreNamespace storeNamespace = namespacesMap.get(namespace);
     if (storeNamespace!=null) {
       for (MemoryMetaStoreElementType elementType : storeNamespace.getTypeMap().values()) {
@@ -167,7 +167,7 @@ public class MemoryMetaStore extends BaseMetaStore implements IMetaStore {
 
   @Override
   public List<IMetaStoreElement> getElements(String namespace, String elementTypeId) throws MetaStoreException {
-    MemoryMetaStoreElementType elementType = getElementType(namespace, elementTypeId);
+    MemoryMetaStoreElementType elementType = (MemoryMetaStoreElementType) getElementType(namespace, elementTypeId);
     if (elementType==null) {
       return new ArrayList<IMetaStoreElement>();
     } else {
@@ -177,7 +177,7 @@ public class MemoryMetaStore extends BaseMetaStore implements IMetaStore {
 
   @Override
   public List<String> getElementIds(String namespace, String elementTypeId) throws MetaStoreException {
-    MemoryMetaStoreElementType elementType = getElementType(namespace, elementTypeId);
+    MemoryMetaStoreElementType elementType = (MemoryMetaStoreElementType) getElementType(namespace, elementTypeId);
     
     List<String> ids = new ArrayList<String>();
     for (String id : elementType.getElementMap().keySet()) {
@@ -189,7 +189,7 @@ public class MemoryMetaStore extends BaseMetaStore implements IMetaStore {
 
   @Override
   public IMetaStoreElement getElement(String namespace, String elementTypeId, String elementId) throws MetaStoreException {
-    MemoryMetaStoreElementType elementType = getElementType(namespace, elementTypeId);
+    MemoryMetaStoreElementType elementType = (MemoryMetaStoreElementType) getElementType(namespace, elementTypeId);
     return elementType.getElementMap().get(elementId);
   }
   
@@ -205,13 +205,13 @@ public class MemoryMetaStore extends BaseMetaStore implements IMetaStore {
 
   @Override
   public void createElement(String namespace, String elementTypeId, IMetaStoreElement element) throws MetaStoreException, MetaStoreElementExistException {
-    MemoryMetaStoreElementType elementType = getElementType(namespace, elementTypeId);
+    MemoryMetaStoreElementType elementType = (MemoryMetaStoreElementType) getElementType(namespace, elementTypeId);
     elementType.getElementMap().put(element.getId(), new MemoryMetaStoreElement(element));
   }
 
   @Override
   public void deleteElement(String namespace, String elementTypeId, String elementId) throws MetaStoreException {
-    MemoryMetaStoreElementType elementType = getElementType(namespace, elementTypeId);
+    MemoryMetaStoreElementType elementType = (MemoryMetaStoreElementType) getElementType(namespace, elementTypeId);
     elementType.getElementMap().remove(elementId);
   }
 

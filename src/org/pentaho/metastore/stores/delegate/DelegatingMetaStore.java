@@ -1,6 +1,7 @@
 package org.pentaho.metastore.stores.delegate;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Iterator;
 import java.util.List;
 
@@ -28,13 +29,12 @@ import org.pentaho.metastore.api.security.MetaStoreElementOwnerType;
  * 
  * If you didn't specify an active store, all namespaces and elements in all listed meta stores are considered. 
  * 
- * That way, if you ask for the list of elements, you will get a unique list (by element ID) based on all stores 
+ * That way, if you ask for the list of elements, you will get a unique list (by element ID) based on all stores.
+ * 
  * @author matt
  *
  */
 public class DelegatingMetaStore implements IMetaStore {
-  
-  private static DelegatingMetaStore delegatingMetaStore;
   
   /** Maps the name of the metastore to the physical implementation */
   private List<IMetaStore> metaStoreList;
@@ -42,17 +42,14 @@ public class DelegatingMetaStore implements IMetaStore {
   /** The active metastore */
   private String activeMetaStoreName;
   
-  public static DelegatingMetaStore getInstance() {
-    if (delegatingMetaStore==null) {
-      delegatingMetaStore = new DelegatingMetaStore();
-    }
-    return delegatingMetaStore;
-  }
-
-  private DelegatingMetaStore() {
+  public DelegatingMetaStore() {
     metaStoreList = new ArrayList<IMetaStore>();
   }
-  
+
+  public DelegatingMetaStore(IMetaStore...stores) {
+    metaStoreList = new ArrayList<IMetaStore>(Arrays.asList(stores));
+  }
+
   public void addMetaStore(IMetaStore metaStore) {
     metaStoreList.add(metaStore);
   }
