@@ -7,8 +7,6 @@ import org.pentaho.metastore.api.exceptions.MetaStoreElementExistException;
 import org.pentaho.metastore.api.exceptions.MetaStoreElementTypeExistsException;
 import org.pentaho.metastore.api.exceptions.MetaStoreException;
 import org.pentaho.metastore.api.exceptions.MetaStoreNamespaceExistsException;
-import org.pentaho.metastore.api.listeners.MetaStoreElementListener;
-import org.pentaho.metastore.api.listeners.MetaStoreElementTypeListener;
 import org.pentaho.metastore.api.security.IMetaStoreElementOwner;
 import org.pentaho.metastore.api.security.MetaStoreElementOwnerType;
 
@@ -244,44 +242,33 @@ public interface IMetaStore {
   
   
   
-  
-  /**
+/*  
    * Add a listener to get informed of all changes to an element type
    * @throws MetaStoreException in case there is a problem in the underlying store
    * @param elementTypeListener
-   */
   public void addElementTypeListener(MetaStoreElementTypeListener elementTypeListener) throws MetaStoreException;
   
-  /**
    * @return All the element type listeners
    * @throws MetaStoreException in case there is a problem in the underlying store
-   */
   public List<MetaStoreElementTypeListener> getElementTypeListeners() throws MetaStoreException;
   
-  /**
    * Remove a element type listener
    * @param elementTypeListener The element type listener to be removed.
    * @throws MetaStoreException in case there is a problem in the underlying store
-   */
   public void removeElementTypeListener(MetaStoreElementTypeListener elementTypeListener) throws MetaStoreException;
   
-  /**
    * Add a listener to get informed of all changes to an element
    * @throws MetaStoreException in case there is a problem in the underlying store
    * @param listener
-   */
   public void addElementListener(MetaStoreElementListener listener) throws MetaStoreException;
 
-  /**
    * @return All the element listeners
    * @throws MetaStoreException in case there is a problem in the underlying store
-   */
   public List<MetaStoreElementListener> getElementListeners() throws MetaStoreException;
   
-  /**
    * Remove an element listener
    * @param elementListener The element listener to remove
    * @throws MetaStoreException in case there is a problem in the underlying store
-   */
   public void removeElementListener(MetaStoreElementListener elementListener) throws MetaStoreException;
+*/
 }

@@ -1,6 +1,8 @@
 package org.pentaho.metastore.stores.xml;
 
 import java.io.File;
+import java.io.FileOutputStream;
+import java.io.StringWriter;
 
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
@@ -79,6 +81,38 @@ public class XmlMetaStoreElementType implements IMetaStoreElementType {
   }
   
   public void save() throws MetaStoreException {
+    FileOutputStream fos = null;
+    try {
+      fos = new FileOutputStream(filename);
+      StreamResult result = new StreamResult(fos);
+      saveToStreamResult(result);
+    } catch(Exception e) {
+      throw new MetaStoreException("Unable to save XML meta store data type with file '"+filename+"'", e);
+    } finally {
+      if (fos!=null) {
+        try {
+          fos.close();
+        } catch(Exception e) {
+          throw new MetaStoreException("Unable to save XML meta store data type with file '"+filename+"' (close failed)", e);
+        }
+      }
+    }
+  }
+  
+  public String getXml() throws MetaStoreException {
+    try {
+      StringWriter stringWriter = new StringWriter();
+      StreamResult result = new StreamResult(stringWriter);
+      saveToStreamResult(result);
+      
+      return result.toString();
+    } catch(Exception e) {
+      throw new MetaStoreException("Unable to get XML form of meta store.", e);
+    }
+  }
+
+  
+  public void saveToStreamResult(StreamResult streamResult) throws MetaStoreException {
     try {
       
       DocumentBuilderFactory factory = DocumentBuilderFactory.newInstance();
@@ -98,13 +132,12 @@ public class XmlMetaStoreElementType implements IMetaStoreElementType {
       transformer.setOutputProperty(OutputKeys.INDENT, "yes");
       
       DOMSource source = new DOMSource(doc);
-      StreamResult result = new StreamResult(new File(filename));
       
       // Do the actual saving...
-      transformer.transform(source, result);
+      transformer.transform(source, streamResult);
     } catch(Exception e) {
-      throw new MetaStoreException("Unable to save XML meta store data type with file '"+filename+"'", e);
-    }
+      throw new MetaStoreException("Unable to serialize XML meta store to stream result", e);
+    } 
   }
 
 
