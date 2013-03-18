@@ -14,8 +14,6 @@ import org.pentaho.metastore.api.exceptions.MetaStoreElementExistException;
 import org.pentaho.metastore.api.exceptions.MetaStoreElementTypeExistsException;
 import org.pentaho.metastore.api.exceptions.MetaStoreException;
 import org.pentaho.metastore.api.exceptions.MetaStoreNamespaceExistsException;
-import org.pentaho.metastore.api.listeners.MetaStoreElementListener;
-import org.pentaho.metastore.api.listeners.MetaStoreElementTypeListener;
 import org.pentaho.metastore.api.security.IMetaStoreElementOwner;
 import org.pentaho.metastore.api.security.MetaStoreElementOwnerType;
 
@@ -341,7 +339,7 @@ public class DelegatingMetaStore implements IMetaStore {
   }
 
   
-
+/*
   @Override
   public void addElementTypeListener(MetaStoreElementTypeListener elementTypeListener) throws MetaStoreException {
     getActiveMetaStore().addElementTypeListener(elementTypeListener);
@@ -371,5 +369,5 @@ public class DelegatingMetaStore implements IMetaStore {
   public void removeElementListener(MetaStoreElementListener elementListener) throws MetaStoreException {
     getActiveMetaStore().removeElementListener(elementListener);
   }
-
+*/
 }
