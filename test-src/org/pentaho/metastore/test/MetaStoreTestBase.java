@@ -4,6 +4,7 @@ import java.util.List;
 
 import junit.framework.TestCase;
 
+import org.junit.Ignore;
 import org.pentaho.metastore.api.IMetaStore;
 import org.pentaho.metastore.api.IMetaStoreElement;
 import org.pentaho.metastore.api.IMetaStoreElementType;
@@ -15,6 +16,7 @@ import org.pentaho.metastore.api.security.MetaStoreElementOwnerType;
 import org.pentaho.metastore.api.security.MetaStoreObjectPermission;
 import org.pentaho.metastore.api.security.MetaStoreOwnerPermissions;
 
+@Ignore
 public class MetaStoreTestBase extends TestCase {
 
   // Namespace: Pentaho
