@@ -1,95 +1,66 @@
-<project name="metastore" default="default" basedir=".">
+<!--===========================================================================
+  This is the build file for the Metastore project.
+  
+  This build file will use the subfloor.xml file as the default build
+  process and should only override the tasks that need to differ from
+  the common build file.
+  
+  See common_build.xml for more details
+============================================================================-->
+<project name="metastore" basedir="." default="default">
 
-	  <description>
-	      metastore plugin build file
-	    </description>
+  <description>
+    This build file is used to create the API project
+    and works with the subfloor.xml file.
+  </description>
 
-	  <tstamp prefix="start"/>
+  <!-- The continuous target is used by CI ... this is the list of -->
+  <!-- tasks that the CI machine will run.                         -->
+  <!-- DO NOT change the CI machine's ant task .. change this list -->
+  <target name="continuous" 
+          depends="clean-all,resolve,publish" />
 
-	  <property file="override.properties"/>
-	  <property name="libext" value="lib"/>
+  <!-- Import the common_build.xml file which contains all the default tasks -->
+  <import file="build-res/subfloor.xml"/>
 
-	  <!-- Plugin Name -->
-	  <property name= "plugin-name" value="metastore"/> 
-
-	  <!-- system properties to use -->
-	  <property name= "cr" value="${line.separator}"/> 
-		
-	  <!-- set global properties for this build -->
+    <!--
+      AS STATED ABOVE, THE ONLY TASKS THAT SHOULD EXIST IN THIS BUILD FILE ARE
+      THE TASKS THAT NEED TO DIFFER FROM THE DEFAULT IMPLEMENTATION OF THE TASKS
+      FOUND IN common_build.xml.
+    --> 
+    
+	<target name="create-dot-classpath" depends="init,resolve,subfloor.create-dot-classpath"/>
 	
-	  <property name="src"        			location="src"/> 
-	  <property name="classes"        		location="classes"/> 
-	  <property name="samples"        		location="samples"/>
-	  <property name="distrib"        		location="distrib"/>
-	
-	  <target name="init" description="create timestamp and directories">
-    	<echo>Init...</echo>
-	  	
-	    <tstamp/>
-	    <mkdir dir="${classes}"/>
-	    <mkdir dir="${distrib}"/>
-	  </target>
+	<target name="default" depends="clean,init,resolve,dist"/>
+	    
+  <target name="set-revision">
+    <condition property="revision" value="${svn-revision}" else="1">
+        <length string="${svn-revision}" length="7" when="less"/>
+    </condition>
+    
+    <echo message="Revision set to r${revision}"/>
+  </target>
 
-	  <!--
-	       ==========================
-	            Compile the code
-	       ==========================
-	  -->
+  <!--=======================================================================
+      generate.manifest
+      
+      Creates a new manifest file if one is not specified, or updates
+      an existing manifest file if one is specified.
+      ====================================================================-->
+  <target name="generate.manifest" depends="init,set-build.id,set-revision">
+    <delete file="${dist.manifest.file}" />
+    <touch file="${dist.manifest.file}" />
+    <copy file="${manifest.file}" tofile="${dist.manifest.file}" overwrite="true" failonerror="false" />
 
-	  <target name="compile" depends="init" description="compile the source " >
-	  	<echo>Compiling metastore project...</echo>
-	    <javac debug="true" srcdir="${src}" 
-	    	   destdir="${classes}"
-                   includeantruntime="false"
-                   >
+    <manifest file="${dist.manifest.file}" mode="update">
+      <attribute name="Implementation-Title" value="${impl.title}" />
+      <attribute name="Implementation-Version" value="${impl.version}" />
+      <attribute name="Specification-Version" value="${revision}" />
+      <attribute name="Implementation-Vendor" value="${impl.vendor}" />
+      <attribute name="Implementation-ProductID" value="${impl.productID}" />
+      <attribute name="Compile-Timestamp" value="${compile.timestamp}" />
+      <attribute name="Compile-User" value="${user.name}" />
+    </manifest>
+  </target>
 
-	    	<classpath id="cpath">
-				<fileset dir="${libext}" 		includes="*.jar"/>
-		  		</classpath>
-	    </javac>
-	  </target>
-	
-	  <!-- ==========================
-	          Copy additional files
-	       ==========================
-	  -->
-
-	  <target name="copy" depends="compile" description="copy dependend libraries" >
-	  	<echo>Copying required libraries...</echo>
-	    <copy todir="${classes}"> <fileset dir="${src}" includes="**/*.png **/*.xml **/*.xsl **/*properties"/> </copy>
-	  </target>
-			
-	  <!--
-	       ==========================
-	                library
-	       ==========================
-	  -->
-		
-	  <target name="jar" depends="compile, copy" description="generate the metastore jar">
-	  	<echo>Generating the metastore jar ...</echo>
-	  	<jar 
-	    	jarfile="${distrib}/metastore.jar" 
-	    	basedir="${classes}" 
-	    	includes="**/*"/>	 
-	  </target>
-
-	<!--
-	       ==========================
-	          Default target: all
-	       ==========================
-	  -->
-	<target name="default" depends="jar" description="default = build all"/>
-
-	<!--
-	       ==========================
-	              C L E A N
-	       ==========================
-	  -->
-
-	  <target name="clean"  description="clean up generated files" >
-	    <delete dir="${classes}"/>
-	    <delete dir="${distrib}"/>
-	    <delete file="metastore.zip"/>
-	  </target>
-	
 </project>
