@@ -6,7 +6,7 @@ import org.pentaho.metastore.api.IMetaStore;
 import org.pentaho.metastore.stores.xml.XmlMetaStore;
 import org.pentaho.metastore.util.FileUtil;
 
-public class XmlMetaStoreTest extends BaseMetaStoreTest {
+public class XmlMetaStoreTest extends MetaStoreTestBase {
   
   public void test() throws Exception {
     // First make sure to delete the meta store content, from a possible previous failed execution of this test.

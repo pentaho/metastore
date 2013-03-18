@@ -15,7 +15,7 @@ import org.pentaho.metastore.api.security.MetaStoreElementOwnerType;
 import org.pentaho.metastore.api.security.MetaStoreObjectPermission;
 import org.pentaho.metastore.api.security.MetaStoreOwnerPermissions;
 
-public class BaseMetaStoreTest extends TestCase {
+public class MetaStoreTestBase extends TestCase {
 
   // Namespace: Pentaho
   //
@@ -31,9 +31,6 @@ public class BaseMetaStoreTest extends TestCase {
   //
   protected static final String CUSTOMER_DIMENSION_ID = "CustomerDimensionId";
   protected static final String CUSTOMER_DIMENSION_NAME = "Customer dimension";
-  
-  public void testNothing() throws Exception {
-  }
   
   protected void testFunctionality(IMetaStore metaStore) throws MetaStoreException {
     metaStore.createNamespace(NS_PENTAHO);
