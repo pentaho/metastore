@@ -32,6 +32,9 @@ public class BaseMetaStoreTest extends TestCase {
   protected static final String CUSTOMER_DIMENSION_ID = "CustomerDimensionId";
   protected static final String CUSTOMER_DIMENSION_NAME = "Customer dimension";
   
+  public void testNothing() throws Exception {
+  }
+  
   protected void testFunctionality(IMetaStore metaStore) throws MetaStoreException {
     metaStore.createNamespace(NS_PENTAHO);
     List<String> namespaces = metaStore.getNamespaces();
