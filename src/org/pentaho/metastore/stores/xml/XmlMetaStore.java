@@ -15,8 +15,6 @@ import org.pentaho.metastore.api.exceptions.MetaStoreElementExistException;
 import org.pentaho.metastore.api.exceptions.MetaStoreElementTypeExistsException;
 import org.pentaho.metastore.api.exceptions.MetaStoreException;
 import org.pentaho.metastore.api.exceptions.MetaStoreNamespaceExistsException;
-import org.pentaho.metastore.api.listeners.MetaStoreElementListener;
-import org.pentaho.metastore.api.listeners.MetaStoreElementTypeListener;
 import org.pentaho.metastore.api.security.IMetaStoreElementOwner;
 import org.pentaho.metastore.api.security.MetaStoreElementOwnerType;
 
@@ -167,12 +165,6 @@ public class XmlMetaStore extends BaseMetaStore implements IMetaStore {
     XmlMetaStoreElementType xmlType = new XmlMetaStoreElementType(namespace, dataType.getId(), dataType.getName(), dataType.getDescription());
     xmlType.setFilename(dataTypeFilename);
     xmlType.save();
-    
-    // Inform the data type listeners of the creation
-    //
-    for (MetaStoreElementTypeListener listener : getElementTypeListeners()) {
-      listener.dataTypeCreated(namespace, xmlType);
-    }
   }
   
   @Override
@@ -184,26 +176,17 @@ public class XmlMetaStore extends BaseMetaStore implements IMetaStore {
     }
     
     String dataTypeFilename = XmlUtil.getElementTypeFile(rootFolder, namespace, dataType.getId());
-    IMetaStoreElementType oldDataType = getElementType(namespace, dataType.getId());
     
     // Save the data type information to the XML meta store
     //
     XmlMetaStoreElementType xmlType = new XmlMetaStoreElementType(namespace, dataType.getId(), dataType.getName(), dataType.getDescription());
     xmlType.setFilename(dataTypeFilename);
     xmlType.save();
-    
-    // Inform the data type listeners of the update
-    //
-    for (MetaStoreElementTypeListener listener : getElementTypeListeners()) {
-      listener.dataTypeUpdated(namespace, oldDataType, xmlType);
-    }
   }
 
 
   @Override
   public void deleteElementType(String namespace, String dataTypeId) throws MetaStoreException, MetaStoreDependenciesExistsException {
-    IMetaStoreElementType dataType = getElementType(namespace, dataTypeId);
-    
     String dataTypeFilename = XmlUtil.getElementTypeFile(rootFolder, namespace, dataTypeId);
     File dataTypeFile = new File(dataTypeFilename);
     if (!dataTypeFile.exists()) {
@@ -231,12 +214,6 @@ public class XmlMetaStore extends BaseMetaStore implements IMetaStore {
     File dataTypeFolderFile = new File(dataTypeFolder);
     if (!dataTypeFolderFile.delete()) {
       throw new MetaStoreException("Unable to delete data type XML folder '"+dataTypeFolder+"'");
-    }
-
-    // Inform the data type listeners of the deletion
-    //
-    for (MetaStoreElementTypeListener listener : getElementTypeListeners()) {
-      listener.dataTypeDeleted(namespace, dataType);
     }
   }
   
@@ -302,11 +279,6 @@ public class XmlMetaStore extends BaseMetaStore implements IMetaStore {
     XmlMetaStoreElement xmlEntity = new XmlMetaStoreElement(entity);
     xmlEntity.setFilename(entityFilename);
     xmlEntity.save();    
-    
-    // inform the listeners
-    for (MetaStoreElementListener entityListener : getElementListeners()) {
-      entityListener.elementCreated(namespace, dataTypeId, xmlEntity);
-    }
   }
   
   public void updateElement(String namespace, String dataTypeId, IMetaStoreElement element) throws MetaStoreException {
@@ -316,24 +288,14 @@ public class XmlMetaStore extends BaseMetaStore implements IMetaStore {
       throw new MetaStoreException("The specified element to update doesn't exist with ID: '"+element.getId()+"'");
     }
     
-    IMetaStoreElement oldElement = getElement(namespace, dataTypeId, element.getId());
-
     XmlMetaStoreElement xmlElement = new XmlMetaStoreElement(element);
     xmlElement.setFilename(elementFilename);
     xmlElement.save();    
-
-    // inform the listeners after saving
-    //
-    for (MetaStoreElementListener entityListener : getElementListeners()) {
-      entityListener.elementUpdated(namespace, dataTypeId, oldElement, element);
-    }
   }
   
 
   @Override
   public void deleteElement(String namespace, String dataTypeId, String entityId) throws MetaStoreException {
-    IMetaStoreElement entity = getElement(namespace, dataTypeId, entityId);
-    
     String entityFilename = XmlUtil.getElementFile(rootFolder, namespace, dataTypeId, entityId);
     File entityFile = new File(entityFilename);
     if (!entityFile.exists()) {
@@ -342,11 +304,6 @@ public class XmlMetaStore extends BaseMetaStore implements IMetaStore {
     
     if (!entityFile.delete()) {
       throw new MetaStoreException("Unable to delete entity with ID '"+entityId+"' in filename '"+entityFilename+"'");
-    }
-
-    // inform the listeners
-    for (MetaStoreElementListener entityListener : getElementListeners()) {
-      entityListener.elementDeleted(namespace, dataTypeId, entity);
     }
   }
   

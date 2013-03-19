@@ -48,16 +48,21 @@ public class DelegatingMetaStore implements IMetaStore {
     metaStoreList = new ArrayList<IMetaStore>(Arrays.asList(stores));
   }
 
-  public void addMetaStore(IMetaStore metaStore) {
+  public void addMetaStore(IMetaStore metaStore) throws MetaStoreException {
     metaStoreList.add(metaStore);
+    setActiveMetaStoreName(metaStore.getName());
   }
   
-  public void addMetaStore(int index, IMetaStore metaStore) {
+  public void addMetaStore(int index, IMetaStore metaStore) throws MetaStoreException {
     metaStoreList.add(index, metaStore);
+    setActiveMetaStoreName(metaStore.getName());
   }
   
-  public void removeMetaStore(IMetaStore metaStore) {
+  public void removeMetaStore(IMetaStore metaStore) throws MetaStoreException {
     metaStoreList.remove(metaStore);
+    if (activeMetaStoreName!=null && metaStore.getName().equalsIgnoreCase(activeMetaStoreName)) {
+      activeMetaStoreName = null;
+    }
   }
   
   public List<IMetaStore> getMetaStoreList() {
@@ -322,52 +327,4 @@ public class DelegatingMetaStore implements IMetaStore {
   public String getDescription() throws MetaStoreException {
     return getActiveMetaStore().getDescription();
   }
-
-  @Override
-  public String getLifeCycle() throws MetaStoreException {
-    return getActiveMetaStore().getLifeCycle();
-  }
-
-  @Override
-  public String getCustomerName() throws MetaStoreException {
-    return getActiveMetaStore().getCustomerName();
-  }
-
-  @Override
-  public String getProjectName() throws MetaStoreException {
-    return getActiveMetaStore().getProjectName();
-  }
-
-  
-/*
-  @Override
-  public void addElementTypeListener(MetaStoreElementTypeListener elementTypeListener) throws MetaStoreException {
-    getActiveMetaStore().addElementTypeListener(elementTypeListener);
-  }
-
-  @Override
-  public List<MetaStoreElementTypeListener> getElementTypeListeners() throws MetaStoreException {
-    return getActiveMetaStore().getElementTypeListeners();
-  }
-
-  @Override
-  public void removeElementTypeListener(MetaStoreElementTypeListener elementTypeListener) throws MetaStoreException {
-    getActiveMetaStore().removeElementTypeListener(elementTypeListener);
-  }
-
-  @Override
-  public void addElementListener(MetaStoreElementListener listener) throws MetaStoreException {
-    getActiveMetaStore().addElementListener(listener);
-  }
-
-  @Override
-  public List<MetaStoreElementListener> getElementListeners() throws MetaStoreException {
-    return getActiveMetaStore().getElementListeners();
-  }
-
-  @Override
-  public void removeElementListener(MetaStoreElementListener elementListener) throws MetaStoreException {
-    getActiveMetaStore().removeElementListener(elementListener);
-  }
-*/
 }
