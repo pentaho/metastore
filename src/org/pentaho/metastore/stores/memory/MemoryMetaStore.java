@@ -32,6 +32,11 @@ public class MemoryMetaStore extends BaseMetaStore implements IMetaStore {
   }
   
   @Override
+  public boolean namespaceExists(String namespace) throws MetaStoreException {
+    return namespacesMap.get(namespace)!=null;
+  }
+  
+  @Override
   public boolean equals(Object obj) {
     if (this==obj) return true;
     if (!(obj instanceof MemoryMetaStore)) {

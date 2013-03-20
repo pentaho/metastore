@@ -58,6 +58,13 @@ public class XmlMetaStore extends BaseMetaStore implements IMetaStore {
     }
     return namespaces;
   }
+  
+  @Override
+  public boolean namespaceExists(String namespace) throws MetaStoreException {
+    String spaceFolder = XmlUtil.getNamespaceFolder(rootFolder, namespace);
+    File spaceFile = new File(spaceFolder);
+    return spaceFile.exists();
+  }
 
 
   @Override
@@ -192,14 +199,14 @@ public class XmlMetaStore extends BaseMetaStore implements IMetaStore {
     if (!dataTypeFile.exists()) {
       return;
     }
-    // Check if the data type has no remaining entities
-    List<IMetaStoreElement> entities = getElements(namespace, dataTypeId);
-    if (!entities.isEmpty()) {
+    // Check if the data type has no remaining elements
+    List<IMetaStoreElement> elements = getElements(namespace, dataTypeId);
+    if (!elements.isEmpty()) {
       List<String> dependencies = new ArrayList<String>();
-      for (IMetaStoreElement entity : entities) {
-        dependencies.add(entity.getId());
+      for (IMetaStoreElement element : elements) {
+        dependencies.add(element.getId());
       }
-      throw new MetaStoreDependenciesExistsException(dependencies, "Unable to delete data type with ID '"+dataTypeId+"' in namespace '"+namespace+"' because there are still entities present");
+      throw new MetaStoreDependenciesExistsException(dependencies, "Unable to delete data type with ID '"+dataTypeId+"' in namespace '"+namespace+"' because there are still elements present");
     }
     
     // Remove the datatype.xml file
@@ -219,7 +226,7 @@ public class XmlMetaStore extends BaseMetaStore implements IMetaStore {
   
   @Override
   public List<IMetaStoreElement> getElements(String namespace, String dataTypeId) throws MetaStoreException {
-    List<IMetaStoreElement> entities = new ArrayList<IMetaStoreElement>();
+    List<IMetaStoreElement> elements = new ArrayList<IMetaStoreElement>();
     
     String dataTypeFolder = XmlUtil.getElementTypeFolder(rootFolder, namespace, dataTypeId);
     File dataTypeFolderFile = new File(dataTypeFolder);
@@ -227,10 +234,10 @@ public class XmlMetaStore extends BaseMetaStore implements IMetaStore {
     for (File dataTypeFile : dataTypeFiles) {
       String entityId = dataTypeFile.getName();
       entityId=entityId.substring(0, entityId.length()-4); // remove .xml to get the ID
-      entities.add(getElement(namespace, dataTypeId, entityId));
+      elements.add(getElement(namespace, dataTypeId, entityId));
     }
     
-    return entities;
+    return elements;
   }
   
   @Override
@@ -270,13 +277,13 @@ public class XmlMetaStore extends BaseMetaStore implements IMetaStore {
     return null;
   }
   
-  public void createElement(String namespace, String dataTypeId, IMetaStoreElement entity) throws MetaStoreException, MetaStoreElementExistException {
-    String entityFilename = XmlUtil.getElementFile(rootFolder, namespace, dataTypeId, entity.getId());
+  public void createElement(String namespace, String dataTypeId, IMetaStoreElement element) throws MetaStoreException, MetaStoreElementExistException {
+    String entityFilename = XmlUtil.getElementFile(rootFolder, namespace, dataTypeId, element.getId());
     File entityFile = new File(entityFilename);
     if (entityFile.exists()) {
-      throw new MetaStoreElementExistException(getElements(namespace, dataTypeId), "The specified entity already exists with the same ID: '"+entity.getId()+"'");
+      throw new MetaStoreElementExistException(getElements(namespace, dataTypeId), "The specified element already exists with the same ID: '"+element.getId()+"'");
     }
-    XmlMetaStoreElement xmlEntity = new XmlMetaStoreElement(entity);
+    XmlMetaStoreElement xmlEntity = new XmlMetaStoreElement(element);
     xmlEntity.setFilename(entityFilename);
     xmlEntity.save();    
   }
@@ -303,7 +310,7 @@ public class XmlMetaStore extends BaseMetaStore implements IMetaStore {
     }
     
     if (!entityFile.delete()) {
-      throw new MetaStoreException("Unable to delete entity with ID '"+entityId+"' in filename '"+entityFilename+"'");
+      throw new MetaStoreException("Unable to delete element with ID '"+entityId+"' in filename '"+entityFilename+"'");
     }
   }
   

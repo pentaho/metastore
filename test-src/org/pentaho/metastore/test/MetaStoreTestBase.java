@@ -126,7 +126,7 @@ public class MetaStoreTestBase extends TestCase {
     element.addChild(metaStore.newAttribute("physical_table", "DIM_CUSTOMER"));
     IMetaStoreAttribute fieldsElement = metaStore.newAttribute("fields", null);
     element.addChild(fieldsElement);
-  
+    
     // A technical key
     //
     IMetaStoreAttribute fieldElement = metaStore.newAttribute("field_0", null);

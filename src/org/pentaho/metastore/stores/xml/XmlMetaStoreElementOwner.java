@@ -41,13 +41,15 @@ public class XmlMetaStoreElementOwner implements IMetaStoreElementOwner {
         }
       }
     }
-    
-    if (name==null) {
-      throw new MetaStoreException("An owner needs to have a name in the <security><owner><name> element");
-    }
-    if (type==null) {
-      throw new MetaStoreException("An owner needs to have a type in the <security><owner><type> element");
-    }
+
+    /*
+      if (name==null) {
+        throw new MetaStoreException("An owner needs to have a name in the <security><owner><name> element");
+      }
+      if (type==null) {
+        throw new MetaStoreException("An owner needs to have a type in the <security><owner><type> element");
+      }
+    */
   }
 
   public XmlMetaStoreElementOwner(IMetaStoreElementOwner owner) {

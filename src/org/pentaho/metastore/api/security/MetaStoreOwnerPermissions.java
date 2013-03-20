@@ -53,6 +53,9 @@ public class MetaStoreOwnerPermissions {
       Node childNode = childNodes.item(c);
       if ("owner".equals(childNode.getNodeName())) {
         owner = new XmlMetaStoreElementOwner(childNode);
+        if (owner.getName()==null || owner.getOwnerType()==null) {
+          owner=null;
+        }
       }
       if ("permissions".equals(childNode.getNodeName())) {
         NodeList pNodes = childNode.getChildNodes();

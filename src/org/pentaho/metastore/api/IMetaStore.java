@@ -41,7 +41,13 @@ public interface IMetaStore {
    */
   public void deleteNamespace(String namespace) throws MetaStoreException, MetaStoreDependenciesExistsException;
   
-  
+  /**
+   * Validate if a namespace exists.
+   * @param namespace The namespace to verify for existance
+   * @return True if the namespace exists, false otherwise
+   * @throws MetaStoreException in case there is a problem in the underlying store 
+   */
+  public boolean namespaceExists(String namespace) throws MetaStoreException;
   
   
   

@@ -111,6 +111,12 @@ public class DelegatingMetaStore implements IMetaStore {
   }
 
   @Override
+  public boolean namespaceExists(String namespace) throws MetaStoreException {
+    IMetaStore activeMetaStore = getActiveMetaStore();
+    return activeMetaStore.namespaceExists(namespace);
+  }
+  
+  @Override
   public List<String> getNamespaces() throws MetaStoreException {
     List<String> namespaces = new ArrayList<String>();
     for (IMetaStore metaStore : metaStoreList) {
