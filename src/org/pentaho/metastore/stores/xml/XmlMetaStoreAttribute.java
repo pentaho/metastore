@@ -75,7 +75,7 @@ public class XmlMetaStoreAttribute implements IMetaStoreAttribute {
           if (childNode.getNodeName().equals("child")) {
             XmlMetaStoreAttribute childElement = new XmlMetaStoreAttribute();
             childElement.loadAttribute(childNode);
-            getChildren().add(childElement);
+            addChild(childElement);
           }
         }
       }

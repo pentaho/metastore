@@ -64,7 +64,8 @@ public class XmlMetaStoreElement extends XmlMetaStoreAttribute implements IMetaS
   public XmlMetaStoreElement(String filename) throws MetaStoreException {
     this();
     File file = new File(filename);
-    this.id = file.getName();
+    id = file.getName();
+    id = id.substring(0, id.length()-4);
 
     try {
       DocumentBuilderFactory documentBuilderFactory = DocumentBuilderFactory.newInstance();
@@ -72,8 +73,8 @@ public class XmlMetaStoreElement extends XmlMetaStoreAttribute implements IMetaS
       Document document = documentBuilder.parse(file);
       Element dataTypeElement = document.getDocumentElement();
       
-      loadAttribute(dataTypeElement);
       loadElement(dataTypeElement);
+      loadAttribute(dataTypeElement);
       loadSecurity(dataTypeElement);
     } catch(Exception e) {
       throw new MetaStoreException("Unable to load XML metastore attribute from file '"+filename+"'", e);
