@@ -6,6 +6,7 @@ import junit.framework.TestCase;
 
 import org.junit.Ignore;
 import org.pentaho.metastore.api.IMetaStore;
+import org.pentaho.metastore.api.IMetaStoreAttribute;
 import org.pentaho.metastore.api.IMetaStoreElement;
 import org.pentaho.metastore.api.IMetaStoreElementType;
 import org.pentaho.metastore.api.exceptions.MetaStoreDependenciesExistsException;
@@ -70,7 +71,7 @@ public class MetaStoreTestBase extends TestCase {
       assertEquals(SHARED_DIMENSION_ID, dependencies.get(0));
     }
     
-    IMetaStoreElement customerDimension = generateCustomerDimensionElement(metaStore, NS_PENTAHO, CUSTOMER_DIMENSION_ID);
+    IMetaStoreElement customerDimension = generateCustomerDimensionElement(metaStore, elementType, NS_PENTAHO, CUSTOMER_DIMENSION_ID);
     IMetaStoreElementOwner elementOwner = customerDimension.getOwner();
     assertNotNull(elementOwner);
     assertEquals("joe", elementOwner.getName());
@@ -116,70 +117,70 @@ public class MetaStoreTestBase extends TestCase {
     assertEquals(0, namespaces.size());
   }
 
-  private IMetaStoreElement generateCustomerDimensionElement(IMetaStore metaStore, String nsPentaho, String dtSharedDimension) throws MetaStoreException {
+  private IMetaStoreElement generateCustomerDimensionElement(IMetaStore metaStore, IMetaStoreElementType elementType, String nsPentaho, String dtSharedDimension) throws MetaStoreException {
     IMetaStoreElement element = metaStore.newElement();
     element.setId(CUSTOMER_DIMENSION_ID);
     element.setName(CUSTOMER_DIMENSION_NAME);
     
-    element.addChild(metaStore.newElement("description", "This is the shared customer dimension"));
-    element.addChild(metaStore.newElement("physical_table", "DIM_CUSTOMER"));
-    IMetaStoreElement fieldsElement = metaStore.newElement("fields", null);
+    element.addChild(metaStore.newAttribute("description", "This is the shared customer dimension"));
+    element.addChild(metaStore.newAttribute("physical_table", "DIM_CUSTOMER"));
+    IMetaStoreAttribute fieldsElement = metaStore.newAttribute("fields", null);
     element.addChild(fieldsElement);
   
     // A technical key
     //
-    IMetaStoreElement fieldElement = metaStore.newElement("field_0", null);
+    IMetaStoreAttribute fieldElement = metaStore.newAttribute("field_0", null);
     fieldsElement.addChild(fieldElement);
-    fieldElement.addChild(metaStore.newElement("field_name", "Customer TK"));
-    fieldElement.addChild(metaStore.newElement("field_description", "Customer Technical key"));
-    fieldElement.addChild(metaStore.newElement("field_phyiscal_name", "customer_tk"));
-    fieldElement.addChild(metaStore.newElement("field_kettle_type", "Integer"));
+    fieldElement.addChild(metaStore.newAttribute("field_name", "Customer TK"));
+    fieldElement.addChild(metaStore.newAttribute("field_description", "Customer Technical key"));
+    fieldElement.addChild(metaStore.newAttribute("field_phyiscal_name", "customer_tk"));
+    fieldElement.addChild(metaStore.newAttribute("field_kettle_type", "Integer"));
   
     // A version field
     //
-    fieldElement = metaStore.newElement("field_1", null);
+    fieldElement = metaStore.newAttribute("field_1", null);
     fieldsElement.addChild(fieldElement);
-    fieldElement.addChild(metaStore.newElement("field_name", "version field"));
-    fieldElement.addChild(metaStore.newElement("field_description", "dimension version field (1..N)"));
-    fieldElement.addChild(metaStore.newElement("field_phyiscal_name", "version"));
-    fieldElement.addChild(metaStore.newElement("field_kettle_type", "Integer"));
+    fieldElement.addChild(metaStore.newAttribute("field_name", "version field"));
+    fieldElement.addChild(metaStore.newAttribute("field_description", "dimension version field (1..N)"));
+    fieldElement.addChild(metaStore.newAttribute("field_phyiscal_name", "version"));
+    fieldElement.addChild(metaStore.newAttribute("field_kettle_type", "Integer"));
   
     // Natural key
     //
-    fieldElement = metaStore.newElement("field_2", null);
+    fieldElement = metaStore.newAttribute("field_2", null);
     fieldsElement.addChild(fieldElement);
-    fieldElement.addChild(metaStore.newElement("field_name", "Customer ID"));
-    fieldElement.addChild(metaStore.newElement("field_description", "Customer ID as a natural key of this dimension"));
-    fieldElement.addChild(metaStore.newElement("field_phyiscal_name", "customer_id"));
-    fieldElement.addChild(metaStore.newElement("field_kettle_type", "Integer"));
+    fieldElement.addChild(metaStore.newAttribute("field_name", "Customer ID"));
+    fieldElement.addChild(metaStore.newAttribute("field_description", "Customer ID as a natural key of this dimension"));
+    fieldElement.addChild(metaStore.newAttribute("field_phyiscal_name", "customer_id"));
+    fieldElement.addChild(metaStore.newAttribute("field_kettle_type", "Integer"));
   
     // Start date
     //
-    fieldElement = metaStore.newElement("field_3", null);
+    fieldElement = metaStore.newAttribute("field_3", null);
     fieldsElement.addChild(fieldElement);
-    fieldElement.addChild(metaStore.newElement("field_name", "Start date"));
-    fieldElement.addChild(metaStore.newElement("field_description", "Start of validity of this dimension entry"));
-    fieldElement.addChild(metaStore.newElement("field_phyiscal_name", "start_date"));
-    fieldElement.addChild(metaStore.newElement("field_kettle_type", "Date"));
+    fieldElement.addChild(metaStore.newAttribute("field_name", "Start date"));
+    fieldElement.addChild(metaStore.newAttribute("field_description", "Start of validity of this dimension entry"));
+    fieldElement.addChild(metaStore.newAttribute("field_phyiscal_name", "start_date"));
+    fieldElement.addChild(metaStore.newAttribute("field_kettle_type", "Date"));
   
     // End date
     //
-    fieldElement = metaStore.newElement("field_4", null);
+    fieldElement = metaStore.newAttribute("field_4", null);
     fieldsElement.addChild(fieldElement);
-    fieldElement.addChild(metaStore.newElement("field_name", "End date"));
-    fieldElement.addChild(metaStore.newElement("field_description", "End of validity of this dimension entry"));
-    fieldElement.addChild(metaStore.newElement("field_phyiscal_name", "end_date"));
-    fieldElement.addChild(metaStore.newElement("field_kettle_type", "Date"));
+    fieldElement.addChild(metaStore.newAttribute("field_name", "End date"));
+    fieldElement.addChild(metaStore.newAttribute("field_description", "End of validity of this dimension entry"));
+    fieldElement.addChild(metaStore.newAttribute("field_phyiscal_name", "end_date"));
+    fieldElement.addChild(metaStore.newAttribute("field_kettle_type", "Date"));
     
     // A few columns...
     //
     for (int i=5;i<=10;i++) {
-      fieldElement = metaStore.newElement("field_"+i, null);
+      fieldElement = metaStore.newAttribute("field_"+i, null);
       fieldsElement.addChild(fieldElement);
-      fieldElement.addChild(metaStore.newElement("field_name", "Field name "+i));
-      fieldElement.addChild(metaStore.newElement("field_description", "Field description "+i));
-      fieldElement.addChild(metaStore.newElement("field_phyiscal_name", "physical_name_"+i));
-      fieldElement.addChild(metaStore.newElement("field_kettle_type", "String"));
+      fieldElement.addChild(metaStore.newAttribute("field_name", "Field name "+i));
+      fieldElement.addChild(metaStore.newAttribute("field_description", "Field description "+i));
+      fieldElement.addChild(metaStore.newAttribute("field_phyiscal_name", "physical_name_"+i));
+      fieldElement.addChild(metaStore.newAttribute("field_kettle_type", "String"));
     }
     
     // Some security

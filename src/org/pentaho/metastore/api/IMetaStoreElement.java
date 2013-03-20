@@ -16,6 +16,8 @@ public interface IMetaStoreElement extends IMetaStoreAttribute {
   public String getName();
   public void setName(String name);
   
+  public IMetaStoreElementType getElementType();
+  
   public IMetaStoreElementOwner getOwner();
   public void setOwner(IMetaStoreElementOwner owner);
   

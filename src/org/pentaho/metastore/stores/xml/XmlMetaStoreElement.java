@@ -13,6 +13,7 @@ import javax.xml.transform.dom.DOMSource;
 import javax.xml.transform.stream.StreamResult;
 
 import org.pentaho.metastore.api.IMetaStoreElement;
+import org.pentaho.metastore.api.IMetaStoreElementType;
 import org.pentaho.metastore.api.exceptions.MetaStoreException;
 import org.pentaho.metastore.api.security.IMetaStoreElementOwner;
 import org.pentaho.metastore.api.security.MetaStoreOwnerPermissions;
@@ -26,17 +27,21 @@ public class XmlMetaStoreElement extends XmlMetaStoreAttribute implements IMetaS
   public static final String XML_TAG = "element";
 
   protected String name;
+
+  protected IMetaStoreElementType elementType;
   
   protected XmlMetaStoreElementOwner owner;
   protected List<MetaStoreOwnerPermissions> ownerPermissionsList;
+
 
   public XmlMetaStoreElement() {
     super();
     this.ownerPermissionsList = new ArrayList<MetaStoreOwnerPermissions>();
   }
   
-  public XmlMetaStoreElement(String id, Object value) {
+  public XmlMetaStoreElement(IMetaStoreElementType elementType, String id, Object value) {
     super(id, value);
+    this.elementType = elementType;
     this.ownerPermissionsList = new ArrayList<MetaStoreOwnerPermissions>();
   }
   
@@ -226,5 +231,13 @@ public class XmlMetaStoreElement extends XmlMetaStoreAttribute implements IMetaS
 
   public void setName(String name) {
     this.name = name;
+  }
+
+  public IMetaStoreElementType getElementType() {
+    return elementType;
+  }
+
+  public void setElementType(IMetaStoreElementType elementType) {
+    this.elementType = elementType;
   }
 }

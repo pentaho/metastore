@@ -226,8 +226,8 @@ public class MemoryMetaStore extends BaseMetaStore implements IMetaStore {
   }
 
   @Override
-  public IMetaStoreElement newElement(String id, Object value) throws MetaStoreException {
-    return new MemoryMetaStoreElement(id, value);
+  public IMetaStoreElement newElement(IMetaStoreElementType elementType, String id, Object value) throws MetaStoreException {
+    return new MemoryMetaStoreElement(elementType, id, value);
   }
 
   public IMetaStoreAttribute newAttribute(String id, Object value) throws MetaStoreException {

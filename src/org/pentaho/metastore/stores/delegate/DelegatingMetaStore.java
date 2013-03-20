@@ -303,8 +303,8 @@ public class DelegatingMetaStore implements IMetaStore {
   }
 
   @Override
-  public IMetaStoreElement newElement(String id, Object value) throws MetaStoreException {
-    return getActiveMetaStore().newElement(id, value);
+  public IMetaStoreElement newElement(IMetaStoreElementType elementType, String id, Object value) throws MetaStoreException {
+    return getActiveMetaStore().newElement(elementType, id, value);
   }
   
   public IMetaStoreAttribute newAttribute(String id, Object value) throws MetaStoreException {

@@ -4,6 +4,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import org.pentaho.metastore.api.IMetaStoreElement;
+import org.pentaho.metastore.api.IMetaStoreElementType;
 import org.pentaho.metastore.api.security.IMetaStoreElementOwner;
 import org.pentaho.metastore.api.security.MetaStoreOwnerPermissions;
 import org.pentaho.metastore.stores.xml.XmlMetaStoreElementOwner;
@@ -11,15 +12,19 @@ import org.pentaho.metastore.stores.xml.XmlMetaStoreElementOwner;
 public class MemoryMetaStoreElement extends MemoryMetaStoreAttribute implements IMetaStoreElement {
 
   protected String name;
+
+  protected IMetaStoreElementType elementType;
+  
   protected IMetaStoreElementOwner owner;
   protected List<MetaStoreOwnerPermissions> ownerPermissionsList;
   
   public MemoryMetaStoreElement() {
-    this(null, null);
+    this(null, null, null);
   }
 
-  public MemoryMetaStoreElement(String id, Object value) {
+  public MemoryMetaStoreElement(IMetaStoreElementType elementType, String id, Object value) {
     super(id, value);
+    this.elementType = elementType;
     
     this.ownerPermissionsList = new ArrayList<MetaStoreOwnerPermissions>();
   }
@@ -27,6 +32,7 @@ public class MemoryMetaStoreElement extends MemoryMetaStoreAttribute implements 
   public MemoryMetaStoreElement(IMetaStoreElement element) {
     super(element);
     this.name = element.getName();
+    this.elementType = element.getElementType();
     this.ownerPermissionsList = new ArrayList<MetaStoreOwnerPermissions>();
     if (element.getOwner()!=null) {
       this.owner = new XmlMetaStoreElementOwner(element.getOwner());
@@ -60,5 +66,11 @@ public class MemoryMetaStoreElement extends MemoryMetaStoreAttribute implements 
     this.name = name;
   }
 
-  
+  public IMetaStoreElementType getElementType() {
+    return elementType;
+  }
+
+  public void setElementType(IMetaStoreElementType elementType) {
+    this.elementType = elementType;
+  }  
 }

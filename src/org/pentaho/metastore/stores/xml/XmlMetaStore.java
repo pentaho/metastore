@@ -329,12 +329,16 @@ public class XmlMetaStore extends BaseMetaStore implements IMetaStore {
    * @return the non-hidden folders in the specified folder
    */
   protected File[] listFolders(File folder) {
-    return folder.listFiles(new FileFilter() {
+    File[] folders = folder.listFiles(new FileFilter() {
       @Override
       public boolean accept(File file) {
         return !file.isHidden() && file.isDirectory();
       }
     });  
+    if (folders==null) {
+      folders = new File[] { };
+    }
+    return folders;
   }
 
   /**
@@ -362,8 +366,8 @@ public class XmlMetaStore extends BaseMetaStore implements IMetaStore {
   }
 
   @Override
-  public IMetaStoreElement newElement(String id, Object value) throws MetaStoreException {
-    return new XmlMetaStoreElement(id, value);
+  public IMetaStoreElement newElement(IMetaStoreElementType elementType, String id, Object value) throws MetaStoreException {
+    return new XmlMetaStoreElement(elementType, id, value);
   }
   
   @Override

@@ -183,12 +183,13 @@ public interface IMetaStore {
 
   /**
    * Have the meta store generate a new element for you with specified ID and value.
+   * @param elementType the type of the element to instantiate.
    * @param id the id or key of the element
    * @param value the value of the element
    * @return A new element, to create it in a element type, use createElement() 
    * @throws MetaStoreException in case something unexpected happens in a bad way.
    */
-  public IMetaStoreElement newElement(String id, Object value) throws MetaStoreException;
+  public IMetaStoreElement newElement(IMetaStoreElementType elementType, String id, Object value) throws MetaStoreException;
 
   /**
    * Create a new element attribute
