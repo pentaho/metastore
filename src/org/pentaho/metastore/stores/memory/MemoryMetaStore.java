@@ -213,6 +213,12 @@ public class MemoryMetaStore extends BaseMetaStore implements IMetaStore {
     MemoryMetaStoreElementType elementType = (MemoryMetaStoreElementType) getElementType(namespace, elementTypeId);
     elementType.getElementMap().put(element.getId(), new MemoryMetaStoreElement(element));
   }
+  
+  @Override
+  public void updateElement(String namespace, String elementTypeId, String elementId, IMetaStoreElement element) throws MetaStoreException {
+    MemoryMetaStoreElementType elementType = (MemoryMetaStoreElementType) getElementType(namespace, elementTypeId);
+    elementType.getElementMap().put(elementId, new MemoryMetaStoreElement(element));
+  }
 
   @Override
   public void deleteElement(String namespace, String elementTypeId, String elementId) throws MetaStoreException {
