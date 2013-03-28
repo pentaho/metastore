@@ -1,16 +1,25 @@
 package org.pentaho.metastore.api;
 
+/**
+ * This class implements common and/or default functionality between IMetaStore instances
+ */
+public abstract class BaseMetaStore implements IMetaStore {
 
-public class BaseMetaStore {
-
+  /** The name of this metastore. */
   protected String name;
 
+  /** The description of this metastore. */
   protected String description;
 
+  /**
+   * Instantiates a new base meta store.
+   */
   public BaseMetaStore() {
   }
 
   /**
+   * Gets the name of this metastore.
+   *
    * @return the name
    */
   public String getName() {
@@ -18,6 +27,8 @@ public class BaseMetaStore {
   }
 
   /**
+   * Sets the name of this metastore.
+   *
    * @param name the name to set
    */
   public void setName(String name) {
@@ -25,13 +36,17 @@ public class BaseMetaStore {
   }
 
   /**
-   * @return the description
+   * Gets the description of this metastore.
+   *
+   * @return the description of this metastore
    */
   public String getDescription() {
     return description;
   }
 
   /**
+   * Sets the description for this metastore.
+   *
    * @param description the description to set
    */
   public void setDescription(String description) {
