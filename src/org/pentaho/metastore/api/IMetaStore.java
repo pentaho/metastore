@@ -169,7 +169,16 @@ public interface IMetaStore {
    */
   public void deleteElement(String namespace, String elementTypeId, String elementId) throws MetaStoreException;
   
-  
+  /**
+   * Update this element in the metastore with the specified namespace and element type.
+   * @param namespace The namespace to reference
+   * @param elementTypeId The ID of the element type to update
+   * @param elementId The id of the old version of the element to update, make sure it has the ID of an existing element!
+   * @param element The element to update, make sure it has the ID of an existing element!
+   * @throws MetaStoreException in case there is a problem in the underlying store
+   */
+  public void updateElement(String namespace, String elementTypeId, String elementId, IMetaStoreElement element) throws MetaStoreException;
+
   
   /**
    * Have the meta store generate a new element type for you in the specified namespace  

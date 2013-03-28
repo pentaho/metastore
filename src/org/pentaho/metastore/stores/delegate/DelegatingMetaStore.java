@@ -140,65 +140,51 @@ public class DelegatingMetaStore implements IMetaStore {
     IMetaStore metaStore = getActiveMetaStore();
     metaStore.deleteNamespace(namespace);
   }
+  
+  private IMetaStoreElementType getElementTypeByName(List<IMetaStoreElementType> types, String name) {
+    for (IMetaStoreElementType type : types) {
+      if (type.getName().equalsIgnoreCase(name)) {
+        return type;
+      }
+    }
+    return null;
+  }
 
   @Override
   public List<IMetaStoreElementType> getElementTypes(String namespace) throws MetaStoreException {
-    if (activeMetaStoreName==null) {
-      List<IMetaStoreElementType> elementTypes = new ArrayList<IMetaStoreElementType>();
-      for (IMetaStore metaStore : metaStoreList) {
-        for (IMetaStoreElementType elementType :  metaStore.getElementTypes(namespace)) {
-          if (!elementTypes.contains(elementType)) {
-            elementTypes.add(elementType);
-          }
+    List<IMetaStoreElementType> elementTypes = new ArrayList<IMetaStoreElementType>();
+    for (IMetaStore metaStore : metaStoreList) {
+      for (IMetaStoreElementType elementType :  metaStore.getElementTypes(namespace)) {
+        if (getElementTypeByName(elementTypes, elementType.getName())==null) {
+          elementTypes.add(elementType);
         }
       }
-      return elementTypes;
-    } else {
-      return getActiveMetaStore().getElementTypes(namespace);
     }
+    return elementTypes;
   }
 
   @Override
   public List<String> getElementTypeIds(String namespace) throws MetaStoreException {
-    if (activeMetaStoreName==null) {
-      List<String> elementTypeIds = new ArrayList<String>();
-      for (IMetaStore metaStore : metaStoreList) {
-        for (IMetaStoreElementType elementType :  metaStore.getElementTypes(namespace)) {
-          if (!elementTypeIds.contains(elementType.getId())) {
-            elementTypeIds.add(elementType.getId());
-          }
-        }
-      }
-      return elementTypeIds;
-    } else {
-      return getActiveMetaStore().getElementTypeIds(namespace);
+    List<String> elementTypeIds = new ArrayList<String>();
+    for (IMetaStoreElementType elementType :  getElementTypes(namespace)) {
+      elementTypeIds.add(elementType.getId());
     }
+    return elementTypeIds;
   }
 
   @Override
   public IMetaStoreElementType getElementType(String namespace, String elementTypeId) throws MetaStoreException {
-    if (activeMetaStoreName==null) {
-      for (IMetaStore metaStore : metaStoreList) {
-        IMetaStoreElementType elementType = metaStore.getElementType(namespace, elementTypeId);
-        if (elementType!=null) {
-          return elementType;
-        }
+    for (IMetaStoreElementType type : getElementTypes(namespace)) {
+      if (type.getId().equals(elementTypeId)) {
+        return type;
       }
-      return null;
-    } else {
-      IMetaStore metaStore = getActiveMetaStore();
-      return metaStore.getElementType(namespace, elementTypeId);
     }
+    return null;
   }
   
   @Override
   public IMetaStoreElementType getElementTypeByName(String namespace, String elementTypeName) throws MetaStoreException {
-    for (IMetaStoreElementType elementType : getElementTypes(namespace)) {
-      if (elementType.getName().equalsIgnoreCase(elementTypeName)) {
-        return elementType;
-      }
-    }
-    return null;
+    return getElementTypeByName(getElementTypes(namespace), elementTypeName);
   }
 
   @Override
@@ -219,73 +205,49 @@ public class DelegatingMetaStore implements IMetaStore {
     metaStore.deleteElementType(namespace, elementTypeId);
   }
 
+  private IMetaStoreElement getElementByName(List<IMetaStoreElement> elements, String name) {
+    for (IMetaStoreElement element : elements) {
+      if (element.getName().equalsIgnoreCase(name)) {
+        return element;
+      }
+    }
+    return null;
+  }
   @Override
   public List<IMetaStoreElement> getElements(String namespace, String elementTypeId) throws MetaStoreException {
-    if (activeMetaStoreName==null) {
-      List<IMetaStoreElement> elements = new ArrayList<IMetaStoreElement>();
-      for (IMetaStore metaStore : metaStoreList) {
-        for (IMetaStoreElement element :  metaStore.getElements(namespace, elementTypeId)) {
-          if (!elements.contains(element)) {
-            elements.add(element);
-          }
+    List<IMetaStoreElement> elements = new ArrayList<IMetaStoreElement>();
+    for (IMetaStore metaStore : metaStoreList) {
+      for (IMetaStoreElement element :  metaStore.getElements(namespace, elementTypeId)) {
+        if (getElementByName(elements, element.getName())==null) {
+          elements.add(element);
         }
       }
-      return elements;
-    } else {
-      return getActiveMetaStore().getElements(namespace, elementTypeId);
     }
+    return elements;
   }
 
   @Override
   public List<String> getElementIds(String namespace, String elementTypeId) throws MetaStoreException {
-    if (activeMetaStoreName==null) {
-      List<String> elementIds = new ArrayList<String>();
-      for (IMetaStore metaStore : metaStoreList) {
-        for (String id :  metaStore.getElementIds(namespace, elementTypeId)) {
-          if (!elementIds.contains(id)) {
-            elementIds.add(id);
-          }
-        }
-      }
-      return elementIds;
-    } else {
-      return getActiveMetaStore().getElementIds(namespace, elementTypeId);
+    List<String> elementIds = new ArrayList<String>();
+    for (IMetaStoreElement element : getElements(namespace, elementTypeId)) {
+      elementIds.add(element.getId());
     }
+    return elementIds;
   }
 
   @Override
   public IMetaStoreElement getElement(String namespace, String elementTypeId, String elementId) throws MetaStoreException {
-    if (activeMetaStoreName==null) {
-      for (IMetaStore metaStore : metaStoreList) {
-        IMetaStoreElement element = metaStore.getElement(namespace, elementTypeId, elementId);
-        if (element!=null) {
-          return element;
-        }
+    for (IMetaStoreElement element : getElements(namespace, elementTypeId)) {
+      if (element.getId().equals(elementId)) {
+        return element;
       }
-      return null;
-    } else {
-      return getActiveMetaStore().getElement(namespace, elementTypeId, elementId);
     }
+    return null;
   }
   
   @Override
   public IMetaStoreElement getElementByName(String namespace, IMetaStoreElementType elementType, String name) throws MetaStoreException {
-    if (activeMetaStoreName==null) {
-      for (IMetaStore metaStore : metaStoreList) {
-        for (IMetaStoreElement element : metaStore.getElements(namespace, elementType.getId())) {
-          if (element.getName()!=null && element.getName().equalsIgnoreCase(name)) {
-            return element;
-          }
-        }
-      }
-    } else {
-      for (IMetaStoreElement element : getElements(namespace, elementType.getId())) {
-        if (element.getName()!=null && element.getName().equalsIgnoreCase(name)) {
-          return element;
-        }
-      }
-    }
-    return null;
+    return getElementByName(getElements(namespace, elementType.getId()), name);
   }
 
   @Override
@@ -298,6 +260,11 @@ public class DelegatingMetaStore implements IMetaStore {
     getActiveMetaStore().deleteElement(namespace, elementTypeId, elementId);
   }
 
+  @Override
+  public void updateElement(String namespace, String elementTypeId, String elementId, IMetaStoreElement element) throws MetaStoreException {
+    getActiveMetaStore().updateElement(namespace, elementTypeId, elementId, element);
+  }
+  
   @Override
   public IMetaStoreElementType newElementType(String namespace) throws MetaStoreException {
     return getActiveMetaStore().newElementType(namespace);
