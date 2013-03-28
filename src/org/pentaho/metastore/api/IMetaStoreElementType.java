@@ -3,7 +3,7 @@ package org.pentaho.metastore.api;
 import org.pentaho.metastore.api.exceptions.MetaStoreException;
 
 /**
- * This interface is used to describe the object that is stored in the meta store.
+ * This interface is used to describe objects of this type that are stored in the metastore.
  * 
  * @author matt
  *
@@ -11,51 +11,65 @@ import org.pentaho.metastore.api.exceptions.MetaStoreException;
 public interface IMetaStoreElementType {
   
   /**
-   * @return The namespace to which this data type belongs.
+   * Gets the namespace associated with the element type.
+   *
+   * @return The namespace to which the element type belongs.
    */
   public String getNamespace();
   
   /**
+   * Associates the specified namespace for the element type.
+   *
    * @param namespace The namespace to set.
    */
   public void setNamespace(String namespace);
   
   /**
-   * @return The ID of the data type, unique in a namespace
+   * Gets the identifier of the element type. This identifier is unique in a namespace.
+   *
+   * @return The ID of the element type, unique in a namespace
    */
   public String getId();
   
   /**
-   * Set an ID on a data type
-   * @param id
+   * Set the identifier for this element type.
+   *
+   * @param id the id to set
    */
   public void setId(String id);
   
   /**
-   * @return The name of the data type
+   * Gets the name of the element type.
+   *
+   * @return The name of the element type
    */
   public String getName();
   
   /**
-   * @param name The data type name to set
+   * Sets the name for the element type.
+   *
+   * @param name The element type name to set
    */
   public void setName(String name);
   
   /**
-   * @return The description of the data type
+   * Gets the description of the element type.
+   *
+   * @return The description of the element type
    */
   public String getDescription();
   
   /**
-   * The description to set.
-   * @param description
+   * Sets the description of the element type.
+   *
+   * @param description the description to set
    */
   public void setDescription(String description);
   
   /**
-   * Persist the data type definition
+   * Persists the element type definition to the underlying metastore.
+   *
    * @throws MetaStoreException In case there is an error in the underlying store.
-   * 
    */
   public void save() throws MetaStoreException;
 }
