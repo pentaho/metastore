@@ -13,16 +13,60 @@ import org.pentaho.metastore.api.security.MetaStoreOwnerPermissions;
  */
 public interface IMetaStoreElement extends IMetaStoreAttribute {
 
+  /**
+   * Gets the name of this element.
+   *
+   * @return the name of the element
+   */
   public String getName();
+  
+  /**
+   * Sets the name for this element.
+   *
+   * @param name the new name
+   */
   public void setName(String name);
   
+  /**
+   * Gets the element type.
+   *
+   * @return the element type
+   */
   public IMetaStoreElementType getElementType();
+  
+  /**
+   * Sets the element type.
+   *
+   * @param elementType the new element type
+   */
   public void setElementType(IMetaStoreElementType elementType);
   
+  /**
+   * Gets the owner of this element.
+   *
+   * @return the owner
+   */
   public IMetaStoreElementOwner getOwner();
+  
+  /**
+   * Sets the owner for this element.
+   *
+   * @param owner the new owner
+   */
   public void setOwner(IMetaStoreElementOwner owner);
   
+  /**
+   * Gets the owner permissions list for this element.
+   *
+   * @return the owner permissions list
+   */
   public List<MetaStoreOwnerPermissions> getOwnerPermissionsList(); 
+  
+  /**
+   * Sets the owner permissions list for this element.
+   *
+   * @param ownerPermissions the new owner permissions list
+   */
   public void setOwnerPermissionsList(List<MetaStoreOwnerPermissions> ownerPermissions);
   
 }
