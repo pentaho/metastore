@@ -1,5 +1,8 @@
 package org.pentaho.metastore.api;
 
+import org.pentaho.metastore.api.security.Base64TwoWayPasswordEncoder;
+import org.pentaho.metastore.api.security.ITwoWayPasswordEncoder;
+
 /**
  * This class implements common and/or default functionality between IMetaStore instances
  */
@@ -11,6 +14,7 @@ public abstract class BaseMetaStore implements IMetaStore {
   /** The description of this metastore. */
   protected String description;
   
+  protected ITwoWayPasswordEncoder passwordEncoder;
   /**
    * Instantiates a new base meta store.
    */
