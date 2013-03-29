@@ -1,13 +1,19 @@
 package org.pentaho.metastore.api;
 
+import org.pentaho.metastore.api.security.Base64TwoWayPasswordEncoder;
+import org.pentaho.metastore.api.security.ITwoWayPasswordEncoder;
+
 
 public class BaseMetaStore {
 
   protected String name;
 
   protected String description;
+  
+  protected ITwoWayPasswordEncoder passwordEncoder;
 
   public BaseMetaStore() {
+    passwordEncoder = new Base64TwoWayPasswordEncoder();
   }
 
   /**
@@ -36,6 +42,14 @@ public class BaseMetaStore {
    */
   public void setDescription(String description) {
     this.description = description;
+  }
+
+  public ITwoWayPasswordEncoder getTwoWayPasswordEncoder() {
+    return passwordEncoder;
+  }
+
+  public void setTwoWayPasswordEncoder(ITwoWayPasswordEncoder passwordEncoder) {
+    this.passwordEncoder = passwordEncoder;
   }
 
 }

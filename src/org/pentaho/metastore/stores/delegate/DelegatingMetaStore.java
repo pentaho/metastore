@@ -14,7 +14,9 @@ import org.pentaho.metastore.api.exceptions.MetaStoreElementExistException;
 import org.pentaho.metastore.api.exceptions.MetaStoreElementTypeExistsException;
 import org.pentaho.metastore.api.exceptions.MetaStoreException;
 import org.pentaho.metastore.api.exceptions.MetaStoreNamespaceExistsException;
+import org.pentaho.metastore.api.security.Base64TwoWayPasswordEncoder;
 import org.pentaho.metastore.api.security.IMetaStoreElementOwner;
+import org.pentaho.metastore.api.security.ITwoWayPasswordEncoder;
 import org.pentaho.metastore.api.security.MetaStoreElementOwnerType;
 
 /**
@@ -35,13 +37,17 @@ import org.pentaho.metastore.api.security.MetaStoreElementOwnerType;
 public class DelegatingMetaStore implements IMetaStore {
   
   /** Maps the name of the metastore to the physical implementation */
-  private List<IMetaStore> metaStoreList;
+  protected List<IMetaStore> metaStoreList;
   
   /** The active metastore */
-  private String activeMetaStoreName;
+  protected String activeMetaStoreName;
+  
+  /** The two way password encoder to use */
+  protected ITwoWayPasswordEncoder passwordEncoder;
   
   public DelegatingMetaStore() {
     metaStoreList = new ArrayList<IMetaStore>();
+    passwordEncoder = new Base64TwoWayPasswordEncoder();
   }
 
   public DelegatingMetaStore(IMetaStore...stores) {
@@ -299,5 +305,15 @@ public class DelegatingMetaStore implements IMetaStore {
   @Override
   public String getDescription() throws MetaStoreException {
     return getActiveMetaStore().getDescription();
+  }
+
+  @Override
+  public void setTwoWayPasswordEncoder(ITwoWayPasswordEncoder encoder) {
+    this.passwordEncoder = encoder;
+  }
+
+  @Override
+  public ITwoWayPasswordEncoder getTwoWayPasswordEncoder() {
+    return passwordEncoder;
   }
 }

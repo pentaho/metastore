@@ -8,6 +8,7 @@ import org.pentaho.metastore.api.exceptions.MetaStoreElementTypeExistsException;
 import org.pentaho.metastore.api.exceptions.MetaStoreException;
 import org.pentaho.metastore.api.exceptions.MetaStoreNamespaceExistsException;
 import org.pentaho.metastore.api.security.IMetaStoreElementOwner;
+import org.pentaho.metastore.api.security.ITwoWayPasswordEncoder;
 import org.pentaho.metastore.api.security.MetaStoreElementOwnerType;
 
 /**
@@ -237,4 +238,13 @@ public interface IMetaStore {
    */
   public String getDescription() throws MetaStoreException;
   
+  /**
+   * @param encoder The password encoder to use in this MetaStore 
+   */
+  public void setTwoWayPasswordEncoder(ITwoWayPasswordEncoder encoder);
+  
+  /**
+   * @return The password encoder used by the MetaStore.
+   */
+  public ITwoWayPasswordEncoder getTwoWayPasswordEncoder();
 }

@@ -16,6 +16,8 @@
   </publications>  
     
   <dependencies defaultconf="default->default">
+
+    <dependency org="commons-codec"       name="commons-codec"       rev="1.5"              transitive="false"/>
     <dependency org="junit"               name="junit"               rev="4.7"              transitive="false" conf="test->default"/>          
   </dependencies>
 </ivy-module>
