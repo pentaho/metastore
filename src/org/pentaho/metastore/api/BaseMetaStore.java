@@ -15,6 +15,7 @@ public abstract class BaseMetaStore implements IMetaStore {
   protected String description;
   
   protected ITwoWayPasswordEncoder passwordEncoder;
+  
   /**
    * Instantiates a new base meta store.
    */

@@ -1,7 +1,13 @@
 package org.pentaho.metastore.util;
 
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
+
 import org.pentaho.metastore.api.IMetaStore;
 import org.pentaho.metastore.api.IMetaStoreAttribute;
+import org.pentaho.metastore.api.IMetaStoreElement;
+import org.pentaho.metastore.api.IMetaStoreElementType;
 import org.pentaho.metastore.api.exceptions.MetaStoreException;
 
 /**
@@ -40,4 +46,27 @@ public class MetaStoreUtil {
     return attribute.getValue().toString();
   }
   
+  /**
+   * Get a sorted list of element names for the specified element type in the given namespace.
+   * 
+   * @param namespace
+   * @param metaStore
+   * @param elementType
+   * @return
+   * @throws MetaStoreException
+   */
+  public String[] getElementNames(String namespace, IMetaStore metaStore, IMetaStoreElementType elementType) throws MetaStoreException {
+    List<String> names = new ArrayList<String>();
+    
+    List<IMetaStoreElement> elements = metaStore.getElements(namespace, elementType.getId());
+    for (IMetaStoreElement element :  elements) {
+      names.add(element.getName());
+    }
+    
+    // Alphabetical sort
+    //
+    Collections.sort(names);
+    
+    return names.toArray(new String[names.size()]);
+  }
 }
