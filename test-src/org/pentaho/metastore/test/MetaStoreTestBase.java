@@ -55,6 +55,7 @@ public class MetaStoreTestBase extends TestCase {
     } catch(MetaStoreElementTypeExistsException e) {
       // OK!
     } catch(MetaStoreException e) {
+      e.printStackTrace();
       fail("Create exception needs to be MetaStoreDataTypesExistException");
     }
     
