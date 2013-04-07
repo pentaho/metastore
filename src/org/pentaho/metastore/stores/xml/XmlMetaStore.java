@@ -78,6 +78,7 @@ public class XmlMetaStore extends BaseMetaStore implements IMetaStore {
     }
   }
 
+
   @Override
   public synchronized void createNamespace(String namespace) throws MetaStoreException, MetaStoreNamespaceExistsException {
     lockStore();
@@ -123,6 +124,7 @@ public class XmlMetaStore extends BaseMetaStore implements IMetaStore {
       unlockStore();
     }
   }
+
   @Override
   public synchronized List<IMetaStoreElementType> getElementTypes(String namespace) throws MetaStoreException {
     return getElementTypes(namespace, true);
@@ -198,6 +200,8 @@ public class XmlMetaStore extends BaseMetaStore implements IMetaStore {
     return new XmlMetaStoreAttribute(id, value);
   }
 
+  
+
   @Override
   public synchronized void createElementType(String namespace, IMetaStoreElementType elementType) throws MetaStoreException,
       MetaStoreElementTypeExistsException {
@@ -255,6 +259,7 @@ public class XmlMetaStore extends BaseMetaStore implements IMetaStore {
       unlockStore();
     }
   }
+
 
   @Override
   public synchronized void deleteElementType(String namespace, String elementTypeId) throws MetaStoreException,
@@ -341,6 +346,7 @@ public class XmlMetaStore extends BaseMetaStore implements IMetaStore {
     }
   }
 
+
   @Override
   public IMetaStoreElement getElement(String namespace, String elementTypeId, String elementId)
       throws MetaStoreException {
@@ -398,6 +404,10 @@ public class XmlMetaStore extends BaseMetaStore implements IMetaStore {
       element.setId(xmlElement.getName());
     } finally {
       unlockStore();
+      }    
+
+    } finally {
+      unlockStore();
     }
   }
 
@@ -419,6 +429,7 @@ public class XmlMetaStore extends BaseMetaStore implements IMetaStore {
       unlockStore();
     }
   }
+  
 
   @Override
   public synchronized void deleteElement(String namespace, String elementTypeId, String elementId) throws MetaStoreException {
@@ -438,6 +449,9 @@ public class XmlMetaStore extends BaseMetaStore implements IMetaStore {
       unlockStore();
     }
   }
+  
+  
+  
 
   /**
    * @return the rootFolder
@@ -486,6 +500,7 @@ public class XmlMetaStore extends BaseMetaStore implements IMetaStore {
     }
     return files;
   }
+
 
   @Override
   public IMetaStoreElementType newElementType(String namespace) throws MetaStoreException {
