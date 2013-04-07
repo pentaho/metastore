@@ -5,6 +5,7 @@ import java.io.FileFilter;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.UUID;
 
 import org.pentaho.metastore.api.BaseMetaStore;
 import org.pentaho.metastore.api.IMetaStore;
@@ -26,7 +27,7 @@ public class XmlMetaStore extends BaseMetaStore implements IMetaStore {
   private File rootFile;
 
   public XmlMetaStore() throws MetaStoreException {
-    this(System.getProperty("java.io.tmpdir"));
+    this(System.getProperty("java.io.tmpdir")+File.separator+UUID.randomUUID());
   }
 
   public XmlMetaStore(String rootFolder) throws MetaStoreException {
@@ -34,7 +35,7 @@ public class XmlMetaStore extends BaseMetaStore implements IMetaStore {
 
     rootFile = new File(this.rootFolder);
     if (!rootFile.exists()) {
-      if (!rootFile.mkdir()) {
+      if (!rootFile.mkdirs()) {
         throw new MetaStoreException("Unable to create XML meta store root folder: " + this.rootFolder);
       }
     }

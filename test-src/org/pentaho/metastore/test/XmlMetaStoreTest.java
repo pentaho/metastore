@@ -20,16 +20,14 @@ import org.pentaho.metastore.util.FileUtil;
 public class XmlMetaStoreTest extends MetaStoreTestBase {
   
   public void test() throws Exception {
-    // First make sure to delete the meta store content, from a possible previous failed execution of this test.
-    // This is the only XmlMetaStore specific code of the unit test.
-    //
-    File storeFolder = new File(new XmlMetaStore().getRootFolder()); 
-    FileUtil.cleanFolder(storeFolder, false);
-
     // Run the test against the XML metadata store.
     //
-    IMetaStore metaStore = new XmlMetaStore();
-    super.testFunctionality(metaStore);
+    XmlMetaStore metaStore = new XmlMetaStore();
+    try {
+      super.testFunctionality(metaStore);
+    } finally {
+      FileUtil.cleanFolder(new File(metaStore.getRootFolder()).getParentFile(), true);
+    }
   }
   
   public void testParallelDifferentStores() throws Exception {
@@ -67,42 +65,42 @@ public class XmlMetaStoreTest extends MetaStoreTestBase {
     }
 
     for (XmlMetaStore store : stores) {
-      FileUtil.cleanFolder(new File(store.getRootFolder()), true);
+      FileUtil.cleanFolder(new File(store.getRootFolder()).getParentFile(), true);
     }
   }
 
   public void testParallelOneStore() throws Exception {
-    
-    File storeFolder = new File(new XmlMetaStore().getRootFolder()); 
-    FileUtil.cleanFolder(storeFolder, false);
 
-    // Run the test against the XML metadata store.
-    //
     final XmlMetaStore metaStore = new XmlMetaStore();
-    
-    List<Thread> threads = new ArrayList<Thread>();
     final List<Exception> exceptions = new ArrayList<Exception>();
     
-    for (int i=9000;i<9020;i++) {
-      final int index=i;
-      Thread thread = new Thread() {
-        public void run() {
-          try {
-            XmlMetaStoreTest.parallelStoreRetrieve(metaStore, index);
-          } catch(Exception e) {
-            exceptions.add(e);
-          }
-        };
-      };
-      threads.add(thread);
-      thread.start();
-    }
+    try {
+      // Run the test against the XML metadata store.
+      //
       
-    for (Thread thread : threads) {
-      thread.join();
+      List<Thread> threads = new ArrayList<Thread>();
+      
+      for (int i=9000;i<9020;i++) {
+        final int index=i;
+        Thread thread = new Thread() {
+          public void run() {
+            try {
+              XmlMetaStoreTest.parallelStoreRetrieve(metaStore, index);
+            } catch(Exception e) {
+              exceptions.add(e);
+            }
+          };
+        };
+        threads.add(thread);
+        thread.start();
+      }
+        
+      for (Thread thread : threads) {
+        thread.join();
+      }
+    } finally {
+      FileUtil.cleanFolder(new File(metaStore.getRootFolder()).getParentFile(), true);
     }
-
-    FileUtil.cleanFolder(new File(metaStore.getRootFolder()), true);
     
     if (!exceptions.isEmpty()) {
       fail(exceptions.size()+" exceptions encountered during parallel store/retrieve");
