@@ -5,6 +5,7 @@ import java.io.FileFilter;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.UUID;
 
 import org.pentaho.metastore.api.BaseMetaStore;
 import org.pentaho.metastore.api.IMetaStore;
@@ -26,7 +27,7 @@ public class XmlMetaStore extends BaseMetaStore implements IMetaStore {
   private File rootFile;
 
   public XmlMetaStore() throws MetaStoreException {
-    this(System.getProperty("java.io.tmpdir"));
+    this(System.getProperty("java.io.tmpdir")+File.separator+UUID.randomUUID());
   }
 
   public XmlMetaStore(String rootFolder) throws MetaStoreException {
@@ -34,7 +35,7 @@ public class XmlMetaStore extends BaseMetaStore implements IMetaStore {
 
     rootFile = new File(this.rootFolder);
     if (!rootFile.exists()) {
-      if (!rootFile.mkdir()) {
+      if (!rootFile.mkdirs()) {
         throw new MetaStoreException("Unable to create XML meta store root folder: " + this.rootFolder);
       }
     }
@@ -76,6 +77,7 @@ public class XmlMetaStore extends BaseMetaStore implements IMetaStore {
       unlockStore();
     }
   }
+
 
   @Override
   public synchronized void createNamespace(String namespace) throws MetaStoreException, MetaStoreNamespaceExistsException {
@@ -122,6 +124,7 @@ public class XmlMetaStore extends BaseMetaStore implements IMetaStore {
       unlockStore();
     }
   }
+
   @Override
   public synchronized List<IMetaStoreElementType> getElementTypes(String namespace) throws MetaStoreException {
     return getElementTypes(namespace, true);
@@ -197,11 +200,19 @@ public class XmlMetaStore extends BaseMetaStore implements IMetaStore {
     return new XmlMetaStoreAttribute(id, value);
   }
 
+  
+
   @Override
   public synchronized void createElementType(String namespace, IMetaStoreElementType elementType) throws MetaStoreException,
       MetaStoreElementTypeExistsException {
     lockStore();
     try {
+      // In the case of a file, the ID is the name
+      //
+      if (elementType.getId()==null) {
+        elementType.setId(elementType.getName());
+      }
+      
       String elementTypeFolder = XmlUtil.getElementTypeFolder(rootFolder, namespace, elementType.getId());
       File elementTypeFolderFile = new File(elementTypeFolder);
       if (elementTypeFolderFile.exists()) {
@@ -248,6 +259,7 @@ public class XmlMetaStore extends BaseMetaStore implements IMetaStore {
       unlockStore();
     }
   }
+
 
   @Override
   public synchronized void deleteElementType(String namespace, String elementTypeId) throws MetaStoreException,
@@ -302,9 +314,9 @@ public class XmlMetaStore extends BaseMetaStore implements IMetaStore {
       File elementTypeFolderFile = new File(elementTypeFolder);
       File[] elementTypeFiles = listFiles(elementTypeFolderFile);
       for (File elementTypeFile : elementTypeFiles) {
-        String entityId = elementTypeFile.getName();
-        entityId = entityId.substring(0, entityId.length() - 4); // remove .xml to get the ID
-        elements.add(getElement(namespace, elementTypeId, entityId, false));
+        String elementId = elementTypeFile.getName();
+        elementId = elementId.substring(0, elementId.length() - 4); // remove .xml to get the ID
+        elements.add(getElement(namespace, elementTypeId, elementId, false));
       }
   
       return elements;
@@ -317,39 +329,40 @@ public class XmlMetaStore extends BaseMetaStore implements IMetaStore {
   public synchronized List<String> getElementIds(String namespace, String elementTypeId) throws MetaStoreException {
     lockStore();
     try {
-      List<String> entityIds = new ArrayList<String>();
+      List<String> elementIds = new ArrayList<String>();
   
       String elementTypeFolder = XmlUtil.getElementTypeFolder(rootFolder, namespace, elementTypeId);
       File elementTypeFolderFile = new File(elementTypeFolder);
       File[] elementTypeFiles = listFiles(elementTypeFolderFile);
       for (File elementTypeFile : elementTypeFiles) {
-        String entityId = elementTypeFile.getName();
-        entityId = entityId.substring(0, entityId.length() - 4); // remove .xml to get the ID
-        entityIds.add(entityId);
+        String elementId = elementTypeFile.getName();
+        elementId = elementId.substring(0, elementId.length() - 4); // remove .xml to get the ID
+        elementIds.add(elementId);
       }
   
-      return entityIds;
+      return elementIds;
     } finally {
       unlockStore();
     }
   }
 
+
   @Override
-  public IMetaStoreElement getElement(String namespace, String elementTypeId, String entityId)
+  public IMetaStoreElement getElement(String namespace, String elementTypeId, String elementId)
       throws MetaStoreException {
-    return getElement(namespace, elementTypeId, entityId, true);
+    return getElement(namespace, elementTypeId, elementId, true);
   }
 
-  protected synchronized IMetaStoreElement getElement(String namespace, String elementTypeId, String entityId, boolean lock)
+  protected synchronized IMetaStoreElement getElement(String namespace, String elementTypeId, String elementId, boolean lock)
       throws MetaStoreException {
     if (lock) lockStore();
     try {
-      String entityFilename = XmlUtil.getElementFile(rootFolder, namespace, elementTypeId, entityId);
-      File entityFile = new File(entityFilename);
-      if (!entityFile.exists()) {
+      String elementFilename = XmlUtil.getElementFile(rootFolder, namespace, elementTypeId, elementId);
+      File elementFile = new File(elementFilename);
+      if (!elementFile.exists()) {
         return null;
       }
-      return new XmlMetaStoreElement(entityFilename);
+      return new XmlMetaStoreElement(elementFilename);
     } finally {
       if (lock) unlockStore();
     }
@@ -370,18 +383,28 @@ public class XmlMetaStore extends BaseMetaStore implements IMetaStore {
       throws MetaStoreException, MetaStoreElementExistException {
     lockStore();
     try {
-      String entityFilename = XmlUtil.getElementFile(rootFolder, namespace, elementTypeId, element.getId());
-      File entityFile = new File(entityFilename);
-      if (entityFile.exists()) {
+      // In the case of a file, the ID is the name
+      //
+      if (element.getId()==null) {
+        element.setId(element.getName());
+      }
+
+      String elementFilename = XmlUtil.getElementFile(rootFolder, namespace, elementTypeId, element.getId());
+      File elementFile = new File(elementFilename);
+      if (elementFile.exists()) {
         throw new MetaStoreElementExistException(getElements(namespace, elementTypeId),
             "The specified element already exists with the same ID: '" + element.getId() + "'");
       }
-      XmlMetaStoreElement xmlEntity = new XmlMetaStoreElement(element);
-      xmlEntity.setFilename(entityFilename);
-      xmlEntity.save();
+      XmlMetaStoreElement xmlElement = new XmlMetaStoreElement(element);
+      xmlElement.setFilename(elementFilename);
+      xmlElement.save();
+      
+      // In the case of the XML store, the name is the same as the ID
+      //
+      element.setId(xmlElement.getName());
     } finally {
       unlockStore();
-    }
+    }    
   }
 
   @Override
@@ -402,25 +425,29 @@ public class XmlMetaStore extends BaseMetaStore implements IMetaStore {
       unlockStore();
     }
   }
+  
 
   @Override
-  public synchronized void deleteElement(String namespace, String elementTypeId, String entityId) throws MetaStoreException {
+  public synchronized void deleteElement(String namespace, String elementTypeId, String elementId) throws MetaStoreException {
     lockStore();
     try {
-      String entityFilename = XmlUtil.getElementFile(rootFolder, namespace, elementTypeId, entityId);
-      File entityFile = new File(entityFilename);
-      if (!entityFile.exists()) {
+      String elementFilename = XmlUtil.getElementFile(rootFolder, namespace, elementTypeId, elementId);
+      File elementFile = new File(elementFilename);
+      if (!elementFile.exists()) {
         return;
       }
   
-      if (!entityFile.delete()) {
-        throw new MetaStoreException("Unable to delete element with ID '" + entityId + "' in filename '" + entityFilename
+      if (!elementFile.delete()) {
+        throw new MetaStoreException("Unable to delete element with ID '" + elementId + "' in filename '" + elementFilename
             + "'");
       }
     } finally {
       unlockStore();
     }
   }
+  
+  
+  
 
   /**
    * @return the rootFolder
@@ -469,6 +496,7 @@ public class XmlMetaStore extends BaseMetaStore implements IMetaStore {
     }
     return files;
   }
+
 
   @Override
   public IMetaStoreElementType newElementType(String namespace) throws MetaStoreException {
