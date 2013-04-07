@@ -404,6 +404,10 @@ public class XmlMetaStore extends BaseMetaStore implements IMetaStore {
       element.setId(xmlElement.getName());
     } finally {
       unlockStore();
+      }    
+
+    } finally {
+      unlockStore();
     }    
   }
 
