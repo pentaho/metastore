@@ -58,7 +58,7 @@ public class MetaStoreUtil {
   public String[] getElementNames(String namespace, IMetaStore metaStore, IMetaStoreElementType elementType) throws MetaStoreException {
     List<String> names = new ArrayList<String>();
     
-    List<IMetaStoreElement> elements = metaStore.getElements(namespace, elementType.getId());
+    List<IMetaStoreElement> elements = metaStore.getElements(namespace, elementType);
     for (IMetaStoreElement element :  elements) {
       names.add(element.getName());
     }

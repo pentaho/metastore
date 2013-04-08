@@ -157,19 +157,19 @@ public class MemoryMetaStore extends BaseMetaStore implements IMetaStore {
   }
 
   @Override
-  public synchronized void deleteElementType(String namespace, String elementTypeId) throws MetaStoreException, MetaStoreDependenciesExistsException {
+  public synchronized void deleteElementType(String namespace, IMetaStoreElementType elementType) throws MetaStoreException, MetaStoreDependenciesExistsException {
     MemoryMetaStoreNamespace storeNamespace = namespacesMap.get(namespace);
     if (storeNamespace!=null) {
-      MemoryMetaStoreElementType verifyType = storeNamespace.getTypeMap().get(elementTypeId);
+      MemoryMetaStoreElementType verifyType = storeNamespace.getTypeMap().get(elementType.getId());
       if (verifyType==null) {
-        throw new MetaStoreElementTypeExistsException(getElementTypes(namespace), "Element type to delete, with ID '"+elementTypeId+"', does not exist");
+        throw new MetaStoreElementTypeExistsException(getElementTypes(namespace), "Element type to delete, with ID '"+elementType.getId()+"', does not exist");
       } else {
         // See if there are elements in there...
         //
         if (!verifyType.getElementMap().isEmpty()) {
-          throw new MetaStoreDependenciesExistsException(getElementIds(namespace, elementTypeId), "Element type with ID '"+elementTypeId+"' could not be deleted as it still contains elements.");
+          throw new MetaStoreDependenciesExistsException(getElementIds(namespace, elementType), "Element type with ID '"+elementType.getId()+"' could not be deleted as it still contains elements.");
         }
-        storeNamespace.getTypeMap().remove(elementTypeId);
+        storeNamespace.getTypeMap().remove(elementType.getId());
       }
     } else {
       throw new MetaStoreException("Namespace '"+namespace+"' doesn't exist!");
@@ -177,21 +177,21 @@ public class MemoryMetaStore extends BaseMetaStore implements IMetaStore {
   }
 
   @Override
-  public synchronized List<IMetaStoreElement> getElements(String namespace, String elementTypeId) throws MetaStoreException {
-    MemoryMetaStoreElementType elementType = (MemoryMetaStoreElementType) getElementType(namespace, elementTypeId);
-    if (elementType==null) {
+  public synchronized List<IMetaStoreElement> getElements(String namespace, IMetaStoreElementType elementType) throws MetaStoreException {
+    MemoryMetaStoreElementType foundType = (MemoryMetaStoreElementType) getElementTypeByName(namespace, elementType.getName());
+    if (foundType==null) {
       return new ArrayList<IMetaStoreElement>();
     } else {
-      return new ArrayList<IMetaStoreElement>(elementType.getElementMap().values());
+      return new ArrayList<IMetaStoreElement>(foundType.getElementMap().values());
     }
   }
 
   @Override
-  public synchronized List<String> getElementIds(String namespace, String elementTypeId) throws MetaStoreException {
-    MemoryMetaStoreElementType elementType = (MemoryMetaStoreElementType) getElementType(namespace, elementTypeId);
+  public synchronized List<String> getElementIds(String namespace, IMetaStoreElementType elementType) throws MetaStoreException {
+    MemoryMetaStoreElementType foundType = (MemoryMetaStoreElementType) getElementTypeByName(namespace, elementType.getName());
     
     List<String> ids = new ArrayList<String>();
-    for (String id : elementType.getElementMap().keySet()) {
+    for (String id : foundType.getElementMap().keySet()) {
       ids.add(id);
     }
     
@@ -199,14 +199,17 @@ public class MemoryMetaStore extends BaseMetaStore implements IMetaStore {
   }
 
   @Override
-  public synchronized IMetaStoreElement getElement(String namespace, String elementTypeId, String elementId) throws MetaStoreException {
-    MemoryMetaStoreElementType elementType = (MemoryMetaStoreElementType) getElementType(namespace, elementTypeId);
-    return elementType.getElementMap().get(elementId);
+  public synchronized IMetaStoreElement getElement(String namespace, IMetaStoreElementType elementType, String elementId) throws MetaStoreException {
+    MemoryMetaStoreElementType foundType = (MemoryMetaStoreElementType) getElementTypeByName(namespace, elementType.getName());
+    if (foundType==null) {
+      return null;
+    }
+    return foundType.getElementMap().get(elementId);
   }
   
   @Override
   public synchronized IMetaStoreElement getElementByName(String namespace, IMetaStoreElementType elementType, String name) throws MetaStoreException {
-    for (IMetaStoreElement element : getElements(namespace, elementType.getId())) {
+    for (IMetaStoreElement element : getElements(namespace, elementType)) {
       if (element.getName()!=null && element.getName().equalsIgnoreCase(name)) {
         return element;
       }
@@ -215,26 +218,35 @@ public class MemoryMetaStore extends BaseMetaStore implements IMetaStore {
   }
 
   @Override
-  public synchronized void createElement(String namespace, String elementTypeId, IMetaStoreElement element) throws MetaStoreException, MetaStoreElementExistException {
+  public synchronized void createElement(String namespace, IMetaStoreElementType elementType, IMetaStoreElement element) throws MetaStoreException, MetaStoreElementExistException {
     // For the memory store, the ID is the same as the name if empty
     if (element.getId()==null) {
       element.setId(element.getName());
     }
 
-    MemoryMetaStoreElementType elementType = (MemoryMetaStoreElementType) getElementType(namespace, elementTypeId);
-    elementType.getElementMap().put(element.getId(), new MemoryMetaStoreElement(element));
+    MemoryMetaStoreElementType foundType = (MemoryMetaStoreElementType) getElementTypeByName(namespace, elementType.getName());
+    if (foundType==null) {
+      throw new MetaStoreException("Element type '"+elementType.getName()+"' couldn't be found");
+    }
+    foundType.getElementMap().put(element.getId(), new MemoryMetaStoreElement(element));
   }
   
   @Override
-  public synchronized void updateElement(String namespace, String elementTypeId, String elementId, IMetaStoreElement element) throws MetaStoreException {
-    MemoryMetaStoreElementType elementType = (MemoryMetaStoreElementType) getElementType(namespace, elementTypeId);
-    elementType.getElementMap().put(elementId, new MemoryMetaStoreElement(element));
+  public synchronized void updateElement(String namespace, IMetaStoreElementType elementType, String elementId, IMetaStoreElement element) throws MetaStoreException {
+    MemoryMetaStoreElementType foundType = (MemoryMetaStoreElementType) getElementTypeByName(namespace, elementType.getName());
+    if (foundType==null) {
+      throw new MetaStoreException("Element type '"+elementType.getName()+"' couldn't be found");
+    }
+    foundType.getElementMap().put(elementId, new MemoryMetaStoreElement(element));
   }
 
   @Override
-  public synchronized void deleteElement(String namespace, String elementTypeId, String elementId) throws MetaStoreException {
-    MemoryMetaStoreElementType elementType = (MemoryMetaStoreElementType) getElementType(namespace, elementTypeId);
-    elementType.getElementMap().remove(elementId);
+  public synchronized void deleteElement(String namespace, IMetaStoreElementType elementType, String elementId) throws MetaStoreException {
+    MemoryMetaStoreElementType foundType = (MemoryMetaStoreElementType) getElementTypeByName(namespace, elementType.getName());
+    if (foundType==null) {
+      throw new MetaStoreException("Element type '"+elementType.getName()+"' couldn't be found");
+    }
+    foundType.getElementMap().remove(elementId);
   }
 
   @Override

@@ -206,9 +206,9 @@ public class DelegatingMetaStore implements IMetaStore {
   }
 
   @Override
-  public void deleteElementType(String namespace, String elementTypeId) throws MetaStoreException, MetaStoreDependenciesExistsException {
+  public void deleteElementType(String namespace, IMetaStoreElementType elementType) throws MetaStoreException, MetaStoreDependenciesExistsException {
     IMetaStore metaStore = getActiveMetaStore();
-    metaStore.deleteElementType(namespace, elementTypeId);
+    metaStore.deleteElementType(namespace, elementType);
   }
 
   private IMetaStoreElement getElementByName(List<IMetaStoreElement> elements, String name) {
@@ -220,10 +220,10 @@ public class DelegatingMetaStore implements IMetaStore {
     return null;
   }
   @Override
-  public List<IMetaStoreElement> getElements(String namespace, String elementTypeId) throws MetaStoreException {
+  public List<IMetaStoreElement> getElements(String namespace, IMetaStoreElementType elementType) throws MetaStoreException {
     List<IMetaStoreElement> elements = new ArrayList<IMetaStoreElement>();
     for (IMetaStore metaStore : metaStoreList) {
-      for (IMetaStoreElement element :  metaStore.getElements(namespace, elementTypeId)) {
+      for (IMetaStoreElement element :  metaStore.getElements(namespace, elementType)) {
         if (getElementByName(elements, element.getName())==null) {
           elements.add(element);
         }
@@ -233,17 +233,17 @@ public class DelegatingMetaStore implements IMetaStore {
   }
 
   @Override
-  public List<String> getElementIds(String namespace, String elementTypeId) throws MetaStoreException {
+  public List<String> getElementIds(String namespace, IMetaStoreElementType elementType) throws MetaStoreException {
     List<String> elementIds = new ArrayList<String>();
-    for (IMetaStoreElement element : getElements(namespace, elementTypeId)) {
+    for (IMetaStoreElement element : getElements(namespace, elementType)) {
       elementIds.add(element.getId());
     }
     return elementIds;
   }
 
   @Override
-  public IMetaStoreElement getElement(String namespace, String elementTypeId, String elementId) throws MetaStoreException {
-    for (IMetaStoreElement element : getElements(namespace, elementTypeId)) {
+  public IMetaStoreElement getElement(String namespace, IMetaStoreElementType elementType, String elementId) throws MetaStoreException {
+    for (IMetaStoreElement element : getElements(namespace, elementType)) {
       if (element.getId().equals(elementId)) {
         return element;
       }
@@ -253,22 +253,22 @@ public class DelegatingMetaStore implements IMetaStore {
   
   @Override
   public IMetaStoreElement getElementByName(String namespace, IMetaStoreElementType elementType, String name) throws MetaStoreException {
-    return getElementByName(getElements(namespace, elementType.getId()), name);
+    return getElementByName(getElements(namespace, elementType), name);
   }
 
   @Override
-  public void createElement(String namespace, String elementTypeId, IMetaStoreElement element) throws MetaStoreException, MetaStoreElementExistException {
-    getActiveMetaStore().createElement(namespace, elementTypeId, element);
+  public void createElement(String namespace, IMetaStoreElementType elementType, IMetaStoreElement element) throws MetaStoreException, MetaStoreElementExistException {
+    getActiveMetaStore().createElement(namespace, elementType, element);
   }
 
   @Override
-  public void deleteElement(String namespace, String elementTypeId, String elementId) throws MetaStoreException {
-    getActiveMetaStore().deleteElement(namespace, elementTypeId, elementId);
+  public void deleteElement(String namespace, IMetaStoreElementType elementType, String elementId) throws MetaStoreException {
+    getActiveMetaStore().deleteElement(namespace, elementType, elementId);
   }
 
   @Override
-  public void updateElement(String namespace, String elementTypeId, String elementId, IMetaStoreElement element) throws MetaStoreException {
-    getActiveMetaStore().updateElement(namespace, elementTypeId, elementId, element);
+  public void updateElement(String namespace, IMetaStoreElementType elementType, String elementId, IMetaStoreElement element) throws MetaStoreException {
+    getActiveMetaStore().updateElement(namespace, elementType, elementId, element);
   }
   
   @Override

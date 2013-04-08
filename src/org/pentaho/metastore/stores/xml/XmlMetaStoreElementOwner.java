@@ -35,7 +35,7 @@ public class XmlMetaStoreElementOwner implements IMetaStoreElementOwner {
       if ("type".equals(ownerNode.getNodeName())) {
         String typeString = XmlUtil.getNodeValue(ownerNode);
         try { 
-          type = MetaStoreElementOwnerType.valueOf(typeString); 
+          type = MetaStoreElementOwnerType.getOwnerType(typeString); 
         } catch(Exception ex) { 
           throw new MetaStoreException("Unable to convert owner type ["+typeString+"] to one of USER, ROLE or SYSTEM_ROLE", ex); 
         }
