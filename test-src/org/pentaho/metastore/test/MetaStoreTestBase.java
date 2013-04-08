@@ -1,4 +1,4 @@
-package org.pentaho.metastore.util;
+package org.pentaho.metastore.test;
 
 import java.util.List;
 
@@ -16,6 +16,7 @@ import org.pentaho.metastore.api.security.IMetaStoreElementOwner;
 import org.pentaho.metastore.api.security.MetaStoreElementOwnerType;
 import org.pentaho.metastore.api.security.MetaStoreObjectPermission;
 import org.pentaho.metastore.api.security.MetaStoreOwnerPermissions;
+import org.pentaho.metastore.util.PentahoDefaults;
 
 @Ignore
 public class MetaStoreTestBase extends TestCase {

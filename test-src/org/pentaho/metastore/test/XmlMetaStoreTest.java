@@ -16,7 +16,6 @@ import org.pentaho.metastore.api.exceptions.MetaStoreException;
 import org.pentaho.metastore.stores.xml.XmlMetaStore;
 import org.pentaho.metastore.stores.xml.XmlMetaStoreElementType;
 import org.pentaho.metastore.util.FileUtil;
-import org.pentaho.metastore.util.MetaStoreTestBase;
 
 public class XmlMetaStoreTest extends MetaStoreTestBase {
   

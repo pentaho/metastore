@@ -2,7 +2,6 @@ package org.pentaho.metastore.test;
 
 import org.pentaho.metastore.api.IMetaStore;
 import org.pentaho.metastore.stores.memory.MemoryMetaStore;
-import org.pentaho.metastore.util.MetaStoreTestBase;
 
 public class MemoryMetaStoreTest extends MetaStoreTestBase {
   
