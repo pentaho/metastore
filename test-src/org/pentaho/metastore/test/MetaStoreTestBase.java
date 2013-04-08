@@ -16,41 +16,42 @@ import org.pentaho.metastore.api.security.IMetaStoreElementOwner;
 import org.pentaho.metastore.api.security.MetaStoreElementOwnerType;
 import org.pentaho.metastore.api.security.MetaStoreObjectPermission;
 import org.pentaho.metastore.api.security.MetaStoreOwnerPermissions;
+import org.pentaho.metastore.util.PentahoDefaults;
 
 @Ignore
 public class MetaStoreTestBase extends TestCase {
 
   // Namespace: Pentaho
   //
-  protected static final String NS_PENTAHO = "Pentaho";
+  protected static String namespace = PentahoDefaults.NAMESPACE;
 
   // Element type: Shared Dimension
   //
-  protected static final String SHARED_DIMENSION_ID = "SharedDimensionId";
   protected static final String SHARED_DIMENSION_NAME = "Shared Dimension";
   protected static final String SHARED_DIMENSION_DESCRIPTION = "Star modeler shared dimension";
   
   // Element: customer dimension
   //
-  protected static final String CUSTOMER_DIMENSION_ID = "CustomerDimensionId";
   protected static final String CUSTOMER_DIMENSION_NAME = "Customer dimension";
   
-  protected void testFunctionality(IMetaStore metaStore) throws MetaStoreException {
-    metaStore.createNamespace(NS_PENTAHO);
+  public void testFunctionality(IMetaStore metaStore) throws MetaStoreException {
+    if (!metaStore.namespaceExists(namespace)) {
+      metaStore.createNamespace(namespace);
+    }
     List<String> namespaces = metaStore.getNamespaces();
     assertEquals(1, namespaces.size());
     
-    IMetaStoreElementType elementType = metaStore.newElementType(NS_PENTAHO);
-    elementType.setId(SHARED_DIMENSION_ID);
+    IMetaStoreElementType elementType = metaStore.newElementType(namespace);
     elementType.setName(SHARED_DIMENSION_NAME);
     elementType.setDescription(SHARED_DIMENSION_DESCRIPTION);
-    metaStore.createElementType(NS_PENTAHO, elementType);
+    metaStore.createElementType(namespace, elementType);
+    assertNotNull(elementType.getId());
     
-    List<IMetaStoreElementType> elementTypes = metaStore.getElementTypes(NS_PENTAHO);
+    List<IMetaStoreElementType> elementTypes = metaStore.getElementTypes(namespace);
     assertEquals(1, elementTypes.size());
     
     try {
-      metaStore.createElementType(NS_PENTAHO, elementType);
+      metaStore.createElementType(namespace, elementType);
       fail("Duplicate creation error expected!");
     } catch(MetaStoreElementTypeExistsException e) {
       // OK!
@@ -62,65 +63,65 @@ public class MetaStoreTestBase extends TestCase {
     // Try to delete the namespace, should error out
     //
     try {
-      metaStore.deleteNamespace(NS_PENTAHO);
+      metaStore.deleteNamespace(namespace);
       fail("Expected error while deleting namespace with content!");
     } catch(MetaStoreDependenciesExistsException e) {
       // OK!
       List<String> dependencies = e.getDependencies();
       assertNotNull(dependencies);
       assertEquals(1, dependencies.size());
-      assertEquals(SHARED_DIMENSION_ID, dependencies.get(0));
+      assertEquals(elementType.getId(), dependencies.get(0));
     }
     
-    IMetaStoreElement customerDimension = generateCustomerDimensionElement(metaStore, elementType, NS_PENTAHO, CUSTOMER_DIMENSION_ID);
+    IMetaStoreElement customerDimension = generateCustomerDimensionElement(metaStore, elementType);
     IMetaStoreElementOwner elementOwner = customerDimension.getOwner();
     assertNotNull(elementOwner);
     assertEquals("joe", elementOwner.getName());
     assertEquals(MetaStoreElementOwnerType.USER, elementOwner.getOwnerType());
     
-    metaStore.createElement(NS_PENTAHO, SHARED_DIMENSION_ID, customerDimension);
-    List<IMetaStoreElement> elements = metaStore.getElements(NS_PENTAHO, SHARED_DIMENSION_ID);
+    metaStore.createElement(namespace, elementType, customerDimension);
+    assertNotNull(customerDimension.getId());
+    List<IMetaStoreElement> elements = metaStore.getElements(namespace, elementType);
     assertEquals(1, elements.size());
     assertNotNull(elements.get(0));
-    assertEquals(CUSTOMER_DIMENSION_ID, elements.get(0).getId());
     assertEquals(CUSTOMER_DIMENSION_NAME, elements.get(0).getName());
     
     // Try to delete the data type, should error out
     //
     try {
-      metaStore.deleteElementType(NS_PENTAHO, SHARED_DIMENSION_ID);
+      metaStore.deleteElementType(namespace, elementType);
       fail("Expected error while deleting data type with content!");
     } catch(MetaStoreDependenciesExistsException e) {
       // OK!
       List<String> dependencies = e.getDependencies();
       assertNotNull(dependencies);
       assertEquals(1, dependencies.size());
-      assertEquals(CUSTOMER_DIMENSION_ID, dependencies.get(0));
+      assertEquals(customerDimension.getId(), dependencies.get(0));
     }
     
     // Some lookup-by-name tests...
     //
-    assertNotNull(metaStore.getElementTypeByName(NS_PENTAHO, SHARED_DIMENSION_NAME));
-    assertNotNull(metaStore.getElementByName(NS_PENTAHO, elementType, CUSTOMER_DIMENSION_NAME));
+    assertNotNull(metaStore.getElementTypeByName(namespace, SHARED_DIMENSION_NAME));
+    assertNotNull(metaStore.getElementByName(namespace, elementType, CUSTOMER_DIMENSION_NAME));
     
     // Clean up shop!
     //
-    metaStore.deleteElement(NS_PENTAHO, SHARED_DIMENSION_ID, CUSTOMER_DIMENSION_ID);
-    elements = metaStore.getElements(NS_PENTAHO, SHARED_DIMENSION_ID);
+    metaStore.deleteElement(namespace, elementType, customerDimension.getId());
+    elements = metaStore.getElements(namespace, elementType);
     assertEquals(0, elements.size());
     
-    metaStore.deleteElementType(NS_PENTAHO, elementType.getId());
-    elementTypes = metaStore.getElementTypes(NS_PENTAHO);
+    metaStore.deleteElementType(namespace, elementType);
+    elementTypes = metaStore.getElementTypes(namespace);
     assertEquals(0, elementTypes.size());
     
-    metaStore.deleteNamespace(NS_PENTAHO);
+    metaStore.deleteNamespace(namespace);
     namespaces = metaStore.getNamespaces();
     assertEquals(0, namespaces.size());
   }
 
-  private IMetaStoreElement generateCustomerDimensionElement(IMetaStore metaStore, IMetaStoreElementType elementType, String nsPentaho, String dtSharedDimension) throws MetaStoreException {
+  private IMetaStoreElement generateCustomerDimensionElement(IMetaStore metaStore, IMetaStoreElementType elementType) throws MetaStoreException {
     IMetaStoreElement element = metaStore.newElement();
-    element.setId(CUSTOMER_DIMENSION_ID);
+    element.setElementType(elementType);
     element.setName(CUSTOMER_DIMENSION_NAME);
     
     element.addChild(metaStore.newAttribute("description", "This is the shared customer dimension"));

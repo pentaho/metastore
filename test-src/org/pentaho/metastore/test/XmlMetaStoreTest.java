@@ -130,18 +130,24 @@ public class XmlMetaStoreTest extends MetaStoreTestBase {
       XmlMetaStoreElementType verifyType = metaStore.getElementType(namespace, elementType.getId());
       assertEquals(typeName, verifyType.getName());
       assertEquals(typeDescription, verifyType.getDescription());
+      assertNotNull(verifyType.getId());
+      
+      verifyType = metaStore.getElementTypeByName(namespace, elementType.getName());
+      assertEquals(typeName, verifyType.getName());
+      assertEquals(typeDescription, verifyType.getDescription());
+      assertNotNull(verifyType.getId());
       
       // Populate
       List<IMetaStoreElement> elements = new ArrayList<IMetaStoreElement>();
       for (int i=100;i<100+nrElements;i++) {
         IMetaStoreElement element = populateElement(metaStore, "element-"+index+"-"+i);
         elements.add(element);
-        metaStore.createElement(namespace, elementType.getId(), element);
+        metaStore.createElement(namespace, elementType, element);
         assertNotNull(element.getId());
       }
       
       try {
-        metaStore.deleteElementType(namespace, elementType.getId());
+        metaStore.deleteElementType(namespace, elementType);
         fail("Unable to detect dependencies");
       } catch(MetaStoreDependenciesExistsException e) {
         // OK
@@ -154,7 +160,7 @@ public class XmlMetaStoreTest extends MetaStoreTestBase {
       IMetaStoreElementType elementType = metaStore.getElementTypeByName(namespace, typeName);
       assertNotNull(elementType);
 
-      List<IMetaStoreElement> verifyElements = metaStore.getElements(namespace, elementType.getId());
+      List<IMetaStoreElement> verifyElements = metaStore.getElements(namespace, elementType);
       assertEquals(nrElements, verifyElements.size());
     
       // the elements come back in an unpredictable order
@@ -171,13 +177,13 @@ public class XmlMetaStoreTest extends MetaStoreTestBase {
       for (int i=0;i<verifyElements.size();i++) {
         IMetaStoreElement element = verifyElements.get(i);
         validateElement(element, "element-"+index+"-"+(100+i));
-        metaStore.deleteElement(namespace, elementType.getId(), element.getId());
+        metaStore.deleteElement(namespace, elementType, element.getId());
       }
     
-      verifyElements = metaStore.getElements(namespace, elementType.getId());
+      verifyElements = metaStore.getElements(namespace, elementType);
       assertEquals(0, verifyElements.size());
             
-      metaStore.deleteElementType(namespace, elementType.getId());
+      metaStore.deleteElementType(namespace, elementType);
     }
     
 
