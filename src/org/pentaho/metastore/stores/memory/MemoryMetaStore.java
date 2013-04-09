@@ -134,6 +134,8 @@ public class MemoryMetaStore extends BaseMetaStore implements IMetaStore {
       } else {
         MemoryMetaStoreElementType copiedType = new MemoryMetaStoreElementType(elementType);
         storeNamespace.getTypeMap().put(elementType.getId(), copiedType);
+        copiedType.setMetaStoreName(getName());
+        elementType.setMetaStoreName(getName());
       }
     } else {
       throw new MetaStoreException("Namespace '"+namespace+"' doesn't exist!");
@@ -150,6 +152,8 @@ public class MemoryMetaStore extends BaseMetaStore implements IMetaStore {
       } else {
         MemoryMetaStoreElementType copiedType = new MemoryMetaStoreElementType(elementType);
         storeNamespace.getTypeMap().put(elementType.getId(), copiedType);
+        copiedType.setMetaStoreName(getName());
+        elementType.setMetaStoreName(getName());
       }
     } else {
       throw new MetaStoreException("Namespace '"+namespace+"' doesn't exist!");
@@ -233,6 +237,13 @@ public class MemoryMetaStore extends BaseMetaStore implements IMetaStore {
   
   @Override
   public synchronized void updateElement(String namespace, IMetaStoreElementType elementType, String elementId, IMetaStoreElement element) throws MetaStoreException {
+    
+    // verify that the element type belongs to this meta store
+    //
+    if (elementType.getMetaStoreName()==null || !elementType.getName().equals(getName())) {
+      throw new MetaStoreException("The element type '"+elementType.getName()+"' needs to explicitly belong to the meta store in which you are updating.");
+    }
+    
     MemoryMetaStoreElementType foundType = (MemoryMetaStoreElementType) getElementTypeByName(namespace, elementType.getName());
     if (foundType==null) {
       throw new MetaStoreException("Element type '"+elementType.getName()+"' couldn't be found");

@@ -27,6 +27,7 @@ public class XmlMetaStoreElementType implements IMetaStoreElementType {
   private String id;
   private String name;
   private String description;
+  private String metaStoreName;
 
   private String filename;
   
@@ -215,6 +216,14 @@ public class XmlMetaStoreElementType implements IMetaStoreElementType {
    */
   public void setFilename(String filename) {
     this.filename = filename;
+  }
+
+  public String getMetaStoreName() {
+    return metaStoreName;
+  }
+
+  public void setMetaStoreName(String metaStoreName) {
+    this.metaStoreName = metaStoreName;
   }
 
 

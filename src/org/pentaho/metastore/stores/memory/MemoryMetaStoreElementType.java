@@ -12,6 +12,7 @@ public class MemoryMetaStoreElementType implements IMetaStoreElementType {
   private String id;
   private String name;
   private String description;
+  private String metaStoreName;
   
   private Map<String, MemoryMetaStoreElement> elementMap;
   
@@ -101,6 +102,14 @@ public class MemoryMetaStoreElementType implements IMetaStoreElementType {
    */
   public void setDescription(String description) {
     this.description = description;
+  }
+
+  public String getMetaStoreName() {
+    return metaStoreName;
+  }
+
+  public void setMetaStoreName(String metaStoreName) {
+    this.metaStoreName = metaStoreName;
   }
 
 }

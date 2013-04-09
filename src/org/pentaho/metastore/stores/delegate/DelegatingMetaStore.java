@@ -243,9 +243,14 @@ public class DelegatingMetaStore implements IMetaStore {
 
   @Override
   public IMetaStoreElement getElement(String namespace, IMetaStoreElementType elementType, String elementId) throws MetaStoreException {
-    for (IMetaStoreElement element : getElements(namespace, elementType)) {
-      if (element.getId().equals(elementId)) {
-        return element;
+    for (IMetaStore localStore : metaStoreList) {
+      if (elementType.getMetaStoreName()==null || elementType.getMetaStoreName().equals(localStore.getName())) {
+        IMetaStoreElementType localType = localStore.getElementTypeByName(namespace, elementType.getName());
+        for (IMetaStoreElement element : localStore.getElements(namespace, localType)) {
+          if (element.getId().equals(elementId)) {
+            return element;
+          }
+        }
       }
     }
     return null;
@@ -268,7 +273,11 @@ public class DelegatingMetaStore implements IMetaStore {
 
   @Override
   public void updateElement(String namespace, IMetaStoreElementType elementType, String elementId, IMetaStoreElement element) throws MetaStoreException {
-    getActiveMetaStore().updateElement(namespace, elementType, elementId, element);
+    for (IMetaStore localStore : metaStoreList) {
+      if (elementType.getMetaStoreName()==null || elementType.getMetaStoreName().equals(localStore.getName())) {
+        localStore.updateElement(namespace, elementType, elementId, element);
+      }
+    }
   }
   
   @Override

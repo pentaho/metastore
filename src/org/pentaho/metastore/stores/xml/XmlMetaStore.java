@@ -175,6 +175,7 @@ public class XmlMetaStore extends BaseMetaStore implements IMetaStore {
     try {
       String elementTypeFile = XmlUtil.getElementTypeFile(rootFolder, namespace, elementTypeId);
       XmlMetaStoreElementType elementType = new XmlMetaStoreElementType(namespace, elementTypeFile);
+      elementType.setMetaStoreName(getName());
       return elementType;
     } finally {
       if (lock) unlockStore();
@@ -231,6 +232,7 @@ public class XmlMetaStore extends BaseMetaStore implements IMetaStore {
           elementType.getName(), elementType.getDescription());
       xmlType.setFilename(elementTypeFilename);
       xmlType.save();
+      xmlType.setMetaStoreName(getName());
     } finally {
       unlockStore();
     }
@@ -410,6 +412,13 @@ public class XmlMetaStore extends BaseMetaStore implements IMetaStore {
   @Override
   public synchronized void updateElement(String namespace, IMetaStoreElementType elementType, String elementId, IMetaStoreElement element)
       throws MetaStoreException {
+
+    // verify that the element type belongs to this meta store
+    //
+    if (elementType.getMetaStoreName()==null || !elementType.getName().equals(getName())) {
+      throw new MetaStoreException("The element type '"+elementType.getName()+"' needs to explicitly belong to the meta store in which you are updating.");
+    }
+
     lockStore();
     try {
       String elementFilename = XmlUtil.getElementFile(rootFolder, namespace, elementType.getName(), element.getName());

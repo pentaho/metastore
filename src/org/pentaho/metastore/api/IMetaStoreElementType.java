@@ -25,6 +25,16 @@ public interface IMetaStoreElementType {
   public void setNamespace(String namespace);
   
   /**
+   * @return The name of the IMetaStore this element type belongs to.
+   */
+  public String getMetaStoreName();
+
+  /**
+   * @param metaStoreName The name of the IMetaStore this element type belongs to.
+   */
+  public void setMetaStoreName(String metaStoreName);
+
+  /**
    * Gets the identifier of the element type. This identifier is unique in a namespace.
    *
    * @return The ID of the element type, unique in a namespace
