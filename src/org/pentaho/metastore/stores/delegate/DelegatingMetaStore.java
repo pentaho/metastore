@@ -64,10 +64,7 @@ public class DelegatingMetaStore implements IMetaStore {
   }
   
   public void removeMetaStore(IMetaStore metaStore) throws MetaStoreException {
-    metaStoreList.remove(metaStore);
-    if (activeMetaStoreName!=null && metaStore.getName().equalsIgnoreCase(activeMetaStoreName)) {
-      activeMetaStoreName = null;
-    }
+    removeMetaStore(metaStore.getName());
   }
   
   public List<IMetaStore> getMetaStoreList() {
@@ -79,14 +76,17 @@ public class DelegatingMetaStore implements IMetaStore {
   }
   
   public void removeMetaStore(String metaStoreName) throws MetaStoreException {
-    for (Iterator<IMetaStore> it = metaStoreList.iterator(); it.hasNext();) {
-      IMetaStore metaStore = it.next();
-      if (metaStore.getName().equalsIgnoreCase(metaStoreName)) {
+    for (Iterator<IMetaStore> it=metaStoreList.iterator();it.hasNext();) {
+      IMetaStore store = it.next();
+      if (store.getName().equalsIgnoreCase(metaStoreName)) {
         it.remove();
+        if (activeMetaStoreName!=null && metaStoreName.equalsIgnoreCase(activeMetaStoreName)) {
+          activeMetaStoreName = null;
+        }
         return;
       }
     }
-    throw new MetaStoreException("Unable to find meta store with name '"+metaStoreName+"'");
+    throw new MetaStoreException("Unable to find metastore to remove '"+metaStoreName+"'");
   }
   
   
