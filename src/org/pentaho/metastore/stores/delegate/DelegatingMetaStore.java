@@ -32,7 +32,6 @@ import org.pentaho.metastore.api.security.MetaStoreElementOwnerType;
  * That way, if you ask for the list of elements, you will get a unique list (by element ID) based on all stores.
  * 
  * @author matt
- *
  */
 public class DelegatingMetaStore implements IMetaStore {
   
@@ -219,13 +218,17 @@ public class DelegatingMetaStore implements IMetaStore {
     }
     return null;
   }
+  
   @Override
   public List<IMetaStoreElement> getElements(String namespace, IMetaStoreElementType elementType) throws MetaStoreException {
     List<IMetaStoreElement> elements = new ArrayList<IMetaStoreElement>();
     for (IMetaStore metaStore : metaStoreList) {
-      for (IMetaStoreElement element :  metaStore.getElements(namespace, elementType)) {
-        if (getElementByName(elements, element.getName())==null) {
-          elements.add(element);
+      IMetaStoreElementType localElementType = metaStore.getElementTypeByName(namespace, elementType.getName());
+      if (localElementType!=null) {
+        for (IMetaStoreElement element :  metaStore.getElements(namespace, localElementType)) {
+          if (getElementByName(elements, element.getName())==null) {
+            elements.add(element);
+          }
         }
       }
     }
@@ -246,9 +249,11 @@ public class DelegatingMetaStore implements IMetaStore {
     for (IMetaStore localStore : metaStoreList) {
       if (elementType.getMetaStoreName()==null || elementType.getMetaStoreName().equals(localStore.getName())) {
         IMetaStoreElementType localType = localStore.getElementTypeByName(namespace, elementType.getName());
-        for (IMetaStoreElement element : localStore.getElements(namespace, localType)) {
-          if (element.getId().equals(elementId)) {
-            return element;
+        if (localType!=null) {
+          for (IMetaStoreElement element : localStore.getElements(namespace, localType)) {
+            if (element.getId().equals(elementId)) {
+              return element;
+            }
           }
         }
       }
@@ -299,12 +304,10 @@ public class DelegatingMetaStore implements IMetaStore {
     return getActiveMetaStore().newAttribute(id, value);
   }
 
-
   @Override
   public IMetaStoreElementOwner newElementOwner(String name, MetaStoreElementOwnerType ownerType) throws MetaStoreException {
     return getActiveMetaStore().newElementOwner(name, ownerType);
   }
-
 
   @Override
   public String getName() throws MetaStoreException {
