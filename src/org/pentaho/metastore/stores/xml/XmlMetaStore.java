@@ -415,7 +415,7 @@ public class XmlMetaStore extends BaseMetaStore implements IMetaStore {
 
     // verify that the element type belongs to this meta store
     //
-    if (elementType.getMetaStoreName()==null || !elementType.getName().equals(getName())) {
+    if (elementType.getMetaStoreName()==null || !elementType.getMetaStoreName().equals(getName())) {
       throw new MetaStoreException("The element type '"+elementType.getName()+"' needs to explicitly belong to the meta store in which you are updating.");
     }
 
