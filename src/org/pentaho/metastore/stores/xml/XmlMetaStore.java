@@ -39,6 +39,10 @@ public class XmlMetaStore extends BaseMetaStore implements IMetaStore {
         throw new MetaStoreException("Unable to create XML meta store root folder: " + this.rootFolder);
       }
     }
+    
+    // Give the MetaStore a default name
+    //
+    setName(this.rootFolder);
   }
 
   @Override
@@ -429,6 +433,7 @@ public class XmlMetaStore extends BaseMetaStore implements IMetaStore {
   
       XmlMetaStoreElement xmlElement = new XmlMetaStoreElement(element);
       xmlElement.setFilename(elementFilename);
+      xmlElement.setIdWithFilename(elementFilename);
       xmlElement.save();
     } finally {
       unlockStore();

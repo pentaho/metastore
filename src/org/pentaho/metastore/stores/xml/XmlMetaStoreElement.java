@@ -64,8 +64,7 @@ public class XmlMetaStoreElement extends XmlMetaStoreAttribute implements IMetaS
   public XmlMetaStoreElement(String filename) throws MetaStoreException {
     this();
     File file = new File(filename);
-    id = file.getName();
-    id = id.substring(0, id.length()-4);
+    setIdWithFilename(filename);
 
     try {
       DocumentBuilderFactory documentBuilderFactory = DocumentBuilderFactory.newInstance();
@@ -81,6 +80,12 @@ public class XmlMetaStoreElement extends XmlMetaStoreAttribute implements IMetaS
     }
   }
   
+  public void setIdWithFilename(String filename) {
+    File file = new File(filename);
+    id = file.getName();
+    id = id.substring(0, id.length()-4);
+  }
+
   protected void loadElement(Node elementNode) {
     NodeList childNodes = elementNode.getChildNodes();
     for (int e=0;e<childNodes.getLength();e++) {
