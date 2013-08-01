@@ -65,9 +65,9 @@ public class XmlMetaStoreAttribute implements IMetaStoreAttribute {
           value = Double.valueOf((String)value);
         } else if ("Long".equals(type)) {
           value = Long.valueOf((String)value);
-        } else {
-          value = (String)value;
-        }
+        } /* else {
+          value = value;
+        } */
       } else if ("children".equals(elementNode.getNodeName())) {
         NodeList childNodes = elementNode.getChildNodes();
         for (int c=0;c<childNodes.getLength();c++) {

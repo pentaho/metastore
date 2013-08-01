@@ -51,7 +51,7 @@ public class XmlMetaStoreTest extends MetaStoreTestBase {
             } catch(MetaStoreException e) {
               throw new RuntimeException(e);
             }
-          };
+          }
         };
         threads.add(thread);
         thread.start();
@@ -89,7 +89,7 @@ public class XmlMetaStoreTest extends MetaStoreTestBase {
             } catch(Exception e) {
               exceptions.add(e);
             }
-          };
+          }
         };
         threads.add(thread);
         thread.start();

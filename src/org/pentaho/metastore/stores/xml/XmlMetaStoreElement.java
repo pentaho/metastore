@@ -161,7 +161,7 @@ public class XmlMetaStoreElement extends XmlMetaStoreAttribute implements IMetaS
       //
       Element opElement = doc.createElement("owner-permissions");
       oplElement.appendChild(opElement);
-      ((MetaStoreOwnerPermissions)ownerPermissions).append(doc, opElement);
+      ownerPermissions.append(doc, opElement);
     }    
   }
   
