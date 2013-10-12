@@ -1,19 +1,19 @@
 /*!
-* This program is free software; you can redistribute it and/or modify it under the
-* terms of the GNU Lesser General Public License, version 2.1 as published by the Free Software
-* Foundation.
-*
-* You should have received a copy of the GNU Lesser General Public License along with this
-* program; if not, you can obtain a copy at http://www.gnu.org/licenses/old-licenses/lgpl-2.1.html
-* or from the Free Software Foundation, Inc.,
-* 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
-*
-* This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY;
-* without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
-* See the GNU Lesser General Public License for more details.
-*
-* Copyright (c) 2002-2013 Pentaho Corporation..  All rights reserved.
-*/
+ * This program is free software; you can redistribute it and/or modify it under the
+ * terms of the GNU Lesser General Public License, version 2.1 as published by the Free Software
+ * Foundation.
+ *
+ * You should have received a copy of the GNU Lesser General Public License along with this
+ * program; if not, you can obtain a copy at http://www.gnu.org/licenses/old-licenses/lgpl-2.1.html
+ * or from the Free Software Foundation, Inc.,
+ * 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
+ *
+ * This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY;
+ * without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+ * See the GNU Lesser General Public License for more details.
+ *
+ * Copyright (c) 2002-2013 Pentaho Corporation..  All rights reserved.
+ */
 
 package org.pentaho.metastore.stores.memory;
 
@@ -31,31 +31,32 @@ public class MemoryMetaStoreElement extends MemoryMetaStoreAttribute implements 
   protected String name;
 
   protected IMetaStoreElementType elementType;
-  
+
   protected IMetaStoreElementOwner owner;
   protected List<MetaStoreOwnerPermissions> ownerPermissionsList;
-  
+
   public MemoryMetaStoreElement() {
-    this(null, null, null);
+    this( null, null, null );
   }
 
-  public MemoryMetaStoreElement(IMetaStoreElementType elementType, String id, Object value) {
-    super(id, value);
+  public MemoryMetaStoreElement( IMetaStoreElementType elementType, String id, Object value ) {
+    super( id, value );
     this.elementType = elementType;
-    
+
     this.ownerPermissionsList = new ArrayList<MetaStoreOwnerPermissions>();
   }
 
-  public MemoryMetaStoreElement(IMetaStoreElement element) {
-    super(element);
+  public MemoryMetaStoreElement( IMetaStoreElement element ) {
+    super( element );
     this.name = element.getName();
     this.elementType = element.getElementType();
     this.ownerPermissionsList = new ArrayList<MetaStoreOwnerPermissions>();
-    if (element.getOwner()!=null) {
-      this.owner = new XmlMetaStoreElementOwner(element.getOwner());
+    if ( element.getOwner() != null ) {
+      this.owner = new XmlMetaStoreElementOwner( element.getOwner() );
     }
-    for (MetaStoreOwnerPermissions ownerPermissions : element.getOwnerPermissionsList()) {
-      this.getOwnerPermissionsList().add( new MetaStoreOwnerPermissions(ownerPermissions.getOwner(), ownerPermissions.getPermissions()) );
+    for ( MetaStoreOwnerPermissions ownerPermissions : element.getOwnerPermissionsList() ) {
+      this.getOwnerPermissionsList().add(
+          new MetaStoreOwnerPermissions( ownerPermissions.getOwner(), ownerPermissions.getPermissions() ) );
     }
   }
 
@@ -63,7 +64,7 @@ public class MemoryMetaStoreElement extends MemoryMetaStoreAttribute implements 
     return owner;
   }
 
-  public void setOwner(IMetaStoreElementOwner owner) {
+  public void setOwner( IMetaStoreElementOwner owner ) {
     this.owner = owner;
   }
 
@@ -71,7 +72,7 @@ public class MemoryMetaStoreElement extends MemoryMetaStoreAttribute implements 
     return ownerPermissionsList;
   }
 
-  public void setOwnerPermissionsList(List<MetaStoreOwnerPermissions> ownerPermissions) {
+  public void setOwnerPermissionsList( List<MetaStoreOwnerPermissions> ownerPermissions ) {
     this.ownerPermissionsList = ownerPermissions;
   }
 
@@ -79,7 +80,7 @@ public class MemoryMetaStoreElement extends MemoryMetaStoreAttribute implements 
     return name;
   }
 
-  public void setName(String name) {
+  public void setName( String name ) {
     this.name = name;
   }
 
@@ -87,7 +88,7 @@ public class MemoryMetaStoreElement extends MemoryMetaStoreAttribute implements 
     return elementType;
   }
 
-  public void setElementType(IMetaStoreElementType elementType) {
+  public void setElementType( IMetaStoreElementType elementType ) {
     this.elementType = elementType;
-  }  
+  }
 }
