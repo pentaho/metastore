@@ -1,3 +1,20 @@
+/*!
+ * This program is free software; you can redistribute it and/or modify it under the
+ * terms of the GNU Lesser General Public License, version 2.1 as published by the Free Software
+ * Foundation.
+ *
+ * You should have received a copy of the GNU Lesser General Public License along with this
+ * program; if not, you can obtain a copy at http://www.gnu.org/licenses/old-licenses/lgpl-2.1.html
+ * or from the Free Software Foundation, Inc.,
+ * 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
+ *
+ * This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY;
+ * without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+ * See the GNU Lesser General Public License for more details.
+ *
+ * Copyright (c) 2002-2013 Pentaho Corporation..  All rights reserved.
+ */
+
 package org.pentaho.metastore.test;
 
 import java.io.File;
@@ -18,54 +35,50 @@ import org.pentaho.metastore.stores.xml.XmlMetaStoreElementType;
 import org.pentaho.metastore.util.FileUtil;
 
 public class XmlMetaStoreTest extends MetaStoreTestBase {
-  
+
   public void test() throws Exception {
     // Run the test against the XML metadata store.
     //
     XmlMetaStore metaStore = new XmlMetaStore();
     try {
-      super.testFunctionality(metaStore);
+      super.testFunctionality( metaStore );
     } finally {
-      FileUtil.cleanFolder(new File(metaStore.getRootFolder()).getParentFile(), true);
+      FileUtil.cleanFolder( new File( metaStore.getRootFolder() ).getParentFile(), true );
     }
   }
-  
+
   public void testParallelDifferentStores() throws Exception {
     List<XmlMetaStore> stores = new ArrayList<XmlMetaStore>();
-    
-    try {
-      // Run the test against the XML metadata store.
-      //
-      for (int i=0;i<50;i++) {
-        String folder = System.getProperty("java.io.tmpdir")+File.separator+UUID.randomUUID();
-        new File(folder).mkdirs();
-        stores.add(new XmlMetaStore(folder));
-      }
-      
-      List<Thread> threads = new ArrayList<Thread>();
-      for (final IMetaStore store : stores) {
-        Thread thread = new Thread() {
-          public void run() {
-            try {
-              XmlMetaStoreTest.super.testFunctionality(store);
-            } catch(MetaStoreException e) {
-              throw new RuntimeException(e);
-            }
-          }
-        };
-        threads.add(thread);
-        thread.start();
-      }
-      
-      for (Thread thread : threads) {
-        thread.join();
-      }
-    } finally {
 
+    // Run the test against the XML metadata store.
+    //
+    for ( int i = 0; i < 50; i++ ) {
+      String folder = System.getProperty( "java.io.tmpdir" ) + File.separator + UUID.randomUUID();
+      new File( folder ).mkdirs();
+      stores.add( new XmlMetaStore( folder ) );
     }
 
-    for (XmlMetaStore store : stores) {
-      FileUtil.cleanFolder(new File(store.getRootFolder()).getParentFile(), true);
+    List<Thread> threads = new ArrayList<Thread>();
+    for ( final IMetaStore store : stores ) {
+      Thread thread = new Thread() {
+        public void run() {
+          try {
+            XmlMetaStoreTest.super.testFunctionality( store );
+          } catch ( MetaStoreException e ) {
+            throw new RuntimeException( e );
+          }
+        }
+      };
+      threads.add( thread );
+      thread.start();
+    }
+
+    for ( Thread thread : threads ) {
+      thread.join();
+    }
+
+    for ( XmlMetaStore store : stores ) {
+      FileUtil.cleanFolder( new File( store.getRootFolder() ).getParentFile(), true );
     }
   }
 
@@ -73,151 +86,151 @@ public class XmlMetaStoreTest extends MetaStoreTestBase {
 
     final XmlMetaStore metaStore = new XmlMetaStore();
     final List<Exception> exceptions = new ArrayList<Exception>();
-    
+
     try {
       // Run the test against the XML metadata store.
       //
-      
+
       List<Thread> threads = new ArrayList<Thread>();
-      
-      for (int i=9000;i<9020;i++) {
-        final int index=i;
+
+      for ( int i = 9000; i < 9020; i++ ) {
+        final int index = i;
         Thread thread = new Thread() {
           public void run() {
             try {
-              XmlMetaStoreTest.parallelStoreRetrieve(metaStore, index);
-            } catch(Exception e) {
-              exceptions.add(e);
+              XmlMetaStoreTest.parallelStoreRetrieve( metaStore, index );
+            } catch ( Exception e ) {
+              exceptions.add( e );
             }
           }
         };
-        threads.add(thread);
+        threads.add( thread );
         thread.start();
       }
-        
-      for (Thread thread : threads) {
+
+      for ( Thread thread : threads ) {
         thread.join();
       }
     } finally {
-      FileUtil.cleanFolder(new File(metaStore.getRootFolder()).getParentFile(), true);
+      FileUtil.cleanFolder( new File( metaStore.getRootFolder() ).getParentFile(), true );
     }
-    
-    if (!exceptions.isEmpty()) {
-      fail(exceptions.size()+" exceptions encountered during parallel store/retrieve");
-      for (Exception e : exceptions) {
-        e.printStackTrace(System.err);
+
+    if ( !exceptions.isEmpty() ) {
+      fail( exceptions.size() + " exceptions encountered during parallel store/retrieve" );
+      for ( Exception e : exceptions ) {
+        e.printStackTrace( System.err );
       }
     }
   }
 
-  protected static void parallelStoreRetrieve(final XmlMetaStore metaStore, final int index) throws MetaStoreException {
-    String namespace = "ns-"+index;
-    metaStore.createNamespace(namespace);
-    
-    int nrTypes=5;
-    int nrElements=20;
-    
-    for (int typeNr=50;typeNr<50+nrTypes;typeNr++) {
-      IMetaStoreElementType elementType = metaStore.newElementType(namespace);
-      String typeName = "type-name-"+index+"-"+typeNr;
-      String typeDescription = "type-description-"+index+"-"+typeNr;
-      elementType.setName(typeName);
-      elementType.setDescription(typeDescription);
-      metaStore.createElementType(namespace, elementType);
-      
-      assertNotNull(elementType.getId());
-      
-      XmlMetaStoreElementType verifyType = metaStore.getElementType(namespace, elementType.getId());
-      assertEquals(typeName, verifyType.getName());
-      assertEquals(typeDescription, verifyType.getDescription());
-      assertNotNull(verifyType.getId());
-      
-      verifyType = metaStore.getElementTypeByName(namespace, elementType.getName());
-      assertEquals(typeName, verifyType.getName());
-      assertEquals(typeDescription, verifyType.getDescription());
-      assertNotNull(verifyType.getId());
-      
+  protected static void parallelStoreRetrieve( final XmlMetaStore metaStore, final int index )
+    throws MetaStoreException {
+    String namespace = "ns-" + index;
+    metaStore.createNamespace( namespace );
+
+    int nrTypes = 5;
+    int nrElements = 20;
+
+    for ( int typeNr = 50; typeNr < 50 + nrTypes; typeNr++ ) {
+      IMetaStoreElementType elementType = metaStore.newElementType( namespace );
+      String typeName = "type-name-" + index + "-" + typeNr;
+      String typeDescription = "type-description-" + index + "-" + typeNr;
+      elementType.setName( typeName );
+      elementType.setDescription( typeDescription );
+      metaStore.createElementType( namespace, elementType );
+
+      assertNotNull( elementType.getId() );
+
+      XmlMetaStoreElementType verifyType = metaStore.getElementType( namespace, elementType.getId() );
+      assertEquals( typeName, verifyType.getName() );
+      assertEquals( typeDescription, verifyType.getDescription() );
+      assertNotNull( verifyType.getId() );
+
+      verifyType = metaStore.getElementTypeByName( namespace, elementType.getName() );
+      assertEquals( typeName, verifyType.getName() );
+      assertEquals( typeDescription, verifyType.getDescription() );
+      assertNotNull( verifyType.getId() );
+
       // Populate
       List<IMetaStoreElement> elements = new ArrayList<IMetaStoreElement>();
-      for (int i=100;i<100+nrElements;i++) {
-        IMetaStoreElement element = populateElement(metaStore, "element-"+index+"-"+i);
-        elements.add(element);
-        metaStore.createElement(namespace, elementType, element);
-        assertNotNull(element.getId());
+      for ( int i = 100; i < 100 + nrElements; i++ ) {
+        IMetaStoreElement element = populateElement( metaStore, "element-" + index + "-" + i );
+        elements.add( element );
+        metaStore.createElement( namespace, elementType, element );
+        assertNotNull( element.getId() );
       }
-      
+
       try {
-        metaStore.deleteElementType(namespace, elementType);
-        fail("Unable to detect dependencies");
-      } catch(MetaStoreDependenciesExistsException e) {
+        metaStore.deleteElementType( namespace, elementType );
+        fail( "Unable to detect dependencies" );
+      } catch ( MetaStoreDependenciesExistsException e ) {
         // OK
-        assertEquals(e.getDependencies().size(), elements.size());
-      }      
+        assertEquals( e.getDependencies().size(), elements.size() );
+      }
     }
 
-    for (int typeNr=50;typeNr<50+nrTypes;typeNr++) {
-      String typeName = "type-name-"+index+"-"+typeNr;
-      IMetaStoreElementType elementType = metaStore.getElementTypeByName(namespace, typeName);
-      assertNotNull(elementType);
+    for ( int typeNr = 50; typeNr < 50 + nrTypes; typeNr++ ) {
+      String typeName = "type-name-" + index + "-" + typeNr;
+      IMetaStoreElementType elementType = metaStore.getElementTypeByName( namespace, typeName );
+      assertNotNull( elementType );
 
-      List<IMetaStoreElement> verifyElements = metaStore.getElements(namespace, elementType);
-      assertEquals(nrElements, verifyElements.size());
-    
+      List<IMetaStoreElement> verifyElements = metaStore.getElements( namespace, elementType );
+      assertEquals( nrElements, verifyElements.size() );
+
       // the elements come back in an unpredictable order
       // sort by name
       //
-      Collections.sort(verifyElements, new Comparator<IMetaStoreElement>() {
+      Collections.sort( verifyElements, new Comparator<IMetaStoreElement>() {
         @Override
-        public int compare(IMetaStoreElement o1, IMetaStoreElement o2) {
-          return o1.getName().compareTo(o2.getName());
+        public int compare( IMetaStoreElement o1, IMetaStoreElement o2 ) {
+          return o1.getName().compareTo( o2.getName() );
         }
-      });
-    
+      } );
+
       // Validate
-      for (int i=0;i<verifyElements.size();i++) {
-        IMetaStoreElement element = verifyElements.get(i);
-        validateElement(element, "element-"+index+"-"+(100+i));
-        metaStore.deleteElement(namespace, elementType, element.getId());
+      for ( int i = 0; i < verifyElements.size(); i++ ) {
+        IMetaStoreElement element = verifyElements.get( i );
+        validateElement( element, "element-" + index + "-" + ( 100 + i ) );
+        metaStore.deleteElement( namespace, elementType, element.getId() );
       }
-    
-      verifyElements = metaStore.getElements(namespace, elementType);
-      assertEquals(0, verifyElements.size());
-            
-      metaStore.deleteElementType(namespace, elementType);
+
+      verifyElements = metaStore.getElements( namespace, elementType );
+      assertEquals( 0, verifyElements.size() );
+
+      metaStore.deleteElementType( namespace, elementType );
     }
-    
 
   }
 
-  protected static IMetaStoreElement populateElement(IMetaStore metaStore, String name) throws MetaStoreException {
+  protected static IMetaStoreElement populateElement( IMetaStore metaStore, String name ) throws MetaStoreException {
     IMetaStoreElement element = metaStore.newElement();
-    element.setName(name);
-    for (int i=1;i<=5;i++) {
-      element.addChild(metaStore.newAttribute("id "+i, "value "+i));
+    element.setName( name );
+    for ( int i = 1; i <= 5; i++ ) {
+      element.addChild( metaStore.newAttribute( "id " + i, "value " + i ) );
     }
-    IMetaStoreAttribute subAttr = metaStore.newAttribute("sub-attr", null);
-    for (int i=101;i<=110;i++) {
-      subAttr.addChild(metaStore.newAttribute("sub-id "+i, "sub-value "+i));
+    IMetaStoreAttribute subAttr = metaStore.newAttribute( "sub-attr", null );
+    for ( int i = 101; i <= 110; i++ ) {
+      subAttr.addChild( metaStore.newAttribute( "sub-id " + i, "sub-value " + i ) );
     }
-    element.addChild(subAttr);
-    
+    element.addChild( subAttr );
+
     return element;
   }
-  
-  protected static void validateElement(IMetaStoreElement element, String name) throws MetaStoreException {
-    assertEquals(name, element.getName());
-    assertEquals(6, element.getChildren().size());
-    for (int i=1;i<=5;i++) {
-      IMetaStoreAttribute child = element.getChild("id "+i);
-      assertEquals("value "+i, child.getValue());
+
+  protected static void validateElement( IMetaStoreElement element, String name ) throws MetaStoreException {
+    assertEquals( name, element.getName() );
+    assertEquals( 6, element.getChildren().size() );
+    for ( int i = 1; i <= 5; i++ ) {
+      IMetaStoreAttribute child = element.getChild( "id " + i );
+      assertEquals( "value " + i, child.getValue() );
     }
-    IMetaStoreAttribute subAttr = element.getChild("sub-attr");
-    assertNotNull(subAttr);
-    assertEquals(10, subAttr.getChildren().size());
-    for (int i=101;i<=110;i++) {
-      IMetaStoreAttribute child = subAttr.getChild("sub-id "+i);
-      assertNotNull(child);
-      assertEquals("sub-value "+i, child.getValue());
+    IMetaStoreAttribute subAttr = element.getChild( "sub-attr" );
+    assertNotNull( subAttr );
+    assertEquals( 10, subAttr.getChildren().size() );
+    for ( int i = 101; i <= 110; i++ ) {
+      IMetaStoreAttribute child = subAttr.getChild( "sub-id " + i );
+      assertNotNull( child );
+      assertEquals( "sub-value " + i, child.getValue() );
     }
   }
 }

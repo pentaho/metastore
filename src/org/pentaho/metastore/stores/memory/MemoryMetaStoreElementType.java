@@ -1,3 +1,20 @@
+/*!
+ * This program is free software; you can redistribute it and/or modify it under the
+ * terms of the GNU Lesser General Public License, version 2.1 as published by the Free Software
+ * Foundation.
+ *
+ * You should have received a copy of the GNU Lesser General Public License along with this
+ * program; if not, you can obtain a copy at http://www.gnu.org/licenses/old-licenses/lgpl-2.1.html
+ * or from the Free Software Foundation, Inc.,
+ * 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
+ *
+ * This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY;
+ * without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+ * See the GNU Lesser General Public License for more details.
+ *
+ * Copyright (c) 2002-2013 Pentaho Corporation..  All rights reserved.
+ */
+
 package org.pentaho.metastore.stores.memory;
 
 import java.util.HashMap;
@@ -13,20 +30,22 @@ public class MemoryMetaStoreElementType implements IMetaStoreElementType {
   private String name;
   private String description;
   private String metaStoreName;
-  
+
   private Map<String, MemoryMetaStoreElement> elementMap;
-  
-  public MemoryMetaStoreElementType(String namespace) {
+
+  public MemoryMetaStoreElementType( String namespace ) {
     this.namespace = namespace;
     elementMap = new HashMap<String, MemoryMetaStoreElement>();
   }
 
   /**
    * Copy data from another meta store persistence type...
-   * @param elementType The type to copy over.
+   * 
+   * @param elementType
+   *          The type to copy over.
    */
-  public MemoryMetaStoreElementType(IMetaStoreElementType elementType) {
-    this(elementType.getNamespace());
+  public MemoryMetaStoreElementType( IMetaStoreElementType elementType ) {
+    this( elementType.getNamespace() );
     this.id = elementType.getId();
     this.name = elementType.getName();
     this.description = elementType.getDescription();
@@ -36,7 +55,7 @@ public class MemoryMetaStoreElementType implements IMetaStoreElementType {
   public void save() throws MetaStoreException {
     // Nothing to save.
   }
-  
+
   public Map<String, MemoryMetaStoreElement> getElementMap() {
     return elementMap;
   }
@@ -48,14 +67,13 @@ public class MemoryMetaStoreElementType implements IMetaStoreElementType {
     return namespace;
   }
 
-
   /**
-   * @param namespace the namespace to set
+   * @param namespace
+   *          the namespace to set
    */
-  public void setNamespace(String namespace) {
+  public void setNamespace( String namespace ) {
     this.namespace = namespace;
   }
-
 
   /**
    * @return the id
@@ -64,14 +82,13 @@ public class MemoryMetaStoreElementType implements IMetaStoreElementType {
     return id;
   }
 
-
   /**
-   * @param id the id to set
+   * @param id
+   *          the id to set
    */
-  public void setId(String id) {
+  public void setId( String id ) {
     this.id = id;
   }
-
 
   /**
    * @return the name
@@ -80,14 +97,13 @@ public class MemoryMetaStoreElementType implements IMetaStoreElementType {
     return name;
   }
 
-
   /**
-   * @param name the name to set
+   * @param name
+   *          the name to set
    */
-  public void setName(String name) {
+  public void setName( String name ) {
     this.name = name;
   }
-
 
   /**
    * @return the description
@@ -96,11 +112,11 @@ public class MemoryMetaStoreElementType implements IMetaStoreElementType {
     return description;
   }
 
-
   /**
-   * @param description the description to set
+   * @param description
+   *          the description to set
    */
-  public void setDescription(String description) {
+  public void setDescription( String description ) {
     this.description = description;
   }
 
@@ -108,7 +124,7 @@ public class MemoryMetaStoreElementType implements IMetaStoreElementType {
     return metaStoreName;
   }
 
-  public void setMetaStoreName(String metaStoreName) {
+  public void setMetaStoreName( String metaStoreName ) {
     this.metaStoreName = metaStoreName;
   }
 

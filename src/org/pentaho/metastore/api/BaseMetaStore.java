@@ -1,3 +1,20 @@
+/*!
+ * This program is free software; you can redistribute it and/or modify it under the
+ * terms of the GNU Lesser General Public License, version 2.1 as published by the Free Software
+ * Foundation.
+ *
+ * You should have received a copy of the GNU Lesser General Public License along with this
+ * program; if not, you can obtain a copy at http://www.gnu.org/licenses/old-licenses/lgpl-2.1.html
+ * or from the Free Software Foundation, Inc.,
+ * 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
+ *
+ * This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY;
+ * without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+ * See the GNU Lesser General Public License for more details.
+ *
+ * Copyright (c) 2002-2013 Pentaho Corporation..  All rights reserved.
+ */
+
 package org.pentaho.metastore.api;
 
 import org.pentaho.metastore.api.exceptions.MetaStoreException;
@@ -14,9 +31,9 @@ public abstract class BaseMetaStore implements IMetaStore {
 
   /** The description of this metastore. */
   protected String description;
-  
+
   protected ITwoWayPasswordEncoder passwordEncoder;
-  
+
   /**
    * Instantiates a new base meta store.
    */
@@ -26,7 +43,7 @@ public abstract class BaseMetaStore implements IMetaStore {
 
   /**
    * Gets the name of this metastore.
-   *
+   * 
    * @return the name
    */
   public String getName() throws MetaStoreException {
@@ -35,16 +52,17 @@ public abstract class BaseMetaStore implements IMetaStore {
 
   /**
    * Sets the name of this metastore.
-   *
-   * @param name the name to set
+   * 
+   * @param name
+   *          the name to set
    */
-  public void setName(String name) {
+  public void setName( String name ) {
     this.name = name;
   }
 
   /**
    * Gets the description of this metastore.
-   *
+   * 
    * @return the description of this metastore
    */
   public String getDescription() throws MetaStoreException {
@@ -53,10 +71,11 @@ public abstract class BaseMetaStore implements IMetaStore {
 
   /**
    * Sets the description for this metastore.
-   *
-   * @param description the description to set
+   * 
+   * @param description
+   *          the description to set
    */
-  public void setDescription(String description) {
+  public void setDescription( String description ) {
     this.description = description;
   }
 
@@ -64,7 +83,7 @@ public abstract class BaseMetaStore implements IMetaStore {
     return passwordEncoder;
   }
 
-  public void setTwoWayPasswordEncoder(ITwoWayPasswordEncoder passwordEncoder) {
+  public void setTwoWayPasswordEncoder( ITwoWayPasswordEncoder passwordEncoder ) {
     this.passwordEncoder = passwordEncoder;
   }
 
