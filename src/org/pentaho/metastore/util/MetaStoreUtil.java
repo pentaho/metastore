@@ -45,6 +45,15 @@ public class MetaStoreUtil {
     }
     return attribute.getValue().toString();
   }
+
+  public static boolean getAttributeBoolean(IMetaStoreAttribute attribute, String id) {
+    String b = getChildString(attribute, id);
+    if (b==null) {
+      return false;
+    }
+    return "true".equalsIgnoreCase(b) || "y".equalsIgnoreCase(b);
+  }
+
   
   /**
    * Get a sorted list of element names for the specified element type in the given namespace.

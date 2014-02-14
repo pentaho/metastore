@@ -1,5 +1,6 @@
 package org.pentaho.metastore.api;
 
+import org.pentaho.metastore.api.exceptions.MetaStoreException;
 import org.pentaho.metastore.api.security.Base64TwoWayPasswordEncoder;
 import org.pentaho.metastore.api.security.ITwoWayPasswordEncoder;
 
@@ -28,7 +29,7 @@ public abstract class BaseMetaStore implements IMetaStore {
    *
    * @return the name
    */
-  public String getName() {
+  public String getName() throws MetaStoreException {
     return name;
   }
 
@@ -46,7 +47,7 @@ public abstract class BaseMetaStore implements IMetaStore {
    *
    * @return the description of this metastore
    */
-  public String getDescription() {
+  public String getDescription() throws MetaStoreException {
     return description;
   }
 
