@@ -172,17 +172,17 @@ public class MetaStoreFactory<T> {
             element.addChild( child );
             break;
           case INTEGER:
-            int intValue = (int) getAttributeValue( t, field.getName(), getGetterMethodName( field.getName(), false ) );
+            int intValue = (Integer) getAttributeValue( t, field.getName(), getGetterMethodName( field.getName(), false ) );
             child = metaStore.newAttribute( key, Integer.toString( intValue ) );
             element.addChild( child );
             break;
           case LONG:
-            long longValue = (long) getAttributeValue( t, field.getName(), getGetterMethodName( field.getName(), false ) );
+            long longValue = (Long) getAttributeValue( t, field.getName(), getGetterMethodName( field.getName(), false ) );
             child = metaStore.newAttribute( key, Long.toString( longValue ) );
             element.addChild( child );
             break;
           case BOOLEAN:
-            boolean boolValue = (boolean) getAttributeValue( t, field.getName(), getGetterMethodName( field.getName(), true ) );
+            boolean boolValue = (Boolean) getAttributeValue( t, field.getName(), getGetterMethodName( field.getName(), true ) );
             child = metaStore.newAttribute( key, boolValue ? "Y" : "N" );
             element.addChild( child );
             break;
