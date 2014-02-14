@@ -45,8 +45,9 @@ public class MetaStoreFactoryTest extends TestCase {
     // verify the details...
     //
     assertTrue( metaStore.namespaceExists( "custom" ) );
-    IMetaStoreElementType elementType = metaStore.getElementTypeByName( "custom", "My element type" );
+    IMetaStoreElementType elementType = factory.getElementType();
     assertNotNull( elementType );
+    assertEquals( "My element type", elementType.getName() );
     assertEquals( "This is my element type", elementType.getDescription() );
 
     IMetaStoreElement element = metaStore.getElementByName( "custom", elementType, NAME );
@@ -62,5 +63,13 @@ public class MetaStoreFactoryTest extends TestCase {
     List<String> names = factory.getElementNames();
     assertEquals( 1, names.size() );
     assertEquals( NAME, names.get( 0 ) );
+
+    List<MyElement> list = factory.getElements();
+    assertEquals( 1, list.size() );
+    assertEquals( NAME, list.get( 0 ).getName() );
+
+    factory.deleteElement( NAME );
+    assertEquals( 0, factory.getElementNames().size() );
+    assertEquals( 0, factory.getElements().size() );
   }
 }

@@ -211,6 +211,45 @@ public class MetaStoreFactory<T> {
     }
   }
 
+  /**
+   * @return A list of all the de-serialized objects of this class in the metastore
+   * @throws MetaStoreException
+   */
+  public List<T> getElements() throws MetaStoreException {
+    List<T> list = new ArrayList<T>();
+
+    for ( String name : getElementNames() ) {
+      list.add( loadElement( name ) );
+    }
+
+    return list;
+  }
+
+  /**
+   * Remove an element with a specific name from the metastore
+   * @param name The name of the element to delete
+   * @throws MetaStoreException In case either the element type or the element to delete doesn't exists
+   */
+  public void deleteElement( String name ) throws MetaStoreException {
+    MetaStoreElementType elementTypeAnnotation = getElementTypeAnnotation();
+
+    IMetaStoreElementType elementType = metaStore.getElementTypeByName( namespace, elementTypeAnnotation.name() );
+    if ( elementType == null ) {
+      throw new MetaStoreException( "The element type '" + elementTypeAnnotation.name() + "' does not exist so the element with name '" + name + "' can not be deleted" );
+    }
+
+    IMetaStoreElement element = metaStore.getElementByName( namespace, elementType, name );
+    if ( element == null ) {
+      throw new MetaStoreException( "The element with name '" + name + "' does not exists so it can not be deleted" );
+    }
+
+    metaStore.deleteElement( namespace, elementType, element.getId() );
+  }
+
+  /**
+   * @return The list of element names 
+   * @throws MetaStoreException
+   */
   public List<String> getElementNames() throws MetaStoreException {
     List<String> names = new ArrayList<String>();
 
@@ -227,6 +266,15 @@ public class MetaStoreFactory<T> {
     }
 
     return names;
+  }
+
+  /**
+   * @return The {@link IMetaStoreElementType} to reference in the {@link IMetaStore} API.
+   * @throws MetaStoreException
+   */
+  public IMetaStoreElementType getElementType() throws MetaStoreException {
+    MetaStoreElementType elementTypeAnnotation = getElementTypeAnnotation();
+    return metaStore.getElementTypeByName( namespace, elementTypeAnnotation.name() );
   }
 
   private AttributeType determineAttributeType( Field field ) throws MetaStoreException {
