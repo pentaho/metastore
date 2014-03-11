@@ -76,6 +76,9 @@ public class MetaStoreFactory<T> {
         if ( child != null && child.getValue() != null ) {
           String setterName = getSetterMethodName( field.getName() );
           String value = MetaStoreUtil.getAttributeString( child );
+          if ( attributeAnnotation.password() ) {
+            value = metaStore.getTwoWayPasswordEncoder().decode( value );
+          }
           switch ( type ) {
             case STRING:
               setAttributeValue( object, field.getName(), setterName, String.class, value );
@@ -168,6 +171,9 @@ public class MetaStoreFactory<T> {
         switch ( type ) {
           case STRING:
             String value = (String) getAttributeValue( t, field.getName(), getGetterMethodName( field.getName(), false ) );
+            if ( attributeAnnotation.password() ) {
+              value = metaStore.getTwoWayPasswordEncoder().encode( value );
+            }
             child = metaStore.newAttribute( key, value );
             element.addChild( child );
             break;

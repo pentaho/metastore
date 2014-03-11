@@ -21,12 +21,13 @@ public class MetaStoreFactoryTest extends TestCase {
     String NAME = "one";
     String ATTR = "11111111";
     String ANOTHER = "2222222";
+    String PASSWORD = "my secret password";
     int INT = 3;
     long LONG = 4;
     boolean BOOL = true;
     Date DATE = new Date();
 
-    MyElement me = new MyElement( NAME, ATTR, ANOTHER, INT, LONG, BOOL, DATE );
+    MyElement me = new MyElement( NAME, ATTR, ANOTHER, PASSWORD, INT, LONG, BOOL, DATE );
 
     IMetaStore metaStore = new MemoryMetaStore();
 
@@ -37,6 +38,7 @@ public class MetaStoreFactoryTest extends TestCase {
     assertNotNull( verify );
     assertEquals( ATTR, verify.getMyAttribute() );
     assertEquals( ANOTHER, verify.getAnotherAttribute() );
+    assertEquals( PASSWORD, verify.getPasswordAttribute() );
     assertEquals( INT, verify.getIntAttribute() );
     assertEquals( LONG, verify.getLongAttribute() );
     assertEquals( BOOL, verify.isBoolAttribute() );
@@ -55,6 +57,9 @@ public class MetaStoreFactoryTest extends TestCase {
     IMetaStoreAttribute child = element.getChild( "my_attribute" );
     assertNotNull( child );
     assertEquals( ATTR, MetaStoreUtil.getAttributeString( child ) );
+    child = element.getChild( "passwordAttribute" );
+    assertNotNull( child );
+    assertNotSame( "Password needs to be encoded", PASSWORD, MetaStoreUtil.getAttributeString( child ) );
 
     child = element.getChild( "anotherAttribute" );
     assertNotNull( child );

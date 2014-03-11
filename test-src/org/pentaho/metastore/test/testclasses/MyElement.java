@@ -17,6 +17,9 @@ public class MyElement {
   @MetaStoreAttribute
   private String anotherAttribute;
 
+  @MetaStoreAttribute( password = true )
+  private String passwordAttribute;
+
   @MetaStoreAttribute
   private int intAttribute;
 
@@ -35,11 +38,12 @@ public class MyElement {
   public MyElement() {
   }
 
-  public MyElement( String name, String myAttribute, String anotherAttribute, int intAttribute, long longAttribute, boolean boolAttribute, Date dateAttribute ) {
+  public MyElement( String name, String myAttribute, String anotherAttribute, String passwordAttribute, int intAttribute, long longAttribute, boolean boolAttribute, Date dateAttribute ) {
     super();
     this.name = name;
     this.myAttribute = myAttribute;
     this.anotherAttribute = anotherAttribute;
+    this.passwordAttribute = passwordAttribute;
     this.intAttribute = intAttribute;
     this.longAttribute = longAttribute;
     this.boolAttribute = boolAttribute;
@@ -100,5 +104,13 @@ public class MyElement {
 
   public void setDateAttribute( Date dateAttribute ) {
     this.dateAttribute = dateAttribute;
+  }
+
+  public String getPasswordAttribute() {
+    return passwordAttribute;
+  }
+
+  public void setPasswordAttribute( String passwordAttribute ) {
+    this.passwordAttribute = passwordAttribute;
   }
 }
