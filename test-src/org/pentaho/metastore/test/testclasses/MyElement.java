@@ -1,6 +1,8 @@
 package org.pentaho.metastore.test.testclasses;
 
+import java.util.ArrayList;
 import java.util.Date;
+import java.util.List;
 
 import org.pentaho.metastore.persist.MetaStoreAttribute;
 import org.pentaho.metastore.persist.MetaStoreElementType;
@@ -9,6 +11,9 @@ import org.pentaho.metastore.persist.MetaStoreElementType;
   name = "My element type",
   description = "This is my element type" )
 public class MyElement {
+  public static final String LIST_KEY_MY_NAMES = "MyNames";
+  public static final String LIST_KEY_MY_FILENAMES = "MyFilenames";
+
   private String name;
 
   @MetaStoreAttribute( key = "my_attribute" )
@@ -32,14 +37,24 @@ public class MyElement {
   @MetaStoreAttribute
   private Date dateAttribute;
 
+  @MetaStoreAttribute
+  private List<MyElementAttr> subAttributes;
+
+  @MetaStoreAttribute( nameReference = true, nameListKey = LIST_KEY_MY_NAMES )
+  private MyNameElement nameElement;
+
+  @MetaStoreAttribute( filenameReference = true, filenameListKey = LIST_KEY_MY_FILENAMES )
+  private MyFilenameElement filenameElement;
+
   /** 
    * We need the empty constructor for our factory.  Having any other constructor is fine too, but this one is mandatory!
    */
   public MyElement() {
+    subAttributes = new ArrayList<MyElementAttr>();
   }
 
   public MyElement( String name, String myAttribute, String anotherAttribute, String passwordAttribute, int intAttribute, long longAttribute, boolean boolAttribute, Date dateAttribute ) {
-    super();
+    this();
     this.name = name;
     this.myAttribute = myAttribute;
     this.anotherAttribute = anotherAttribute;
@@ -112,5 +127,29 @@ public class MyElement {
 
   public void setPasswordAttribute( String passwordAttribute ) {
     this.passwordAttribute = passwordAttribute;
+  }
+
+  public List<MyElementAttr> getSubAttributes() {
+    return subAttributes;
+  }
+
+  public void setSubAttributes( List<MyElementAttr> subAttributes ) {
+    this.subAttributes = subAttributes;
+  }
+
+  public MyNameElement getNameElement() {
+    return nameElement;
+  }
+
+  public void setNameElement( MyNameElement nameElement ) {
+    this.nameElement = nameElement;
+  }
+
+  public MyFilenameElement getFilenameElement() {
+    return filenameElement;
+  }
+
+  public void setFilenameElement( MyFilenameElement filenameElement ) {
+    this.filenameElement = filenameElement;
   }
 }
