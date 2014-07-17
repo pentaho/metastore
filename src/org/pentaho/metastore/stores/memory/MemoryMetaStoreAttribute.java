@@ -22,15 +22,22 @@ import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.locks.ReentrantReadWriteLock;
+import java.util.concurrent.locks.ReentrantReadWriteLock.ReadLock;
+import java.util.concurrent.locks.ReentrantReadWriteLock.WriteLock;
 
 import org.pentaho.metastore.api.IMetaStoreAttribute;
 
 public class MemoryMetaStoreAttribute implements IMetaStoreAttribute {
 
+  private final ReadLock readLock;
+  private final WriteLock writeLock;
+
+  protected final Map<String, IMetaStoreAttribute> children;
+
   protected String id;
   protected Object value;
-
-  protected Map<String, IMetaStoreAttribute> children;
 
   public MemoryMetaStoreAttribute() {
     this( null, null );
@@ -39,7 +46,11 @@ public class MemoryMetaStoreAttribute implements IMetaStoreAttribute {
   public MemoryMetaStoreAttribute( String id, Object value ) {
     this.id = id;
     this.value = value;
-    children = new HashMap<String, IMetaStoreAttribute>();
+    this.children = new HashMap<String, IMetaStoreAttribute>();
+
+    ReentrantReadWriteLock lock = new ReentrantReadWriteLock();
+    readLock = lock.readLock();
+    writeLock = lock.writeLock();
   }
 
   public MemoryMetaStoreAttribute( IMetaStoreAttribute attribute ) {
@@ -84,7 +95,12 @@ public class MemoryMetaStoreAttribute implements IMetaStoreAttribute {
    * @return the children
    */
   public List<IMetaStoreAttribute> getChildren() {
-    return new ArrayList<IMetaStoreAttribute>( children.values() );
+    readLock.lock();
+    try {
+      return new ArrayList<IMetaStoreAttribute>( children.values() );
+    } finally {
+      readLock.unlock();
+    }
   }
 
   /**
@@ -92,26 +108,41 @@ public class MemoryMetaStoreAttribute implements IMetaStoreAttribute {
    *          the children to set
    */
   public void setChildren( List<IMetaStoreAttribute> children ) {
-    this.children.clear();
-    for ( IMetaStoreAttribute child : children ) {
-      this.children.put( child.getId(), child );
+    writeLock.lock();
+    try {
+      this.children.clear();
+      for ( IMetaStoreAttribute child : children ) {
+        this.children.put( child.getId(), child );
+      }
+    } finally {
+      writeLock.unlock();
     }
   }
 
   @Override
   public void addChild( IMetaStoreAttribute attribute ) {
-    children.put( attribute.getId(), attribute );
+    writeLock.lock();
+    try {
+      children.put( attribute.getId(), attribute );
+    } finally {
+      writeLock.unlock();
+    }
   }
 
   @Override
   public void deleteChild( String attributeId ) {
-    Iterator<IMetaStoreAttribute> iterator = children.values().iterator();
-    while ( iterator.hasNext() ) {
-      IMetaStoreAttribute next = iterator.next();
-      if ( next.getId().equals( attributeId ) ) {
-        iterator.remove();
-        break;
+    writeLock.lock();
+    try {
+      Iterator<IMetaStoreAttribute> iterator = children.values().iterator();
+      while ( iterator.hasNext() ) {
+        IMetaStoreAttribute next = iterator.next();
+        if ( next.getId().equals( attributeId ) ) {
+          iterator.remove();
+          break;
+        }
       }
+    } finally {
+      writeLock.unlock();
     }
   }
 
@@ -119,10 +150,20 @@ public class MemoryMetaStoreAttribute implements IMetaStoreAttribute {
    * Remove all child attributes
    */
   public void clearChildren() {
-    children.clear();
+    writeLock.lock();
+    try {
+      children.clear();
+    } finally {
+      writeLock.unlock();
+    }
   }
 
   public IMetaStoreAttribute getChild( String id ) {
-    return children.get( id );
+    readLock.lock();
+    try {
+      return children.get( id );
+    } finally {
+      readLock.unlock();
+    }
   }
 }

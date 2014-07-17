@@ -17,9 +17,16 @@
 
 package org.pentaho.metastore.stores.memory;
 
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.locks.ReentrantReadWriteLock;
+import java.util.concurrent.locks.ReentrantReadWriteLock.ReadLock;
+import java.util.concurrent.locks.ReentrantReadWriteLock.WriteLock;
 
+import org.pentaho.metastore.api.IMetaStoreElement;
 import org.pentaho.metastore.api.IMetaStoreElementType;
 import org.pentaho.metastore.api.exceptions.MetaStoreException;
 
@@ -31,11 +38,18 @@ public class MemoryMetaStoreElementType implements IMetaStoreElementType {
   private String description;
   private String metaStoreName;
 
-  private Map<String, MemoryMetaStoreElement> elementMap;
+  private final Map<String, MemoryMetaStoreElement> elementMap;
+
+  private final ReadLock readLock;
+  private final WriteLock writeLock;
 
   public MemoryMetaStoreElementType( String namespace ) {
     this.namespace = namespace;
-    elementMap = new HashMap<String, MemoryMetaStoreElement>();
+    this.elementMap = new HashMap<String, MemoryMetaStoreElement>();
+
+    ReentrantReadWriteLock lock = new ReentrantReadWriteLock();
+    readLock = lock.readLock();
+    writeLock = lock.writeLock();
   }
 
   /**
@@ -57,7 +71,12 @@ public class MemoryMetaStoreElementType implements IMetaStoreElementType {
   }
 
   public Map<String, MemoryMetaStoreElement> getElementMap() {
-    return elementMap;
+    readLock.lock();
+    try {
+      return new HashMap<String, MemoryMetaStoreElement>( elementMap );
+    } finally {
+      readLock.unlock();
+    }
   }
 
   /**
@@ -126,6 +145,103 @@ public class MemoryMetaStoreElementType implements IMetaStoreElementType {
 
   public void setMetaStoreName( String metaStoreName ) {
     this.metaStoreName = metaStoreName;
+  }
+
+  public List<String> getElementIds() {
+    readLock.lock();
+    try {
+      List<String> ids = new ArrayList<String>();
+      for ( String id : elementMap.keySet() ) {
+        ids.add( id );
+      }
+      return ids;
+
+    } finally {
+      readLock.unlock();
+    }
+  }
+
+  public MemoryMetaStoreElement getElement( String elementId ) {
+    readLock.lock();
+    try {
+      return elementMap.get( elementId );
+    } finally {
+      readLock.unlock();
+    }
+  }
+
+  protected ReadLock getReadLock() {
+    return readLock;
+  }
+
+  public boolean isElementMapEmpty() {
+    readLock.lock();
+    try {
+      return elementMap.isEmpty();
+    } finally {
+      readLock.unlock();
+    }
+  }
+
+  public List<IMetaStoreElement> getElements() {
+    readLock.lock();
+    try {
+      return new ArrayList<IMetaStoreElement>( elementMap.values() );
+    } finally {
+      readLock.unlock();
+    }
+  }
+
+  public IMetaStoreElement getElementByName( String elementName ) {
+    readLock.lock();
+    try {
+      for ( MemoryMetaStoreElement element : elementMap.values() ) {
+        if ( element.getName() != null && element.getName().equalsIgnoreCase( elementName ) ) {
+          return element;
+        }
+      }
+      return null;
+    } finally {
+      readLock.unlock();
+    }
+  }
+
+  public void createElement( IMetaStoreElement element ) {
+    // For the memory store, the ID is the same as the name if empty
+    if ( element.getId() == null ) {
+      element.setId( element.getName() );
+    }
+
+    writeLock.lock();
+    try {
+      elementMap.put( element.getId(), new MemoryMetaStoreElement( element ) );
+    } finally {
+      writeLock.unlock();
+    }
+  }
+
+  public void updateElement( String elementId, IMetaStoreElement element ) {
+    // For the memory store, the ID is the same as the name if empty
+    if ( element.getId() == null ) {
+      element.setId( element.getName() );
+    }
+
+
+    writeLock.lock();
+    try {
+      elementMap.put( elementId, new MemoryMetaStoreElement( element ) );
+    } finally {
+      writeLock.unlock();
+    }
+  }
+
+  public void deleteElement( String elementId ) {
+    writeLock.lock();
+    try {
+      elementMap.remove( elementId );
+    } finally {
+      writeLock.unlock();
+    }
   }
 
 }

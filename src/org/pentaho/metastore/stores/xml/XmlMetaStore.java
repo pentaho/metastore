@@ -266,6 +266,7 @@ public class XmlMetaStore extends BaseMetaStore implements IMetaStore {
       xmlType.setFilename( elementTypeFilename );
       xmlType.save();
       xmlType.setMetaStoreName( getName() );
+      elementType.setMetaStoreName( getName() );
     } finally {
       unlockStore();
     }
@@ -355,6 +356,10 @@ public class XmlMetaStore extends BaseMetaStore implements IMetaStore {
       File[] elementTypeFiles = listFiles( elementTypeFolderFile );
       for ( File elementTypeFile : elementTypeFiles ) {
         String elementId = elementTypeFile.getName();
+        // File .type.xml doesn't hidden in OS Windows so better to ignore it explicitly
+        if ( elementId.equals( XmlUtil.ELEMENT_TYPE_FILE_NAME ) ) {
+          continue;
+        }
         elementId = elementId.substring( 0, elementId.length() - 4 ); // remove .xml to get the ID
         elements.add( getElement( namespace, elementType, elementId, false ) );
       }
@@ -379,6 +384,10 @@ public class XmlMetaStore extends BaseMetaStore implements IMetaStore {
       File[] elementTypeFiles = listFiles( elementTypeFolderFile );
       for ( File elementTypeFile : elementTypeFiles ) {
         String elementId = elementTypeFile.getName();
+        // File .type.xml doesn't hidden in OS Windows so better to ignore it explicitly
+        if ( elementId.equals( XmlUtil.ELEMENT_TYPE_FILE_NAME ) ) {
+          continue;
+        }
         elementId = elementId.substring( 0, elementId.length() - 4 ); // remove .xml to get the ID
         elementIds.add( elementId );
       }

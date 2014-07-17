@@ -18,9 +18,13 @@
 package org.pentaho.metastore.stores.memory;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.locks.ReentrantReadWriteLock;
+import java.util.concurrent.locks.ReentrantReadWriteLock.ReadLock;
+import java.util.concurrent.locks.ReentrantReadWriteLock.WriteLock;
 
 import org.pentaho.metastore.api.BaseMetaStore;
 import org.pentaho.metastore.api.IMetaStore;
@@ -37,20 +41,37 @@ import org.pentaho.metastore.api.security.MetaStoreElementOwnerType;
 
 public class MemoryMetaStore extends BaseMetaStore implements IMetaStore {
 
-  private Map<String, MemoryMetaStoreNamespace> namespacesMap;
+  private final Map<String, MemoryMetaStoreNamespace> namespacesMap;
+
+  private final ReadLock readLock;
+  private final WriteLock writeLock;
 
   public MemoryMetaStore() {
     namespacesMap = new HashMap<String, MemoryMetaStoreNamespace>();
+
+    ReentrantReadWriteLock lock = new ReentrantReadWriteLock();
+    readLock = lock.readLock();
+    writeLock = lock.writeLock();
   }
 
   @Override
   public List<String> getNamespaces() throws MetaStoreException {
-    return new ArrayList<String>( namespacesMap.keySet() );
+    readLock.lock();
+    try {
+      return new ArrayList<String>( namespacesMap.keySet() );
+    } finally {
+      readLock.unlock();
+    }
   }
 
   @Override
   public boolean namespaceExists( String namespace ) throws MetaStoreException {
-    return namespacesMap.get( namespace ) != null;
+    readLock.lock();
+    try {
+      return namespacesMap.get( namespace ) != null;
+    } finally {
+      readLock.unlock();
+    }
   }
 
   @Override
@@ -65,245 +86,266 @@ public class MemoryMetaStore extends BaseMetaStore implements IMetaStore {
   }
 
   @Override
-  public synchronized void createNamespace( String namespace ) throws MetaStoreException,
-    MetaStoreNamespaceExistsException {
-    MemoryMetaStoreNamespace storeNamespace = namespacesMap.get( namespace );
-    if ( storeNamespace != null ) {
-      throw new MetaStoreNamespaceExistsException( "Unable to create namespace '" + namespace
-          + "' as it already exist!" );
-    }
-    storeNamespace = new MemoryMetaStoreNamespace( namespace );
-    namespacesMap.put( namespace, storeNamespace );
-  }
-
-  @Override
-  public synchronized void deleteNamespace( String namespace ) throws MetaStoreException,
-    MetaStoreDependenciesExistsException {
-    if ( namespacesMap.get( namespace ) == null ) {
-      throw new MetaStoreException( "Unable to delete namespace '" + namespace + "' as it doesn't exist" );
-    }
-    List<IMetaStoreElementType> elementTypes = getElementTypes( namespace );
-    if ( elementTypes.isEmpty() ) {
-      namespacesMap.remove( namespace );
-    } else {
-      List<String> ids = new ArrayList<String>();
-      for ( IMetaStoreElementType type : elementTypes ) {
-        ids.add( type.getId() );
+  public void createNamespace( String namespace ) throws MetaStoreException, MetaStoreNamespaceExistsException {
+    writeLock.lock();
+    try {
+      if ( namespacesMap.containsKey( namespace ) ) {
+        throw new MetaStoreNamespaceExistsException( "Unable to create namespace '" + namespace
+            + "' as it already exists!" );
+      } else {
+        MemoryMetaStoreNamespace storeNamespace = new MemoryMetaStoreNamespace( namespace );
+        namespacesMap.put( namespace, storeNamespace );
       }
-      throw new MetaStoreDependenciesExistsException( ids, "Namespace '" + namespace + "' is not empty!" );
+    } finally {
+      writeLock.unlock();
     }
+
   }
 
   @Override
-  public synchronized List<IMetaStoreElementType> getElementTypes( String namespace ) throws MetaStoreException {
-    MemoryMetaStoreNamespace storeNamespace = namespacesMap.get( namespace );
-    if ( storeNamespace == null ) {
-      return new ArrayList<IMetaStoreElementType>();
-    } else {
-      return new ArrayList<IMetaStoreElementType>( storeNamespace.getTypeMap().values() );
-    }
-  }
+  public void deleteNamespace( String namespace ) throws MetaStoreException, MetaStoreDependenciesExistsException {
+    writeLock.lock();
+    try {
+      MemoryMetaStoreNamespace storeNamespace = namespacesMap.get( namespace );
 
-  @Override
-  public synchronized IMetaStoreElementType getElementType( String namespace, String elementTypeId )
-    throws MetaStoreException {
-    MemoryMetaStoreNamespace storeNamespace = namespacesMap.get( namespace );
-    if ( storeNamespace != null ) {
-      return storeNamespace.getTypeMap().get( elementTypeId );
-    }
-    return null;
-  }
+      if ( storeNamespace == null ) {
+        throw new MetaStoreException( "Unable to delete namespace '" + namespace + "' as it doesn't exist" );
+      }
 
-  @Override
-  public synchronized IMetaStoreElementType getElementTypeByName( String namespace, String elementTypeName )
-    throws MetaStoreException {
-    MemoryMetaStoreNamespace storeNamespace = namespacesMap.get( namespace );
-    if ( storeNamespace != null ) {
-      for ( MemoryMetaStoreElementType elementType : storeNamespace.getTypeMap().values() ) {
-        if ( elementType.getName().equalsIgnoreCase( elementTypeName ) ) {
-          return elementType;
+      storeNamespace.getReadLock().lock();
+      try {
+        List<String> elementTypeIds = storeNamespace.getElementTypeIds();
+        if ( elementTypeIds.isEmpty() ) {
+          namespacesMap.remove( namespace );
+        } else {
+          throw new MetaStoreDependenciesExistsException( elementTypeIds, "Namespace '" + namespace
+            + "' is not empty!" );
         }
+      } finally {
+        storeNamespace.getReadLock().unlock();
       }
+    } finally {
+      writeLock.unlock();
     }
-    return null;
   }
 
   @Override
-  public synchronized List<String> getElementTypeIds( String namespace ) throws MetaStoreException {
-    MemoryMetaStoreNamespace storeNamespace = namespacesMap.get( namespace );
-    if ( storeNamespace != null ) {
-      ArrayList<String> list = new ArrayList<String>();
-      for ( MemoryMetaStoreElementType elementType : storeNamespace.getTypeMap().values() ) {
-        list.add( elementType.getId() );
+  public List<IMetaStoreElementType> getElementTypes( String namespace ) throws MetaStoreException {
+    readLock.lock();
+    try {
+      MemoryMetaStoreNamespace storeNamespace = namespacesMap.get( namespace );
+      if ( storeNamespace != null ) {
+        return storeNamespace.getElementTypes();
       }
-      return list;
-    } else {
-      return new ArrayList<String>();
+      return Collections.emptyList();
+    } finally {
+      readLock.unlock();
     }
   }
 
   @Override
-  public synchronized void createElementType( String namespace, IMetaStoreElementType elementType )
-    throws MetaStoreException, MetaStoreElementTypeExistsException {
-    MemoryMetaStoreNamespace storeNamespace = namespacesMap.get( namespace );
-    if ( storeNamespace != null ) {
-
-      // For the memory store, the ID is the same as the name if empty
-      if ( elementType.getId() == null ) {
-        elementType.setId( elementType.getName() );
+  public IMetaStoreElementType getElementType( String namespace, String elementTypeId ) throws MetaStoreException {
+    readLock.lock();
+    try {
+      MemoryMetaStoreNamespace storeNamespace = namespacesMap.get( namespace );
+      if ( storeNamespace != null ) {
+        return storeNamespace.getElementTypeById( elementTypeId );
       }
-
-      MemoryMetaStoreElementType verifyType = storeNamespace.getTypeMap().get( elementType.getId() );
-      if ( verifyType != null ) {
-        throw new MetaStoreElementTypeExistsException( getElementTypes( namespace ), "Element type with ID '"
-            + elementType.getId() + "' already exists" );
-      } else {
-        MemoryMetaStoreElementType copiedType = new MemoryMetaStoreElementType( elementType );
-        storeNamespace.getTypeMap().put( elementType.getId(), copiedType );
-        copiedType.setMetaStoreName( getName() );
-        elementType.setMetaStoreName( getName() );
-      }
-    } else {
-      throw new MetaStoreException( "Namespace '" + namespace + "' doesn't exist!" );
-    }
-  }
-
-  @Override
-  public synchronized void updateElementType( String namespace, IMetaStoreElementType elementType )
-    throws MetaStoreException {
-    MemoryMetaStoreNamespace storeNamespace = namespacesMap.get( namespace );
-    if ( storeNamespace != null ) {
-      MemoryMetaStoreElementType verifyType = storeNamespace.getTypeMap().get( elementType.getId() );
-      if ( verifyType == null ) {
-        throw new MetaStoreElementTypeExistsException( getElementTypes( namespace ),
-            "Element type to update, with ID '" + elementType.getId() + "', does not exist" );
-      } else {
-        MemoryMetaStoreElementType copiedType = new MemoryMetaStoreElementType( elementType );
-        storeNamespace.getTypeMap().put( elementType.getId(), copiedType );
-        copiedType.setMetaStoreName( getName() );
-        elementType.setMetaStoreName( getName() );
-      }
-    } else {
-      throw new MetaStoreException( "Namespace '" + namespace + "' doesn't exist!" );
-    }
-  }
-
-  @Override
-  public synchronized void deleteElementType( String namespace, IMetaStoreElementType elementType )
-    throws MetaStoreException, MetaStoreDependenciesExistsException {
-    MemoryMetaStoreNamespace storeNamespace = namespacesMap.get( namespace );
-    if ( storeNamespace != null ) {
-      MemoryMetaStoreElementType verifyType = storeNamespace.getTypeMap().get( elementType.getId() );
-      if ( verifyType == null ) {
-        throw new MetaStoreElementTypeExistsException( getElementTypes( namespace ),
-            "Element type to delete, with ID '" + elementType.getId() + "', does not exist" );
-      } else {
-        // See if there are elements in there...
-        //
-        if ( !verifyType.getElementMap().isEmpty() ) {
-          throw new MetaStoreDependenciesExistsException( getElementIds( namespace, elementType ),
-              "Element type with ID '" + elementType.getId() + "' could not be deleted as it still contains elements." );
-        }
-        storeNamespace.getTypeMap().remove( elementType.getId() );
-      }
-    } else {
-      throw new MetaStoreException( "Namespace '" + namespace + "' doesn't exist!" );
-    }
-  }
-
-  @Override
-  public synchronized List<IMetaStoreElement> getElements( String namespace, IMetaStoreElementType elementType )
-    throws MetaStoreException {
-    MemoryMetaStoreElementType foundType =
-        (MemoryMetaStoreElementType) getElementTypeByName( namespace, elementType.getName() );
-    if ( foundType == null ) {
-      return new ArrayList<IMetaStoreElement>();
-    } else {
-      return new ArrayList<IMetaStoreElement>( foundType.getElementMap().values() );
-    }
-  }
-
-  @Override
-  public synchronized List<String> getElementIds( String namespace, IMetaStoreElementType elementType )
-    throws MetaStoreException {
-    MemoryMetaStoreElementType foundType =
-        (MemoryMetaStoreElementType) getElementTypeByName( namespace, elementType.getName() );
-
-    List<String> ids = new ArrayList<String>();
-    for ( String id : foundType.getElementMap().keySet() ) {
-      ids.add( id );
-    }
-
-    return ids;
-  }
-
-  @Override
-  public synchronized IMetaStoreElement getElement( String namespace, IMetaStoreElementType elementType,
-      String elementId ) throws MetaStoreException {
-    MemoryMetaStoreElementType foundType =
-        (MemoryMetaStoreElementType) getElementTypeByName( namespace, elementType.getName() );
-    if ( foundType == null ) {
       return null;
+    } finally {
+      readLock.unlock();
     }
-    return foundType.getElementMap().get( elementId );
   }
 
   @Override
-  public synchronized IMetaStoreElement getElementByName( String namespace, IMetaStoreElementType elementType,
-      String name ) throws MetaStoreException {
-    for ( IMetaStoreElement element : getElements( namespace, elementType ) ) {
-      if ( element.getName() != null && element.getName().equalsIgnoreCase( name ) ) {
-        return element;
+  public IMetaStoreElementType getElementTypeByName( String namespace, String elementTypeName )
+    throws MetaStoreException {
+    readLock.lock();
+    try {
+      MemoryMetaStoreNamespace storeNamespace = namespacesMap.get( namespace );
+      if ( storeNamespace != null ) {
+        return storeNamespace.getElementTypeByName( elementTypeName );
       }
+      return null;
+    } finally {
+      readLock.unlock();
     }
-    return null;
   }
 
   @Override
-  public synchronized void
-    createElement( String namespace, IMetaStoreElementType elementType, IMetaStoreElement element )
-      throws MetaStoreException, MetaStoreElementExistException {
-    // For the memory store, the ID is the same as the name if empty
-    if ( element.getId() == null ) {
-      element.setId( element.getName() );
+  public List<String> getElementTypeIds( String namespace ) throws MetaStoreException {
+    readLock.lock();
+    try {
+      MemoryMetaStoreNamespace storeNamespace = namespacesMap.get( namespace );
+      if ( storeNamespace != null ) {
+        return storeNamespace.getElementTypeIds();
+      }
+      return Collections.emptyList();
+    } finally {
+      readLock.unlock();
     }
-
-    MemoryMetaStoreElementType foundType =
-        (MemoryMetaStoreElementType) getElementTypeByName( namespace, elementType.getName() );
-    if ( foundType == null ) {
-      throw new MetaStoreException( "Element type '" + elementType.getName() + "' couldn't be found" );
-    }
-    foundType.getElementMap().put( element.getId(), new MemoryMetaStoreElement( element ) );
   }
 
   @Override
-  public synchronized void updateElement( String namespace, IMetaStoreElementType elementType, String elementId,
+  public void createElementType( String namespace, IMetaStoreElementType elementType ) throws MetaStoreException,
+    MetaStoreElementTypeExistsException {
+    readLock.lock();
+    try {
+      MemoryMetaStoreNamespace storeNamespace = namespacesMap.get( namespace );
+      if ( storeNamespace != null ) {
+        storeNamespace.createElementType( getName(), elementType );
+      } else {
+        throw new MetaStoreException( "Namespace '" + namespace + "' doesn't exist!" );
+      }
+    } finally {
+      readLock.unlock();
+    }
+  }
+
+  @Override
+  public void updateElementType( String namespace, IMetaStoreElementType elementType ) throws MetaStoreException {
+    readLock.lock();
+    try {
+      MemoryMetaStoreNamespace storeNamespace = namespacesMap.get( namespace );
+      if ( storeNamespace != null ) {
+        storeNamespace.updateElementType( getName(), elementType );
+      } else {
+        throw new MetaStoreException( "Namespace '" + namespace + "' doesn't exist!" );
+      }
+    } finally {
+      readLock.unlock();
+    }
+  }
+
+  @Override
+  public void deleteElementType( String namespace, IMetaStoreElementType elementType ) throws MetaStoreException,
+    MetaStoreDependenciesExistsException {
+    readLock.lock();
+    try {
+      MemoryMetaStoreNamespace storeNamespace = namespacesMap.get( namespace );
+      if ( storeNamespace != null ) {
+        storeNamespace.deleteElementType( elementType );
+      } else {
+        throw new MetaStoreException( "Namespace '" + namespace + "' doesn't exist!" );
+      }
+    } finally {
+      readLock.unlock();
+    }
+  }
+
+  @Override
+  public List<IMetaStoreElement> getElements( String namespace, IMetaStoreElementType elementType )
+    throws MetaStoreException {
+    readLock.lock();
+    try {
+      MemoryMetaStoreNamespace storeNamespace = namespacesMap.get( namespace );
+      if ( storeNamespace != null ) {
+        return storeNamespace.getElementsByElementTypeName( elementType.getName() );
+      }
+      return Collections.emptyList();
+    } finally {
+      readLock.unlock();
+    }
+  }
+
+  @Override
+  public List<String> getElementIds( String namespace, IMetaStoreElementType elementType ) throws MetaStoreException {
+    readLock.lock();
+    try {
+      MemoryMetaStoreNamespace storeNamespace = namespacesMap.get( namespace );
+      if ( storeNamespace != null ) {
+        return storeNamespace.getElementIdsByElementTypeName( elementType.getName() );
+      }
+      return Collections.emptyList();
+    } finally {
+      readLock.unlock();
+    }
+  }
+
+  @Override
+  public IMetaStoreElement getElement( String namespace, IMetaStoreElementType elementType, String elementId )
+    throws MetaStoreException {
+    readLock.lock();
+    try {
+      MemoryMetaStoreNamespace storeNamespace = namespacesMap.get( namespace );
+      if ( storeNamespace != null ) {
+        return storeNamespace.getElementByTypeNameId( elementType.getName(), elementId );
+      }
+      return null;
+    } finally {
+      readLock.unlock();
+    }
+  }
+
+  @Override
+  public IMetaStoreElement getElementByName( String namespace, IMetaStoreElementType elementType, String name )
+    throws MetaStoreException {
+    readLock.lock();
+    try {
+      MemoryMetaStoreNamespace storeNamespace = namespacesMap.get( namespace );
+      if ( storeNamespace != null ) {
+        return storeNamespace.getElementByNameTypeName( elementType.getName(), name );
+      }
+      return null;
+    } finally {
+      readLock.unlock();
+    }
+  }
+
+  @Override
+  public void createElement( String namespace, IMetaStoreElementType elementType, IMetaStoreElement element )
+    throws MetaStoreException, MetaStoreElementExistException {
+    readLock.lock();
+    try {
+      MemoryMetaStoreNamespace storeNamespace = namespacesMap.get( namespace );
+      if ( storeNamespace != null ) {
+        storeNamespace.createElement( elementType, element );
+      } else {
+        throw new MetaStoreException( "Namespace '" + namespace + "' doesn't exist!" );
+      }
+    } finally {
+      readLock.unlock();
+    }
+  }
+
+  @Override
+  public void updateElement( String namespace, IMetaStoreElementType elementType, String elementId,
       IMetaStoreElement element ) throws MetaStoreException {
 
     // verify that the element type belongs to this meta store
     //
-    if ( elementType.getMetaStoreName() == null || !elementType.getName().equals( getName() ) ) {
+    if ( elementType.getMetaStoreName() == null || !elementType.getMetaStoreName().equals( getName() ) ) {
       throw new MetaStoreException( "The element type '" + elementType.getName()
-          + "' needs to explicitly belong to the meta store in which you are updating." );
+        + "' needs to explicitly belong to the meta store in which you are updating." );
     }
 
-    MemoryMetaStoreElementType foundType =
-        (MemoryMetaStoreElementType) getElementTypeByName( namespace, elementType.getName() );
-    if ( foundType == null ) {
-      throw new MetaStoreException( "Element type '" + elementType.getName() + "' couldn't be found" );
+    readLock.lock();
+    try {
+      MemoryMetaStoreNamespace storeNamespace = namespacesMap.get( namespace );
+      if ( storeNamespace != null ) {
+        storeNamespace.updateElement( elementType, elementId, element );
+      } else {
+        throw new MetaStoreException( "Namespace '" + namespace + "' doesn't exist!" );
+      }
+    } finally {
+      readLock.unlock();
     }
-    foundType.getElementMap().put( elementId, new MemoryMetaStoreElement( element ) );
   }
 
   @Override
-  public synchronized void deleteElement( String namespace, IMetaStoreElementType elementType, String elementId )
+  public void deleteElement( String namespace, IMetaStoreElementType elementType, String elementId )
     throws MetaStoreException {
-    MemoryMetaStoreElementType foundType =
-        (MemoryMetaStoreElementType) getElementTypeByName( namespace, elementType.getName() );
-    if ( foundType == null ) {
-      throw new MetaStoreException( "Element type '" + elementType.getName() + "' couldn't be found" );
+    readLock.lock();
+    try {
+      MemoryMetaStoreNamespace storeNamespace = namespacesMap.get( namespace );
+      if ( storeNamespace != null ) {
+        storeNamespace.deleteElement( elementType, elementId );
+      } else {
+        throw new MetaStoreException( "Namespace '" + namespace + "' doesn't exist!" );
+      }
+    } finally {
+      readLock.unlock();
     }
-    foundType.getElementMap().remove( elementId );
   }
 
   @Override
