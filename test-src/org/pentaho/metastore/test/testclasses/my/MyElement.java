@@ -1,4 +1,4 @@
-package org.pentaho.metastore.test.testclasses;
+package org.pentaho.metastore.test.testclasses.my;
 
 import java.util.ArrayList;
 import java.util.Date;
@@ -13,6 +13,7 @@ import org.pentaho.metastore.persist.MetaStoreElementType;
 public class MyElement {
   public static final String LIST_KEY_MY_NAMES = "MyNames";
   public static final String LIST_KEY_MY_FILENAMES = "MyFilenames";
+  public static final String FACTORY_OTHER_ELEMENT = "MyOtherElementFactory";
 
   private String name;
 
@@ -40,17 +41,24 @@ public class MyElement {
   @MetaStoreAttribute
   private List<MyElementAttr> subAttributes;
 
+  @MetaStoreAttribute
+  private List<String> stringList;
+
   @MetaStoreAttribute( nameReference = true, nameListKey = LIST_KEY_MY_NAMES )
   private MyNameElement nameElement;
 
   @MetaStoreAttribute( filenameReference = true, filenameListKey = LIST_KEY_MY_FILENAMES )
   private MyFilenameElement filenameElement;
 
+  @MetaStoreAttribute( factoryNameReference = true, factoryNameKey = FACTORY_OTHER_ELEMENT )
+  private MyOtherElement myOtherElement;
+
   /** 
    * We need the empty constructor for our factory.  Having any other constructor is fine too, but this one is mandatory!
    */
   public MyElement() {
     subAttributes = new ArrayList<MyElementAttr>();
+    stringList = new ArrayList<String>();
   }
 
   public MyElement( String name, String myAttribute, String anotherAttribute, String passwordAttribute, int intAttribute, long longAttribute, boolean boolAttribute, Date dateAttribute ) {
@@ -151,5 +159,33 @@ public class MyElement {
 
   public void setFilenameElement( MyFilenameElement filenameElement ) {
     this.filenameElement = filenameElement;
+  }
+
+  /**
+   * @return the stringList
+   */
+  public List<String> getStringList() {
+    return stringList;
+  }
+
+  /**
+   * @param stringList the stringList to set
+   */
+  public void setStringList( List<String> stringList ) {
+    this.stringList = stringList;
+  }
+
+  /**
+   * @return the myOtherElement
+   */
+  public MyOtherElement getMyOtherElement() {
+    return myOtherElement;
+  }
+
+  /**
+   * @param myOtherElement the myOtherElement to set
+   */
+  public void setMyOtherElement( MyOtherElement myOtherElement ) {
+    this.myOtherElement = myOtherElement;
   }
 }

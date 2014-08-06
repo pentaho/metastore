@@ -1,6 +1,7 @@
 package org.pentaho.metastore.test;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Date;
 import java.util.List;
 
@@ -12,15 +13,23 @@ import org.pentaho.metastore.api.IMetaStoreElement;
 import org.pentaho.metastore.api.IMetaStoreElementType;
 import org.pentaho.metastore.persist.MetaStoreFactory;
 import org.pentaho.metastore.stores.memory.MemoryMetaStore;
-import org.pentaho.metastore.test.testclasses.MyElement;
-import org.pentaho.metastore.test.testclasses.MyElementAttr;
-import org.pentaho.metastore.test.testclasses.MyFilenameElement;
-import org.pentaho.metastore.test.testclasses.MyNameElement;
+import org.pentaho.metastore.test.testclasses.cube.Cube;
+import org.pentaho.metastore.test.testclasses.cube.Dimension;
+import org.pentaho.metastore.test.testclasses.cube.DimensionAttribute;
+import org.pentaho.metastore.test.testclasses.cube.DimensionType;
+import org.pentaho.metastore.test.testclasses.cube.Kpi;
+import org.pentaho.metastore.test.testclasses.my.MyElement;
+import org.pentaho.metastore.test.testclasses.my.MyElementAttr;
+import org.pentaho.metastore.test.testclasses.my.MyFilenameElement;
+import org.pentaho.metastore.test.testclasses.my.MyNameElement;
+import org.pentaho.metastore.test.testclasses.my.MyOtherElement;
 import org.pentaho.metastore.util.MetaStoreUtil;
 
 public class MetaStoreFactoryTest extends TestCase {
 
   public void testMyElement() throws Exception {
+
+    IMetaStore metaStore = new MemoryMetaStore();
 
     String NAME = "one";
     String ATTR = "11111111";
@@ -53,19 +62,23 @@ public class MetaStoreFactoryTest extends TestCase {
     }
     me.setNameElement( nameList.get( NR_NAME - 1 ) );
     me.setFilenameElement( filenameList.get( NR_FILENAME - 1 ) );
+    List<String> stringList = Arrays.asList( "a", "b", "c", "d" );
+    me.setStringList( stringList );
+    MyOtherElement myOtherElement = new MyOtherElement( "other", "other attribute" );
+    me.setMyOtherElement( myOtherElement );
 
-    IMetaStore metaStore = new MemoryMetaStore();
-
+    MetaStoreFactory<MyOtherElement> otherFactory = new MetaStoreFactory<MyOtherElement>( MyOtherElement.class, metaStore, "custom" );
     MetaStoreFactory<MyElement> factory = new MetaStoreFactory<MyElement>( MyElement.class, metaStore, "custom" );
+
+    // For loading, specify the name, filename lists or factory that we're referencing...
+    //
+    factory.addNameList( MyElement.LIST_KEY_MY_NAMES, nameList );
+    factory.addFilenameList( MyElement.LIST_KEY_MY_FILENAMES, filenameList );
+    factory.addNameFactory( MyElement.FACTORY_OTHER_ELEMENT, otherFactory );
 
     // Store the class in the meta store
     //
     factory.saveElement( me );
-
-    // For loading, specify the name and filename lists we're referencing...
-    //
-    factory.addNameList( MyElement.LIST_KEY_MY_NAMES, nameList );
-    factory.addFilenameList( MyElement.LIST_KEY_MY_FILENAMES, filenameList );
 
     // Load the class from the meta store
     //
@@ -121,6 +134,20 @@ public class MetaStoreFactoryTest extends TestCase {
       assertEquals( "desc" + i, attr.getDescription() );
     }
 
+    // Verify the referenced MyOtherElement
+    //
+    MyOtherElement verifyOtherElement = verify.getMyOtherElement();
+    assertNotNull( verifyOtherElement );
+    assertEquals( myOtherElement.getName(), verifyOtherElement.getName() );
+    assertEquals( myOtherElement.getSomeAttribute(), verifyOtherElement.getSomeAttribute() );
+
+    // verify that the String list is loaded...
+    List<String> verifyList = verify.getStringList();
+    assertEquals( stringList.size(), verifyList.size() );
+    for ( int i = 0; i < stringList.size(); i++ ) {
+      assertEquals( stringList.get( i ), verifyList.get( i ) );
+    }
+
     List<String> names = factory.getElementNames();
     assertEquals( 1, names.size() );
     assertEquals( NAME, names.get( 0 ) );
@@ -133,4 +160,113 @@ public class MetaStoreFactoryTest extends TestCase {
     assertEquals( 0, factory.getElementNames().size() );
     assertEquals( 0, factory.getElements().size() );
   }
+
+  public void testCube() throws Exception {
+    IMetaStore metaStore = new MemoryMetaStore();
+    MetaStoreFactory<Cube> factoryCube = new MetaStoreFactory<Cube>( Cube.class, metaStore, "pentaho" );
+    MetaStoreFactory<Dimension> factoryDimension = new MetaStoreFactory<Dimension>( Dimension.class, metaStore, "pentaho" );
+    factoryCube.addNameFactory( Cube.DIMENSION_FACTORY_KEY, factoryDimension );
+
+    Cube cube = generateCube();
+    factoryCube.saveElement( cube );
+
+    // Now load back and verify...
+    Cube verify = factoryCube.loadElement( cube.getName() );
+
+    assertEquals( cube.getName(), verify.getName() );
+    assertEquals( cube.getDimensions().size(), verify.getDimensions().size() );
+    for ( int i = 0; i < cube.getDimensions().size(); i++ ) {
+      Dimension dimension = cube.getDimensions().get( i );
+      Dimension verifyDimension = verify.getDimensions().get( i );
+      assertEquals( dimension.getName(), verifyDimension.getName() );
+      assertEquals( dimension.getDimensionType(), verifyDimension.getDimensionType() );
+      assertEquals( dimension.getAttributes().size(), verifyDimension.getAttributes().size() );
+      for ( int x = 0; x < dimension.getAttributes().size(); x++ ) {
+        DimensionAttribute attr = dimension.getAttributes().get( i );
+        DimensionAttribute attrVerify = verifyDimension.getAttributes().get( i );
+        assertEquals( attr.getName(), attrVerify.getName() );
+        assertEquals( attr.getDescription(), attrVerify.getDescription() );
+        assertEquals( attr.getSomeOtherStuff(), attrVerify.getSomeOtherStuff() );
+      }
+    }
+
+    assertEquals( cube.getKpis().size(), verify.getKpis().size() );
+    for ( int i = 0; i < cube.getKpis().size(); i++ ) {
+      Kpi kpi = cube.getKpis().get( i );
+      Kpi verifyKpi = verify.getKpis().get( i );
+      assertEquals( kpi.getName(), verifyKpi.getName() );
+      assertEquals( kpi.getDescription(), verifyKpi.getDescription() );
+      assertEquals( kpi.getOtherDetails(), verifyKpi.getOtherDetails() );
+    }
+
+    assertNotNull( verify.getJunkDimension() );
+    Dimension junk = cube.getJunkDimension();
+    Dimension junkVerify = verify.getJunkDimension();
+    assertEquals( junk.getName(), junkVerify.getName() );
+    assertEquals( junk.getAttributes().size(), junkVerify.getAttributes().size() );
+    for ( int i = 0; i < junk.getAttributes().size(); i++ ) {
+      DimensionAttribute attr = junk.getAttributes().get( i );
+      DimensionAttribute attrVerify = junkVerify.getAttributes().get( i );
+      assertEquals( attr.getName(), attrVerify.getName() );
+      assertEquals( attr.getDescription(), attrVerify.getDescription() );
+      assertEquals( attr.getSomeOtherStuff(), attrVerify.getSomeOtherStuff() );
+    }
+
+  }
+
+  private Cube generateCube() {
+    Cube cube = new Cube();
+    cube.setName( "Fact" );
+
+    Dimension customer = new Dimension();
+    customer.setName( "customer" );
+    customer.setAttributes( generateAttributes() );
+    customer.setDimensionType( DimensionType.SCD );
+    cube.getDimensions().add( customer );
+
+    Dimension product = new Dimension();
+    product.setName( "product" );
+    product.setAttributes( generateAttributes() );
+    product.setDimensionType( null );
+    cube.getDimensions().add( product );
+
+    Dimension date = new Dimension();
+    date.setName( "date" );
+    date.setAttributes( generateAttributes() );
+    date.setDimensionType( DimensionType.DATE );
+    cube.getDimensions().add( date );
+
+    Dimension junk = new Dimension();
+    junk.setName( "junk" );
+    junk.setAttributes( generateAttributes() );
+    junk.setDimensionType( DimensionType.JUNK );
+    cube.setJunkDimension( junk );
+
+    cube.setKpis( generateKpis() );
+    return cube;
+  }
+
+  private List<Kpi> generateKpis() {
+    List<Kpi> list = new ArrayList<Kpi>();
+    for ( int i = 0; i < 5; i++ ) {
+      Kpi kpi = new Kpi();
+      kpi.setName( "kpi-" + ( i + 1 ) );
+      kpi.setDescription( "desc-" + ( i + 1 ) );
+      kpi.setOtherDetails( "othd-" + ( i + 1 ) );
+    }
+    return list;
+  }
+
+  private List<DimensionAttribute> generateAttributes() {
+    List<DimensionAttribute> list = new ArrayList<DimensionAttribute>();
+    for ( int i = 0; i < 10; i++ ) {
+      DimensionAttribute attribute = new DimensionAttribute();
+      attribute.setName( "attr-" + ( i + 1 ) );
+      attribute.setDescription( "desc-" + ( i + 1 ) );
+      attribute.setSomeOtherStuff( "other" + ( i + 1 ) );
+      list.add( attribute );
+    }
+    return list;
+  }
+
 }
