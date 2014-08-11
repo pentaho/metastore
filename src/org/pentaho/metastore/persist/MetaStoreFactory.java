@@ -19,8 +19,10 @@ import org.pentaho.metastore.util.MetaStoreUtil;
 public class MetaStoreFactory<T> {
 
   private enum AttributeType {
-    STRING, INTEGER, LONG, DATE, BOOLEAN, LIST, NAME_REFERENCE, FILENAME_REFERENCE, FACTORY_NAME_REFERENCE, ENUM;
+    STRING, INTEGER, LONG, DATE, BOOLEAN, LIST, NAME_REFERENCE, FILENAME_REFERENCE, FACTORY_NAME_REFERENCE, ENUM, POJO;
   }
+
+  private static final String OBJECT_FACTORY_CONTEXT = "_ObjectFactoryContext_";
 
   protected IMetaStore metaStore;
   protected final Class<T> clazz;
@@ -29,6 +31,8 @@ public class MetaStoreFactory<T> {
   protected Map<String, List<?>> nameListMap;
   protected Map<String, MetaStoreFactory<?>> nameFactoryMap;
   protected Map<String, List<?>> filenameListMap;
+
+  protected IMetaStoreObjectFactory objectFactory;
 
   private volatile SimpleDateFormat DATE_FORMAT = new SimpleDateFormat( "yyyy-MM-dd HH:mm:ss.SSS" );
 
@@ -154,6 +158,26 @@ public class MetaStoreFactory<T> {
             case FILENAME_REFERENCE:
               loadFilenameReference( parentClass, parentObject, field, child, attributeAnnotation );
               break;
+            case POJO:
+              if ( value != null && value.length() > 0 ) {
+                try {
+                  Class<?> pojoClass;
+                  Object pojoObject;
+                  if ( objectFactory == null ) {
+                    pojoClass = Class.forName( value );
+                    pojoObject = pojoClass.newInstance();
+                  } else {
+                    Map<String, String> objectFactoryContext = getObjectFactoryContext( parentElement );
+                    pojoObject = objectFactory.instantiateClass( value, objectFactoryContext );
+                    pojoClass = pojoObject.getClass();
+                  }
+                  loadAttributes( pojoObject, child, pojoClass );
+                  setAttributeValue( parentClass, parentObject, field.getName(), setterName, field.getType(), pojoObject );
+                } catch ( Exception e ) {
+                  throw new MetaStoreException( "Unable to load POJO class " + value + " in parent class: " + parentClass, e );
+                }
+              }
+              break;
             default:
               throw new MetaStoreException( "Only String values are supported at this time" );
 
@@ -161,6 +185,47 @@ public class MetaStoreFactory<T> {
           }
         }
       }
+    }
+  }
+
+  /**
+   * There's an attribute in the parentElement called OBJECT_FACTORY_CONTEXT which contains a set of key/value pair attributes which we'll simply read and pass back.
+   * 
+   * @param parentElement the parent element to read the object factory context from
+   * @return
+   */
+  private Map<String, String> getObjectFactoryContext( IMetaStoreAttribute parentElement ) {
+    Map<String, String> context = new HashMap<String, String>();
+
+    IMetaStoreAttribute contextChild = parentElement.getChild( OBJECT_FACTORY_CONTEXT );
+    if ( contextChild != null ) {
+      for ( IMetaStoreAttribute child : contextChild.getChildren() ) {
+        if ( child.getId() != null && child.getValue() != null ) {
+          context.put( child.getId(), child.getValue().toString() );
+        }
+      }
+    }
+
+    return context;
+  }
+
+  /**
+   * Save contextual information about an object from an object factory
+   * @param parentElement
+   * @param context
+   * @throws MetaStoreException 
+   */
+  private void saveObjectFactoryContext( IMetaStoreAttribute parentElement, Map<String, String> context ) throws MetaStoreException {
+    if ( context == null || context.isEmpty() ) {
+      return;
+    }
+
+    IMetaStoreAttribute contextAttribute = metaStore.newAttribute( OBJECT_FACTORY_CONTEXT, null );
+    parentElement.addChild( contextAttribute );
+
+    for ( String key : context.keySet() ) {
+      IMetaStoreAttribute attribute = metaStore.newAttribute( key, context.get( key ) );
+      contextAttribute.addChild( attribute );
     }
   }
 
@@ -182,7 +247,6 @@ public class MetaStoreFactory<T> {
       List<Object> list = (List<Object>) listGetMethod.invoke( parentObject );
 
       String childClassName = parentElement.getValue().toString();
-      Class<?> childClass = clazz.getClassLoader().loadClass( childClassName );
 
       List<IMetaStoreAttribute> children = parentElement.getChildren();
       for ( int i = 0; i < children.size(); i++ ) {
@@ -199,7 +263,7 @@ public class MetaStoreFactory<T> {
           String value = (String) child.getValue();
           Object object = factory.loadElement( value );
           list.add( object );
-        } else if ( childClass.equals( String.class ) ) {
+        } else if ( childClassName.equals( String.class.getName() ) ) {
           // String lists are a special case
           //
           String value = (String) child.getValue();
@@ -207,7 +271,17 @@ public class MetaStoreFactory<T> {
             list.add( value );
           }
         } else {
-          Object childObject = childClass.newInstance();
+          Class<?> childClass;
+          Object childObject;
+          if ( objectFactory == null ) {
+            childClass = clazz.getClassLoader().loadClass( childClassName );
+            childObject = childClass.newInstance();
+          } else {
+            Map<String, String> context = getObjectFactoryContext( child );
+            childObject = objectFactory.instantiateClass( childClassName, context );
+            childClass = childObject.getClass();
+          }
+
           loadAttributes( childObject, child, childClass );
           list.add( childObject );
         }
@@ -461,6 +535,22 @@ public class MetaStoreFactory<T> {
             case FILENAME_REFERENCE:
               saveFilenameReference( parentClass, parentElement, parentObject, field, key );
               break;
+            case POJO:
+              Object pojoObject = getAttributeValue( parentClass, parentObject, field.getName(), getGetterMethodName( field.getName(), false ) );
+              child = metaStore.newAttribute( key, pojoObject == null ? null : pojoObject.getClass().getName() );
+              parentElement.addChild( child );
+
+              // See if we need to store additional information about this class 
+              //
+              if ( objectFactory != null ) {
+                Map<String, String> context = objectFactory.getContext( pojoObject );
+                saveObjectFactoryContext( child, context );
+              }
+
+              if ( pojoObject != null ) {
+                saveAttributes( child, pojoObject.getClass(), pojoObject );
+              }
+              break;
             default:
               throw new MetaStoreException( "Only String values are supported at this time" );
           }
@@ -513,12 +603,20 @@ public class MetaStoreFactory<T> {
           IMetaStoreAttribute nameChild = metaStore.newAttribute( Integer.toString( i ), name );
           topChild.addChild( nameChild );
         } else if ( object instanceof String ) {
+          // STRING
           IMetaStoreAttribute childAttribute = metaStore.newAttribute( Integer.toString( i ), object );
           topChild.addChild( childAttribute );
         } else {
+          // POJO
           IMetaStoreAttribute childAttribute = metaStore.newAttribute( Integer.toString( i ), null );
-          saveAttributes( childAttribute, attributeClass, object );
           topChild.addChild( childAttribute );
+          // See if we need to store additional information about this class 
+          //
+          if ( objectFactory != null ) {
+            Map<String, String> context = objectFactory.getContext( object );
+            saveObjectFactoryContext( childAttribute, context );
+          }
+          saveAttributes( childAttribute, attributeClass, object );
         }
       }
     }
@@ -671,7 +769,9 @@ public class MetaStoreFactory<T> {
     if ( fieldClass.isEnum() ) {
       return AttributeType.ENUM;
     }
-    throw new MetaStoreException( "Unable to recognize attribute type for class '" + fieldClass + "'" );
+    return AttributeType.POJO;
+
+    // throw new MetaStoreException( "Unable to recognize attribute type for class '" + fieldClass + "'" );
   }
 
   private MetaStoreElementType getElementTypeAnnotation() throws MetaStoreException {
@@ -788,6 +888,20 @@ public class MetaStoreFactory<T> {
 
   public void setFilenameListMap( Map<String, List<?>> filenameListMap ) {
     this.filenameListMap = filenameListMap;
+  }
+
+  /**
+   * @return the objectFactory
+   */
+  public IMetaStoreObjectFactory getObjectFactory() {
+    return objectFactory;
+  }
+
+  /**
+   * @param objectFactory the objectFactory to set
+   */
+  public void setObjectFactory( IMetaStoreObjectFactory objectFactory ) {
+    this.objectFactory = objectFactory;
   }
 
 }

@@ -19,7 +19,11 @@ public class Cube {
   @MetaStoreAttribute( factoryNameReference = true, factoryNameKey = DIMENSION_FACTORY_KEY )
   private Dimension junkDimension;
 
+  @MetaStoreAttribute
   private List<Kpi> kpis;
+
+  @MetaStoreAttribute
+  private Kpi mainKpi;
 
   public Cube() {
     dimensions = new ArrayList<Dimension>();
@@ -80,6 +84,20 @@ public class Cube {
    */
   public void setJunkDimension( Dimension junkDimension ) {
     this.junkDimension = junkDimension;
+  }
+
+  /**
+   * @return the mainKpi
+   */
+  public Kpi getMainKpi() {
+    return mainKpi;
+  }
+
+  /**
+   * @param mainKpi the mainKpi to set
+   */
+  public void setMainKpi( Kpi mainKpi ) {
+    this.mainKpi = mainKpi;
   }
 
 }

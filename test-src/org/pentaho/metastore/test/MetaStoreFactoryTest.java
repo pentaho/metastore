@@ -14,6 +14,7 @@ import org.pentaho.metastore.api.IMetaStoreElementType;
 import org.pentaho.metastore.persist.MetaStoreFactory;
 import org.pentaho.metastore.stores.memory.MemoryMetaStore;
 import org.pentaho.metastore.test.testclasses.cube.Cube;
+import org.pentaho.metastore.test.testclasses.cube.CubeObjectFactory;
 import org.pentaho.metastore.test.testclasses.cube.Dimension;
 import org.pentaho.metastore.test.testclasses.cube.DimensionAttribute;
 import org.pentaho.metastore.test.testclasses.cube.DimensionType;
@@ -166,6 +167,9 @@ public class MetaStoreFactoryTest extends TestCase {
     MetaStoreFactory<Cube> factoryCube = new MetaStoreFactory<Cube>( Cube.class, metaStore, "pentaho" );
     MetaStoreFactory<Dimension> factoryDimension = new MetaStoreFactory<Dimension>( Dimension.class, metaStore, "pentaho" );
     factoryCube.addNameFactory( Cube.DIMENSION_FACTORY_KEY, factoryDimension );
+    CubeObjectFactory objectFactory = new CubeObjectFactory();
+    factoryCube.setObjectFactory( objectFactory );
+    factoryDimension.setObjectFactory( objectFactory );
 
     Cube cube = generateCube();
     factoryCube.saveElement( cube );
@@ -212,6 +216,11 @@ public class MetaStoreFactoryTest extends TestCase {
       assertEquals( attr.getSomeOtherStuff(), attrVerify.getSomeOtherStuff() );
     }
 
+    assertNotNull( verify.getMainKpi() );
+    assertEquals( cube.getMainKpi().getName(), verify.getMainKpi().getName() );
+    assertEquals( cube.getMainKpi().getDescription(), verify.getMainKpi().getDescription() );
+    assertEquals( cube.getMainKpi().getOtherDetails(), verify.getMainKpi().getOtherDetails() );
+
   }
 
   private Cube generateCube() {
@@ -243,6 +252,13 @@ public class MetaStoreFactoryTest extends TestCase {
     cube.setJunkDimension( junk );
 
     cube.setKpis( generateKpis() );
+
+    Kpi mainKpi = new Kpi();
+    mainKpi.setName( "mainKpi-name" );
+    mainKpi.setDescription( "mainKpi-description" );
+    mainKpi.setOtherDetails( "mainKpi-otherDetails" );
+    cube.setMainKpi( mainKpi );
+
     return cube;
   }
 

@@ -3,6 +3,7 @@ package org.pentaho.metastore.test.testclasses.cube;
 import org.pentaho.metastore.persist.MetaStoreAttribute;
 
 public class Kpi {
+  @MetaStoreAttribute
   private String name;
 
   @MetaStoreAttribute
