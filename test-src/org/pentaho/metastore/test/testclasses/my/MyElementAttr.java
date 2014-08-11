@@ -1,4 +1,4 @@
-package org.pentaho.metastore.test.testclasses;
+package org.pentaho.metastore.test.testclasses.my;
 
 import org.pentaho.metastore.persist.MetaStoreAttribute;
 
