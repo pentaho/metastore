@@ -17,8 +17,12 @@ public class Dimension {
   @MetaStoreAttribute( key = "dimension_type" )
   private DimensionType dimensionType;
 
+  @MetaStoreAttribute
+  private boolean shared;
+
   public Dimension() {
     attributes = new ArrayList<DimensionAttribute>();
+    shared = true;
   }
 
   /**
@@ -61,5 +65,19 @@ public class Dimension {
    */
   public void setDimensionType( DimensionType dimensionType ) {
     this.dimensionType = dimensionType;
+  }
+
+  /**
+   * @return the shared
+   */
+  public boolean isShared() {
+    return shared;
+  }
+
+  /**
+   * @param shared the shared to set
+   */
+  public void setShared( boolean shared ) {
+    this.shared = shared;
   }
 }

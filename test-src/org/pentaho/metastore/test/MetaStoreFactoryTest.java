@@ -7,6 +7,7 @@ import java.util.List;
 
 import junit.framework.TestCase;
 
+import org.junit.Test;
 import org.pentaho.metastore.api.IMetaStore;
 import org.pentaho.metastore.api.IMetaStoreAttribute;
 import org.pentaho.metastore.api.IMetaStoreElement;
@@ -162,6 +163,13 @@ public class MetaStoreFactoryTest extends TestCase {
     assertEquals( 0, factory.getElements().size() );
   }
 
+  /**
+   * Save and load a complete Cube object in the IMetaStore through named references and factories.
+   * Some object are saved through a factory with a name reference.  One dimension is embedded in the cube.
+   * 
+   * @throws Exception
+   */
+  @Test
   public void testCube() throws Exception {
     IMetaStore metaStore = new MemoryMetaStore();
     MetaStoreFactory<Cube> factoryCube = new MetaStoreFactory<Cube>( Cube.class, metaStore, "pentaho" );
@@ -216,6 +224,19 @@ public class MetaStoreFactoryTest extends TestCase {
       assertEquals( attr.getSomeOtherStuff(), attrVerify.getSomeOtherStuff() );
     }
 
+    assertNotNull( verify.getNonSharedDimension() );
+    Dimension nonShared = cube.getNonSharedDimension();
+    Dimension nonSharedVerify = verify.getNonSharedDimension();
+    assertEquals( nonShared.getName(), nonSharedVerify.getName() );
+    assertEquals( nonShared.getAttributes().size(), nonSharedVerify.getAttributes().size() );
+    for ( int i = 0; i < junk.getAttributes().size(); i++ ) {
+      DimensionAttribute attr = nonShared.getAttributes().get( i );
+      DimensionAttribute attrVerify = nonSharedVerify.getAttributes().get( i );
+      assertEquals( attr.getName(), attrVerify.getName() );
+      assertEquals( attr.getDescription(), attrVerify.getDescription() );
+      assertEquals( attr.getSomeOtherStuff(), attrVerify.getSomeOtherStuff() );
+    }
+
     assertNotNull( verify.getMainKpi() );
     assertEquals( cube.getMainKpi().getName(), verify.getMainKpi().getName() );
     assertEquals( cube.getMainKpi().getDescription(), verify.getMainKpi().getDescription() );
@@ -250,6 +271,13 @@ public class MetaStoreFactoryTest extends TestCase {
     junk.setAttributes( generateAttributes() );
     junk.setDimensionType( DimensionType.JUNK );
     cube.setJunkDimension( junk );
+
+    Dimension nonShared = new Dimension();
+    nonShared.setName( "analyticalDim" );
+    nonShared.setAttributes( generateAttributes() );
+    nonShared.setDimensionType( DimensionType.JUNK );
+    nonShared.setShared( false );
+    cube.setNonSharedDimension( nonShared );
 
     cube.setKpis( generateKpis() );
 
