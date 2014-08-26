@@ -13,7 +13,7 @@ public class Cube {
 
   private String name;
 
-  @MetaStoreAttribute( factoryNameReference = true, factoryNameKey = DIMENSION_FACTORY_KEY )
+  @MetaStoreAttribute( factoryNameReference = true, factoryNameKey = DIMENSION_FACTORY_KEY, factorySharedIndicatorName = "shared" )
   private List<Dimension> dimensions;
 
   @MetaStoreAttribute( factoryNameReference = true, factoryNameKey = DIMENSION_FACTORY_KEY )
