@@ -1,5 +1,13 @@
 package org.pentaho.metastore.test;
 
+import static org.mockito.Matchers.anyMap;
+import static org.mockito.Matchers.anyObject;
+import static org.mockito.Matchers.anyString;
+import static org.mockito.Matchers.eq;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
+
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Date;
@@ -11,6 +19,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 import junit.framework.TestCase;
 
 import org.junit.Test;
+import org.mockito.invocation.InvocationOnMock;
 import org.mockito.stubbing.Answer;
 import org.pentaho.metastore.api.IMetaStore;
 import org.pentaho.metastore.api.IMetaStoreAttribute;
@@ -34,14 +43,6 @@ import org.pentaho.metastore.test.testclasses.my.MyFilenameElement;
 import org.pentaho.metastore.test.testclasses.my.MyNameElement;
 import org.pentaho.metastore.test.testclasses.my.MyOtherElement;
 import org.pentaho.metastore.util.MetaStoreUtil;
-
-import static org.mockito.Matchers.*;
-import static org.mockito.Matchers.anyObject;
-import static org.mockito.Matchers.anyString;
-import static org.mockito.Matchers.eq;
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.when;
 
 public class MetaStoreFactoryTest extends TestCase {
 
@@ -274,14 +275,16 @@ public class MetaStoreFactoryTest extends TestCase {
 
     final AtomicInteger contextCount = new AtomicInteger( 0 );
     when( objectFactory.getContext( anyObject() ) ).thenAnswer( new Answer<Object>() {
-      @Override public Object answer( InvocationOnMock invocation ) throws Throwable {
-        Map context = new HashMap();
+      @Override
+      public Object answer( InvocationOnMock invocation ) throws Throwable {
+        Map<String, String> context = new HashMap<String, String>();
         context.put( "context-num", String.valueOf( contextCount.getAndIncrement() ) );
         return context;
       }
     } );
     when( objectFactory.instantiateClass( anyString(), anyMap() ) ).thenAnswer( new Answer<Object>() {
-      @Override public Object answer( InvocationOnMock invocation ) throws Throwable {
+      @Override
+      public Object answer( InvocationOnMock invocation ) throws Throwable {
         String className = (String) invocation.getArguments()[0];
         return Class.forName( className ).newInstance();
       }
