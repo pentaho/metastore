@@ -263,6 +263,7 @@ public class MetaStoreFactoryTest extends TestCase {
    * 
    * @throws Exception
    */
+  @SuppressWarnings( "unchecked" )
   @Test
   public void testCube() throws Exception {
     IMetaStore metaStore = new MemoryMetaStore();
@@ -360,7 +361,7 @@ public class MetaStoreFactoryTest extends TestCase {
     assertEquals( cube.getMainKpi().getOtherDetails(), verify.getMainKpi().getOtherDetails() );
 
     for ( int i = 0; i < contextCount.get(); i++ ) {
-      Map context = new HashMap();
+      Map<String, String> context = new HashMap<String, String>();
       context.put( "context-num", String.valueOf( i ) );
       verify( objectFactory ).instantiateClass( anyString(), eq( context ) );
     }
