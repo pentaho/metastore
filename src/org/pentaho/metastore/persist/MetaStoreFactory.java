@@ -189,7 +189,7 @@ public class MetaStoreFactory<T> {
       Class<?> pojoClass;
       Object pojoObject;
       if ( objectFactory == null ) {
-        pojoClass = Class.forName( pojoChildClassName );
+        pojoClass = clazz.getClassLoader().loadClass( pojoChildClassName );
         pojoObject = pojoClass.newInstance();
       } else {
         Map<String, String> objectFactoryContext = getObjectFactoryContext( child );
