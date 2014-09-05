@@ -17,14 +17,25 @@
 
 package org.pentaho.metastore.test;
 
-import org.pentaho.metastore.api.IMetaStore;
 import org.pentaho.metastore.stores.memory.MemoryMetaStore;
 
 public class MemoryMetaStoreTest extends MetaStoreTestBase {
 
+  private MemoryMetaStore metaStore;
+
+  @Override
+  protected void setUp() throws Exception {
+    super.setUp();
+    metaStore = new MemoryMetaStore();
+    metaStore.setName( META_STORE_NAME );
+  }
+
   public void test() throws Exception {
-    // Run the test against the XML metadata store.
-    IMetaStore metaStore = new MemoryMetaStore();
     super.testFunctionality( metaStore );
   }
+
+  public void testParrallelRetrive() throws Exception {
+    super.testParallelOneStore( metaStore );
+  }
+
 }

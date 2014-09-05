@@ -20,6 +20,8 @@ package org.pentaho.metastore.util;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import java.util.concurrent.Callable;
+import java.util.concurrent.locks.Lock;
 
 import org.pentaho.metastore.api.IMetaStore;
 import org.pentaho.metastore.api.IMetaStoreAttribute;
@@ -64,15 +66,41 @@ public class MetaStoreUtil {
     return attribute.getValue().toString();
   }
 
-  public static boolean getAttributeBoolean(IMetaStoreAttribute attribute, String id) {
-    String b = getChildString(attribute, id);
-    if (b==null) {
+  public static boolean getAttributeBoolean( IMetaStoreAttribute attribute, String id ) {
+    String b = getChildString( attribute, id );
+    if ( b == null ) {
       return false;
     }
-    return "true".equalsIgnoreCase(b) || "y".equalsIgnoreCase(b);
+    return "true".equalsIgnoreCase( b ) || "y".equalsIgnoreCase( b );
   }
 
-  
+  public static <T> T executeLockedOperation( Lock lock, Callable<T> callee ) throws MetaStoreException {
+    lock.lock();
+    try {
+      if ( callee != null ) {
+        return callee.call();
+      }
+    } catch ( Exception e ) {
+      if ( e instanceof MetaStoreException ) {
+        throw (MetaStoreException) e;
+      }
+      throw new MetaStoreException( e );
+    } finally {
+      lock.unlock();
+    }
+    return null;
+  }
+
+  public static <T> T executeLockedOperationQuietly( Lock lock, Callable<T> callee ) {
+    T result = null;
+    try {
+      result = executeLockedOperation( lock, callee );
+    } catch ( Exception e ) {
+      // ignore
+    }
+    return result;
+  }
+
   /**
    * Get a sorted list of element names for the specified element type in the given namespace.
    * 
