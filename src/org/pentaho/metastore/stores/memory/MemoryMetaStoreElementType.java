@@ -21,7 +21,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.Callable;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
 import java.util.concurrent.locks.ReentrantReadWriteLock.ReadLock;
 import java.util.concurrent.locks.ReentrantReadWriteLock.WriteLock;
@@ -29,6 +29,7 @@ import java.util.concurrent.locks.ReentrantReadWriteLock.WriteLock;
 import org.pentaho.metastore.api.IMetaStoreElement;
 import org.pentaho.metastore.api.IMetaStoreElementType;
 import org.pentaho.metastore.api.exceptions.MetaStoreException;
+import org.pentaho.metastore.util.MetaStoreUtil;
 
 public class MemoryMetaStoreElementType implements IMetaStoreElementType {
 
@@ -71,12 +72,13 @@ public class MemoryMetaStoreElementType implements IMetaStoreElementType {
   }
 
   public Map<String, MemoryMetaStoreElement> getElementMap() {
-    readLock.lock();
-    try {
-      return new HashMap<String, MemoryMetaStoreElement>( elementMap );
-    } finally {
-      readLock.unlock();
-    }
+    return MetaStoreUtil.executeLockedOperationQuietly( readLock, new Callable<Map<String, MemoryMetaStoreElement>>() {
+
+      @Override
+      public Map<String, MemoryMetaStoreElement> call() throws Exception {
+        return new HashMap<String, MemoryMetaStoreElement>( elementMap );
+      }
+    } );
   }
 
   /**
@@ -148,26 +150,27 @@ public class MemoryMetaStoreElementType implements IMetaStoreElementType {
   }
 
   public List<String> getElementIds() {
-    readLock.lock();
-    try {
-      List<String> ids = new ArrayList<String>();
-      for ( String id : elementMap.keySet() ) {
-        ids.add( id );
-      }
-      return ids;
+    return MetaStoreUtil.executeLockedOperationQuietly( readLock, new Callable<List<String>>() {
 
-    } finally {
-      readLock.unlock();
-    }
+      @Override
+      public List<String> call() throws Exception {
+        List<String> ids = new ArrayList<String>();
+        for ( String id : elementMap.keySet() ) {
+          ids.add( id );
+        }
+        return ids;
+      }
+    } );
   }
 
-  public MemoryMetaStoreElement getElement( String elementId ) {
-    readLock.lock();
-    try {
-      return elementMap.get( elementId );
-    } finally {
-      readLock.unlock();
-    }
+  public MemoryMetaStoreElement getElement( final String elementId ) {
+    return MetaStoreUtil.executeLockedOperationQuietly( readLock, new Callable<MemoryMetaStoreElement>() {
+
+      @Override
+      public MemoryMetaStoreElement call() throws Exception {
+        return elementMap.get( elementId );
+      }
+    } );
   }
 
   protected ReadLock getReadLock() {
@@ -175,73 +178,79 @@ public class MemoryMetaStoreElementType implements IMetaStoreElementType {
   }
 
   public boolean isElementMapEmpty() {
-    readLock.lock();
-    try {
-      return elementMap.isEmpty();
-    } finally {
-      readLock.unlock();
-    }
+    return MetaStoreUtil.executeLockedOperationQuietly( readLock, new Callable<Boolean>() {
+
+      @Override
+      public Boolean call() throws Exception {
+        return elementMap.isEmpty();
+      }
+    } );
   }
 
   public List<IMetaStoreElement> getElements() {
-    readLock.lock();
-    try {
-      return new ArrayList<IMetaStoreElement>( elementMap.values() );
-    } finally {
-      readLock.unlock();
-    }
-  }
+    return MetaStoreUtil.executeLockedOperationQuietly( readLock, new Callable<List<IMetaStoreElement>>() {
 
-  public IMetaStoreElement getElementByName( String elementName ) {
-    readLock.lock();
-    try {
-      for ( MemoryMetaStoreElement element : elementMap.values() ) {
-        if ( element.getName() != null && element.getName().equalsIgnoreCase( elementName ) ) {
-          return element;
-        }
+      @Override
+      public List<IMetaStoreElement> call() throws Exception {
+        return new ArrayList<IMetaStoreElement>( elementMap.values() );
       }
-      return null;
-    } finally {
-      readLock.unlock();
-    }
+    } );
   }
 
-  public void createElement( IMetaStoreElement element ) {
+  public IMetaStoreElement getElementByName( final String elementName ) {
+    return MetaStoreUtil.executeLockedOperationQuietly( readLock, new Callable<IMetaStoreElement>() {
+
+      @Override
+      public IMetaStoreElement call() throws Exception {
+        for ( MemoryMetaStoreElement element : elementMap.values() ) {
+          if ( element.getName() != null && element.getName().equalsIgnoreCase( elementName ) ) {
+            return element;
+          }
+        }
+        return null;
+      }
+    } );
+  }
+
+  public void createElement( final IMetaStoreElement element ) {
     // For the memory store, the ID is the same as the name if empty
     if ( element.getId() == null ) {
       element.setId( element.getName() );
     }
+    MetaStoreUtil.executeLockedOperationQuietly( writeLock, new Callable<Void>() {
 
-    writeLock.lock();
-    try {
-      elementMap.put( element.getId(), new MemoryMetaStoreElement( element ) );
-    } finally {
-      writeLock.unlock();
-    }
+      @Override
+      public Void call() throws Exception {
+        elementMap.put( element.getId(), new MemoryMetaStoreElement( element ) );
+        return null;
+      }
+    } );
   }
 
-  public void updateElement( String elementId, IMetaStoreElement element ) {
+  public void updateElement( final String elementId, final IMetaStoreElement element ) {
     // For the memory store, the ID is the same as the name if empty
     if ( element.getId() == null ) {
       element.setId( element.getName() );
     }
+    MetaStoreUtil.executeLockedOperationQuietly( writeLock, new Callable<Void>() {
 
-
-    writeLock.lock();
-    try {
-      elementMap.put( elementId, new MemoryMetaStoreElement( element ) );
-    } finally {
-      writeLock.unlock();
-    }
+      @Override
+      public Void call() throws Exception {
+        elementMap.put( elementId, new MemoryMetaStoreElement( element ) );
+        return null;
+      }
+    } );
   }
 
-  public void deleteElement( String elementId ) {
-    writeLock.lock();
-    try {
-      elementMap.remove( elementId );
-    } finally {
-      writeLock.unlock();
-    }
+  public void deleteElement( final String elementId ) {
+    MetaStoreUtil.executeLockedOperationQuietly( writeLock, new Callable<Void>() {
+
+      @Override
+      public Void call() throws Exception {
+        elementMap.remove( elementId );
+        return null;
+      }
+    } );
   }
 
 }
