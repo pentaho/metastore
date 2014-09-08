@@ -167,7 +167,7 @@ public class MetaStoreFactory<T> {
                     pojoClass = Class.forName( value );
                     pojoObject = pojoClass.newInstance();
                   } else {
-                    Map<String, String> objectFactoryContext = getObjectFactoryContext( parentElement );
+                    Map<String, String> objectFactoryContext = getObjectFactoryContext( child );
                     pojoObject = objectFactory.instantiateClass( value, objectFactoryContext );
                     pojoClass = pojoObject.getClass();
                   }
