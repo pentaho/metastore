@@ -7,6 +7,7 @@ import java.util.List;
 
 import junit.framework.TestCase;
 
+import org.junit.Test;
 import org.pentaho.metastore.api.IMetaStore;
 import org.pentaho.metastore.api.IMetaStoreAttribute;
 import org.pentaho.metastore.api.IMetaStoreElement;
@@ -19,6 +20,10 @@ import org.pentaho.metastore.test.testclasses.cube.Dimension;
 import org.pentaho.metastore.test.testclasses.cube.DimensionAttribute;
 import org.pentaho.metastore.test.testclasses.cube.DimensionType;
 import org.pentaho.metastore.test.testclasses.cube.Kpi;
+import org.pentaho.metastore.test.testclasses.factory.A;
+import org.pentaho.metastore.test.testclasses.factory.B;
+import org.pentaho.metastore.test.testclasses.factory_shared.X;
+import org.pentaho.metastore.test.testclasses.factory_shared.Y;
 import org.pentaho.metastore.test.testclasses.my.MyElement;
 import org.pentaho.metastore.test.testclasses.my.MyElementAttr;
 import org.pentaho.metastore.test.testclasses.my.MyFilenameElement;
@@ -28,6 +33,7 @@ import org.pentaho.metastore.util.MetaStoreUtil;
 
 public class MetaStoreFactoryTest extends TestCase {
 
+  @Test
   public void testMyElement() throws Exception {
 
     IMetaStore metaStore = new MemoryMetaStore();
@@ -162,6 +168,89 @@ public class MetaStoreFactoryTest extends TestCase {
     assertEquals( 0, factory.getElements().size() );
   }
 
+  @Test
+  public void testFactoryShared() throws Exception {
+    IMetaStore metaStore = new MemoryMetaStore();
+    MetaStoreFactory<A> factoryA = new MetaStoreFactory<A>( A.class, metaStore, "pentaho" );
+    MetaStoreFactory<B> factoryB = new MetaStoreFactory<B>( B.class, metaStore, "pentaho" );
+    factoryA.addNameFactory( A.FACTORY_B, factoryB );
+
+    // Construct test-class
+    A a = new A( "a" );
+    a.getBees().add( new B( "1", true ) );
+    a.getBees().add( new B( "2", true ) );
+    a.getBees().add( new B( "3", false ) );
+    a.getBees().add( new B( "4", true ) );
+    a.setB( new B( "b", false ) );
+
+    factoryA.saveElement( a );
+
+    // 1, 2, 4
+    //
+    assertEquals( 3, factoryB.getElements().size() );
+
+    A _a = factoryA.loadElement( "a" );
+    assertNotNull( _a );
+    assertEquals( 4, _a.getBees().size() );
+    assertEquals( "1", a.getBees().get( 0 ).getName() );
+    assertEquals( true, a.getBees().get( 0 ).isShared() );
+    assertEquals( "2", a.getBees().get( 1 ).getName() );
+    assertEquals( true, a.getBees().get( 1 ).isShared() );
+    assertEquals( "3", a.getBees().get( 2 ).getName() );
+    assertEquals( false, a.getBees().get( 2 ).isShared() );
+    assertEquals( "4", a.getBees().get( 3 ).getName() );
+    assertEquals( true, a.getBees().get( 3 ).isShared() );
+
+    assertNotNull( _a.getB() );
+    assertEquals( "b", _a.getB().getName() );
+    assertEquals( false, _a.getB().isShared() );
+  }
+
+  @Test
+  public void testFactory() throws Exception {
+    IMetaStore metaStore = new MemoryMetaStore();
+    MetaStoreFactory<X> factoryX = new MetaStoreFactory<X>( X.class, metaStore, "pentaho" );
+    MetaStoreFactory<Y> factoryY = new MetaStoreFactory<Y>( Y.class, metaStore, "pentaho" );
+    factoryX.addNameFactory( X.FACTORY_Y, factoryY );
+
+    // Construct test-class
+    X x = new X( "x" );
+    x.getYs().add( new Y( "1", "desc1" ) );
+    x.getYs().add( new Y( "2", "desc2" ) );
+    x.getYs().add( new Y( "3", "desc3" ) );
+    x.getYs().add( new Y( "4", "desc4" ) );
+    x.setY( new Y( "y", "descY" ) );
+
+    factoryX.saveElement( x );
+
+    // 1, 2, 3, 4, y
+    //
+    assertEquals( 5, factoryY.getElements().size() );
+
+    X _x = factoryX.loadElement( "x" );
+    assertNotNull( _x );
+    assertEquals( 4, _x.getYs().size() );
+    assertEquals( "1", x.getYs().get( 0 ).getName() );
+    assertEquals( "desc1", x.getYs().get( 0 ).getDescription() );
+    assertEquals( "2", x.getYs().get( 1 ).getName() );
+    assertEquals( "desc2", x.getYs().get( 1 ).getDescription() );
+    assertEquals( "3", x.getYs().get( 2 ).getName() );
+    assertEquals( "desc3", x.getYs().get( 2 ).getDescription() );
+    assertEquals( "4", x.getYs().get( 3 ).getName() );
+    assertEquals( "desc4", x.getYs().get( 3 ).getDescription() );
+
+    assertNotNull( _x.getY() );
+    assertEquals( "y", _x.getY().getName() );
+    assertEquals( "descY", _x.getY().getDescription() );
+  }
+
+  /**
+   * Save and load a complete Cube object in the IMetaStore through named references and factories.
+   * Some object are saved through a factory with a name reference.  One dimension is embedded in the cube.
+   * 
+   * @throws Exception
+   */
+  @Test
   public void testCube() throws Exception {
     IMetaStore metaStore = new MemoryMetaStore();
     MetaStoreFactory<Cube> factoryCube = new MetaStoreFactory<Cube>( Cube.class, metaStore, "pentaho" );
@@ -216,6 +305,25 @@ public class MetaStoreFactoryTest extends TestCase {
       assertEquals( attr.getSomeOtherStuff(), attrVerify.getSomeOtherStuff() );
     }
 
+    assertNotNull( verify.getNonSharedDimension() );
+    Dimension nonShared = cube.getNonSharedDimension();
+    Dimension nonSharedVerify = verify.getNonSharedDimension();
+    assertEquals( nonShared.getName(), nonSharedVerify.getName() );
+    assertEquals( nonShared.getAttributes().size(), nonSharedVerify.getAttributes().size() );
+    for ( int i = 0; i < junk.getAttributes().size(); i++ ) {
+      DimensionAttribute attr = nonShared.getAttributes().get( i );
+      DimensionAttribute attrVerify = nonSharedVerify.getAttributes().get( i );
+      assertEquals( attr.getName(), attrVerify.getName() );
+      assertEquals( attr.getDescription(), attrVerify.getDescription() );
+      assertEquals( attr.getSomeOtherStuff(), attrVerify.getSomeOtherStuff() );
+    }
+
+    // Make sure that nonShared and product are not shared.
+    // We can load them with the dimension factory and they should not come back.
+    //
+    assertNull( factoryDimension.loadElement( "analyticalDim" ) );
+    assertNull( factoryDimension.loadElement( "product" ) );
+
     assertNotNull( verify.getMainKpi() );
     assertEquals( cube.getMainKpi().getName(), verify.getMainKpi().getName() );
     assertEquals( cube.getMainKpi().getDescription(), verify.getMainKpi().getDescription() );
@@ -237,6 +345,7 @@ public class MetaStoreFactoryTest extends TestCase {
     product.setName( "product" );
     product.setAttributes( generateAttributes() );
     product.setDimensionType( null );
+    product.setShared( false );
     cube.getDimensions().add( product );
 
     Dimension date = new Dimension();
@@ -250,6 +359,13 @@ public class MetaStoreFactoryTest extends TestCase {
     junk.setAttributes( generateAttributes() );
     junk.setDimensionType( DimensionType.JUNK );
     cube.setJunkDimension( junk );
+
+    Dimension nonShared = new Dimension();
+    nonShared.setName( "analyticalDim" );
+    nonShared.setAttributes( generateAttributes() );
+    nonShared.setDimensionType( DimensionType.JUNK );
+    nonShared.setShared( false );
+    cube.setNonSharedDimension( nonShared );
 
     cube.setKpis( generateKpis() );
 
