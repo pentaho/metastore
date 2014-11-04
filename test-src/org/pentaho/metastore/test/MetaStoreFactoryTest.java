@@ -25,7 +25,10 @@ import org.pentaho.metastore.api.IMetaStore;
 import org.pentaho.metastore.api.IMetaStoreAttribute;
 import org.pentaho.metastore.api.IMetaStoreElement;
 import org.pentaho.metastore.api.IMetaStoreElementType;
+import org.pentaho.metastore.api.exceptions.MetaStoreException;
 import org.pentaho.metastore.persist.IMetaStoreObjectFactory;
+import org.pentaho.metastore.persist.MetaStoreAttribute;
+import org.pentaho.metastore.persist.MetaStoreElementType;
 import org.pentaho.metastore.persist.MetaStoreFactory;
 import org.pentaho.metastore.stores.memory.MemoryMetaStore;
 import org.pentaho.metastore.test.testclasses.cube.Cube;
@@ -40,11 +43,83 @@ import org.pentaho.metastore.test.testclasses.factory_shared.Y;
 import org.pentaho.metastore.test.testclasses.my.MyElement;
 import org.pentaho.metastore.test.testclasses.my.MyElementAttr;
 import org.pentaho.metastore.test.testclasses.my.MyFilenameElement;
+import org.pentaho.metastore.test.testclasses.my.MyMigrationElement;
 import org.pentaho.metastore.test.testclasses.my.MyNameElement;
 import org.pentaho.metastore.test.testclasses.my.MyOtherElement;
 import org.pentaho.metastore.util.MetaStoreUtil;
 
 public class MetaStoreFactoryTest extends TestCase {
+
+  @Test
+  public void testIDMigration() throws Exception {
+
+    String namespace = "custom";
+    String stepName = "Step Name";
+    String elementName = "migration";
+    String hostName = "Host Name";
+    String fieldMappings = "Field Mappings";
+    String sourceFieldName = "Source Field Name";
+    String targetFieldName = "Target Field Name";
+    String parameterName = "Parameter Name";
+
+    IMetaStore metaStore = new MemoryMetaStore();
+
+    MetaStoreFactory<MyMigrationElement> factory =
+      new MetaStoreFactory<MyMigrationElement>( MyMigrationElement.class, metaStore, namespace );
+
+    if ( !metaStore.namespaceExists( namespace ) ) {
+      metaStore.createNamespace( namespace );
+    }
+
+    MetaStoreElementType elementTypeAnnotation = MyMigrationElement.class.getAnnotation( MetaStoreElementType.class );
+
+    // Make sure the element type exists...
+    IMetaStoreElementType elementType = metaStore.getElementTypeByName( namespace, elementTypeAnnotation.name() );
+    if ( elementType == null ) {
+      elementType = metaStore.newElementType( namespace );
+      elementType.setName( elementTypeAnnotation.name() );
+      elementType.setDescription( elementTypeAnnotation.description() );
+      metaStore.createElementType( namespace, elementType );
+    }
+
+    // Create an element with the old keys we want to migrate
+    IMetaStoreElement element = metaStore.newElement();
+    element.setName( elementName );
+    element.setElementType( elementType );
+
+    element.addChild( metaStore.newAttribute( "stepName", stepName ) );
+    element.addChild( metaStore.newAttribute( "hostname", hostName ) );
+    element.addChild( metaStore.newAttribute( "fieldMappings", fieldMappings ) );
+    element.addChild( metaStore.newAttribute( "sourceFieldName", sourceFieldName ) );
+    element.addChild( metaStore.newAttribute( "targetFieldName", targetFieldName ) );
+    element.addChild( metaStore.newAttribute( "parameterName", parameterName ) );
+
+    metaStore.createElement( namespace, elementType, element );
+
+    MyMigrationElement loadedElement = factory.loadElement( elementName );
+
+    assertNotNull( loadedElement );
+    assertEquals( loadedElement.getStepName(), stepName );
+    assertEquals( loadedElement.getHostname(), hostName );
+    assertEquals( loadedElement.getFieldMappings(), fieldMappings );
+    assertEquals( loadedElement.getSourceFieldName(), sourceFieldName );
+    assertEquals( loadedElement.getTargetFieldName(), targetFieldName );
+    assertEquals( loadedElement.getParameterName(), parameterName );
+
+    // Test the variation of the step name id
+    element = metaStore.newElement();
+    element.setName( elementName );
+    element.setElementType( elementType );
+
+    element.addChild( metaStore.newAttribute( "stepname", stepName ) );
+
+    metaStore.createElement( namespace, elementType, element );
+
+    loadedElement = factory.loadElement( elementName );
+
+    assertNotNull( loadedElement );
+    assertEquals( loadedElement.getStepname(), stepName );
+  }
 
   @Test
   public void testMyElement() throws Exception {
