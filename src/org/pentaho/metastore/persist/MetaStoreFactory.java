@@ -110,6 +110,14 @@ public class MetaStoreFactory<T> {
 
         AttributeType type = determineAttributeType( field, attributeAnnotation );
         IMetaStoreAttribute child = parentElement.getChild( key );
+        if ( child == null ) {
+          for ( String mappedKey : MetaStoreKeyMap.get( key ) ) {
+            child = parentElement.getChild( mappedKey );
+            if ( child != null ) {
+              break;
+            }
+          }
+        }
         if ( child != null && ( child.getValue() != null || !child.getChildren().isEmpty() ) ) {
           String setterName = getSetterMethodName( field.getName() );
           String childValue = MetaStoreUtil.getAttributeString( child );
