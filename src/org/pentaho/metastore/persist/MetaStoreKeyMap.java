@@ -44,7 +44,12 @@ public class MetaStoreKeyMap {
   }
 
   public static String[] get( String key ) {
-    return keyMap.get( key );
-  }
+    String[] keys = keyMap.get( key );
 
+    if ( keys != null ) {
+      return keys;
+    }
+
+    return new String[ 0 ];
+  }
 }
