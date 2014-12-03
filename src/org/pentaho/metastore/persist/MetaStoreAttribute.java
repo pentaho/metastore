@@ -48,4 +48,10 @@ public @interface MetaStoreAttribute {
    * @return the key/reference of the factory provided to the factory resolving this attribute.
    */
   String factoryNameKey() default "";
+
+  /**
+   * @return the name of the shared flag indicator.  This is the name of the method in the referenced object which indicates whether or not the object should be updated/referenced centrally (true) or embedded locally (false).
+   * As the method name implies, this ONLY works with the use of a factory, not through a simple name or file reference.
+   */
+  String factorySharedIndicatorName() default "";
 }
