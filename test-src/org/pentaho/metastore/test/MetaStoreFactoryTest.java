@@ -3,19 +3,23 @@ package org.pentaho.metastore.test;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Date;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
+import java.util.concurrent.atomic.AtomicInteger;
 
 import junit.framework.TestCase;
 
 import org.junit.Test;
+import org.mockito.stubbing.Answer;
 import org.pentaho.metastore.api.IMetaStore;
 import org.pentaho.metastore.api.IMetaStoreAttribute;
 import org.pentaho.metastore.api.IMetaStoreElement;
 import org.pentaho.metastore.api.IMetaStoreElementType;
+import org.pentaho.metastore.persist.IMetaStoreObjectFactory;
 import org.pentaho.metastore.persist.MetaStoreFactory;
 import org.pentaho.metastore.stores.memory.MemoryMetaStore;
 import org.pentaho.metastore.test.testclasses.cube.Cube;
-import org.pentaho.metastore.test.testclasses.cube.CubeObjectFactory;
 import org.pentaho.metastore.test.testclasses.cube.Dimension;
 import org.pentaho.metastore.test.testclasses.cube.DimensionAttribute;
 import org.pentaho.metastore.test.testclasses.cube.DimensionType;
@@ -30,6 +34,14 @@ import org.pentaho.metastore.test.testclasses.my.MyFilenameElement;
 import org.pentaho.metastore.test.testclasses.my.MyNameElement;
 import org.pentaho.metastore.test.testclasses.my.MyOtherElement;
 import org.pentaho.metastore.util.MetaStoreUtil;
+
+import static org.mockito.Matchers.*;
+import static org.mockito.Matchers.anyObject;
+import static org.mockito.Matchers.anyString;
+import static org.mockito.Matchers.eq;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
 
 public class MetaStoreFactoryTest extends TestCase {
 
@@ -256,9 +268,24 @@ public class MetaStoreFactoryTest extends TestCase {
     MetaStoreFactory<Cube> factoryCube = new MetaStoreFactory<Cube>( Cube.class, metaStore, "pentaho" );
     MetaStoreFactory<Dimension> factoryDimension = new MetaStoreFactory<Dimension>( Dimension.class, metaStore, "pentaho" );
     factoryCube.addNameFactory( Cube.DIMENSION_FACTORY_KEY, factoryDimension );
-    CubeObjectFactory objectFactory = new CubeObjectFactory();
+    IMetaStoreObjectFactory objectFactory = mock( IMetaStoreObjectFactory.class );
     factoryCube.setObjectFactory( objectFactory );
     factoryDimension.setObjectFactory( objectFactory );
+
+    final AtomicInteger contextCount = new AtomicInteger( 0 );
+    when( objectFactory.getContext( anyObject() ) ).thenAnswer( new Answer<Object>() {
+      @Override public Object answer( InvocationOnMock invocation ) throws Throwable {
+        Map context = new HashMap();
+        context.put( "context-num", String.valueOf( contextCount.getAndIncrement() ) );
+        return context;
+      }
+    } );
+    when( objectFactory.instantiateClass( anyString(), anyMap() ) ).thenAnswer( new Answer<Object>() {
+      @Override public Object answer( InvocationOnMock invocation ) throws Throwable {
+        String className = (String) invocation.getArguments()[0];
+        return Class.forName( className ).newInstance();
+      }
+    } );
 
     Cube cube = generateCube();
     factoryCube.saveElement( cube );
@@ -328,6 +355,12 @@ public class MetaStoreFactoryTest extends TestCase {
     assertEquals( cube.getMainKpi().getName(), verify.getMainKpi().getName() );
     assertEquals( cube.getMainKpi().getDescription(), verify.getMainKpi().getDescription() );
     assertEquals( cube.getMainKpi().getOtherDetails(), verify.getMainKpi().getOtherDetails() );
+
+    for ( int i = 0; i < contextCount.get(); i++ ) {
+      Map context = new HashMap();
+      context.put( "context-num", String.valueOf( i ) );
+      verify( objectFactory ).instantiateClass( anyString(), eq( context ) );
+    }
 
   }
 
