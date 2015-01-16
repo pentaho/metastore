@@ -13,11 +13,14 @@ public class Cube {
 
   private String name;
 
-  @MetaStoreAttribute( factoryNameReference = true, factoryNameKey = DIMENSION_FACTORY_KEY )
+  @MetaStoreAttribute( factoryNameReference = true, factoryNameKey = DIMENSION_FACTORY_KEY, factorySharedIndicatorName = "shared" )
   private List<Dimension> dimensions;
 
   @MetaStoreAttribute( factoryNameReference = true, factoryNameKey = DIMENSION_FACTORY_KEY )
   private Dimension junkDimension;
+
+  @MetaStoreAttribute( factoryNameReference = true, factoryNameKey = DIMENSION_FACTORY_KEY, factorySharedIndicatorName = "shared" )
+  private Dimension nonSharedDimension;
 
   @MetaStoreAttribute
   private List<Kpi> kpis;
@@ -98,6 +101,20 @@ public class Cube {
    */
   public void setMainKpi( Kpi mainKpi ) {
     this.mainKpi = mainKpi;
+  }
+
+  /**
+   * @return the nonSharedDimension
+   */
+  public Dimension getNonSharedDimension() {
+    return nonSharedDimension;
+  }
+
+  /**
+   * @param nonSharedDimension the nonSharedDimension to set
+   */
+  public void setNonSharedDimension( Dimension nonSharedDimension ) {
+    this.nonSharedDimension = nonSharedDimension;
   }
 
 }
