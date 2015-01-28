@@ -448,7 +448,7 @@ public class MetaStoreFactory<T> {
     //
 
     String name = (String) getAttributeValue( clazz, t, "name", "getName" );
-    if ( name == null ) {
+    if ( name == null || name.trim().length() == 0 ) {
       throw new MetaStoreException( "Unable to find name of element class object '" + t.toString() + "'" );
     }
 
