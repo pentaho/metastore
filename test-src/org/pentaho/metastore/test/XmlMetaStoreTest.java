@@ -22,6 +22,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import org.pentaho.metastore.api.IMetaStore;
+import org.pentaho.metastore.api.exceptions.MetaStoreException;
 import org.pentaho.metastore.stores.xml.XmlMetaStore;
 import org.pentaho.metastore.util.FileUtil;
 
@@ -32,7 +33,11 @@ public class XmlMetaStoreTest extends MetaStoreTestBase {
   @Override
   protected void setUp() throws Exception {
     super.setUp();
-    metaStore = new XmlMetaStore();
+    metaStore = createMetaStore();
+  }
+  
+  protected XmlMetaStore createMetaStore() throws MetaStoreException {
+    return new XmlMetaStore();
   }
 
   @Override
