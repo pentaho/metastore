@@ -4,6 +4,7 @@ import java.lang.reflect.Field;
 import java.lang.reflect.Method;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
@@ -76,7 +77,12 @@ public class MetaStoreFactory<T> {
     if ( element == null ) {
       return null;
     }
-
+    return loadElement( element );
+  }
+  
+  /** Load an element from the metastore, straight into the appropriate class 
+   */
+  private T loadElement( IMetaStoreElement element ) throws MetaStoreException {
     T object;
 
     try {
@@ -87,7 +93,7 @@ public class MetaStoreFactory<T> {
 
     // Set the name of the object...
     //
-    setAttributeValue( clazz, object, "name", "setName", String.class, name );
+    setAttributeValue( clazz, object, "name", "setName", String.class, element.getName() );
 
     loadAttributes( object, element, clazz );
     return object;
@@ -676,12 +682,18 @@ public class MetaStoreFactory<T> {
    * @throws MetaStoreException
    */
   public List<T> getElements() throws MetaStoreException {
-    List<T> list = new ArrayList<T>();
-
-    for ( String name : getElementNames() ) {
-      list.add( loadElement( name ) );
+    MetaStoreElementType elementTypeAnnotation = getElementTypeAnnotation();
+    
+    IMetaStoreElementType elementType = metaStore.getElementTypeByName( namespace, elementTypeAnnotation.name() );
+    if ( elementType == null ) {
+      return Collections.emptyList();
     }
-
+    
+    List<IMetaStoreElement> elements = metaStore.getElements( namespace, elementType );
+    List<T> list = new ArrayList<T>( elements.size() );
+    for ( IMetaStoreElement metaStoreElement : elements ) {
+      list.add( loadElement( metaStoreElement ) );
+    }
     return list;
   }
 
