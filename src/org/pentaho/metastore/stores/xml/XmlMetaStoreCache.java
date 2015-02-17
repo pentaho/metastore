@@ -16,7 +16,6 @@
  */
 package org.pentaho.metastore.stores.xml;
 
-import java.util.Collections;
 import java.util.Map;
 
 import org.pentaho.metastore.api.IMetaStoreElementType;
@@ -127,53 +126,4 @@ public interface XmlMetaStoreCache {
    */
   void clear();
   
-  /**
-   * Default non-caching implementation.
-   */
-  XmlMetaStoreCache NO_CACHE_INSTANCE = new XmlMetaStoreCache() {
-
-    @Override
-    public void registerElementTypeIdForName( String namespace, String elementTypeName, String elementTypeId ) {
-    }
-
-    @Override
-    public String getElementTypeIdByName( String namespace, String elementTypeName ) {
-      return null;
-    }
-
-    @Override
-    public void unregisterElementTypeId( String namespace, String elementTypeId ) {
-    }
-
-    @Override
-    public void registerElementIdForName( String namespace, IMetaStoreElementType elementType, String elementName, String elementId ) {
-    }
-
-    @Override
-    public String getElementIdByName( String namespace, IMetaStoreElementType elementType, String elementName ) {
-      return null;
-    }
-
-    @Override
-    public void unregisterElementId( String namespace, IMetaStoreElementType elementType, String elementId ) {
-    }
-
-    @Override
-    public void registerProcessedFile( String fullPath, long lastModified ) {
-    }
-
-    @Override
-    public Map<String, Long> getProcessedFiles() {
-      return Collections.emptyMap();
-    }
-
-    @Override
-    public void unregisterProcessedFile( String fullPath ) {
-    }
-
-    @Override
-    public void clear() {
-    }
-    
-  };
 }

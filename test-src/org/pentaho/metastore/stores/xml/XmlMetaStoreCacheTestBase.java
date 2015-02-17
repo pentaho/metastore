@@ -28,10 +28,12 @@ import static org.mockito.Mockito.when;
 import java.util.Map;
 
 import org.junit.Before;
+import org.junit.Ignore;
 import org.junit.Test;
 import org.pentaho.metastore.api.IMetaStoreElementType;
 
-public abstract class BaseXmlMetaStoreCacheTest {
+@Ignore
+public abstract class XmlMetaStoreCacheTestBase {
 
   private XmlMetaStoreCache simpleXmlMetaStoreCache;
   
