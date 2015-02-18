@@ -16,7 +16,7 @@
  */
 package org.pentaho.metastore.stores.xml;
 
-public class PersistentXmlMetaStoreCacheTest extends BaseXmlMetaStoreCacheTest {
+public class PersistentXmlMetaStoreCacheTest extends XmlMetaStoreCacheTestBase {
 
   @Override
   protected XmlMetaStoreCache createMetaStoreCache() {

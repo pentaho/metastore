@@ -47,7 +47,7 @@ public class XmlMetaStore extends BaseMetaStore implements IMetaStore {
   private final XmlMetaStoreCache metaStoreCache;
 
   public XmlMetaStore() throws MetaStoreException {
-    this( XmlMetaStoreCache.NO_CACHE_INSTANCE );
+    this( new AutomaticXmlMetaStoreCache() );
   }
   
   public XmlMetaStore( XmlMetaStoreCache metaStoreCacheImpl ) throws MetaStoreException {
@@ -55,7 +55,7 @@ public class XmlMetaStore extends BaseMetaStore implements IMetaStore {
   }
   
   public XmlMetaStore( String rootFolder ) throws MetaStoreException {
-    this( rootFolder, XmlMetaStoreCache.NO_CACHE_INSTANCE );
+    this( rootFolder, new AutomaticXmlMetaStoreCache() );
   }
 
   public XmlMetaStore( String rootFolder, XmlMetaStoreCache metaStoreCacheImpl ) throws MetaStoreException {
