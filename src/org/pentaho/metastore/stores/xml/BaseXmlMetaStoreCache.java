@@ -145,6 +145,9 @@ public abstract class BaseXmlMetaStoreCache implements XmlMetaStoreCache {
     protected abstract Map<String, String> getElementNameToIdMap();
 
     public void registerElementIdForName( String elementName, String elementId ) {
+      if ( elementId == null ) {
+        return;
+      }
       Map<String, String> elementNameToIdMap = getElementNameToIdMap();
       elementNameToIdMap.put( elementName, elementId );
     }

@@ -69,6 +69,15 @@ public abstract class XmlMetaStoreCacheTestBase {
   }
   
   @Test
+  public void registerElementIdForName_for_null_id() {
+    IMetaStoreElementType testElementType = createTestElementType( "testElementTypeName", "testElementTypeId" );
+    simpleXmlMetaStoreCache.registerElementTypeIdForName( "testNamespace", testElementType.getName(), testElementType.getId() );
+    simpleXmlMetaStoreCache.registerElementIdForName( "testNamespace", testElementType, "testElementName", null );
+    String actualElementId = simpleXmlMetaStoreCache.getElementIdByName( "testNamespace", testElementType, "testElementName" );
+    assertNull( actualElementId );
+  }
+  
+  @Test
   public void registerElementIdForName_for_non_registered_type() {
     IMetaStoreElementType testElementType = createTestElementType( "testElementTypeName", "testElementTypeId" );
     simpleXmlMetaStoreCache.registerElementIdForName( "testNamespace", testElementType, "testElementName", "testElementId" );

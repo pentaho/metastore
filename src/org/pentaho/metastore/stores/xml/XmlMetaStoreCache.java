@@ -69,7 +69,7 @@ public interface XmlMetaStoreCache {
    * @param elementName
    *          the element's name
    * @param elementId
-   *          the element's id
+   *          the element's id. XmlMetaStoreCache doesn't register element's id with null value.
    */
   void registerElementIdForName( String namespace, IMetaStoreElementType elementType, String elementName, String elementId );
   
