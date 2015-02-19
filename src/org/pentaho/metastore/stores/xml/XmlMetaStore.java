@@ -522,7 +522,7 @@ public class XmlMetaStore extends BaseMetaStore implements IMetaStore {
       xmlElement.setIdWithFilename( elementFilename );
       xmlElement.save();
       
-      metaStoreCache.registerElementIdForName( namespace, elementType, xmlElement.getName(), element.getId() );
+      metaStoreCache.registerElementIdForName( namespace, elementType, xmlElement.getName(), xmlElement.getId() );
       metaStoreCache.registerProcessedFile( elementFilename, elementFile.lastModified() );
     } finally {
       unlockStore();
