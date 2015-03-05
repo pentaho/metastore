@@ -203,11 +203,13 @@ public class MetaStoreFactory<T> {
   private Map<String, String> getObjectFactoryContext( IMetaStoreAttribute parentElement ) {
     Map<String, String> context = new HashMap<String, String>();
 
-    IMetaStoreAttribute contextChild = parentElement.getChild( OBJECT_FACTORY_CONTEXT );
-    if ( contextChild != null ) {
-      for ( IMetaStoreAttribute child : contextChild.getChildren() ) {
-        if ( child.getId() != null && child.getValue() != null ) {
-          context.put( child.getId(), child.getValue().toString() );
+    if ( parentElement != null ) {
+      IMetaStoreAttribute contextChild = parentElement.getChild( OBJECT_FACTORY_CONTEXT );
+      if ( contextChild != null ) {
+        for ( IMetaStoreAttribute child : contextChild.getChildren() ) {
+          if ( child.getId() != null && child.getValue() != null ) {
+            context.put( child.getId(), child.getValue().toString() );
+          }
         }
       }
     }
@@ -257,6 +259,9 @@ public class MetaStoreFactory<T> {
       List<IMetaStoreAttribute> children = parentElement.getChildren();
       for ( int i = 0; i < children.size(); i++ ) {
         IMetaStoreAttribute child = parentElement.getChild( Integer.toString( i ) );
+        if ( child == null ) {
+          continue; // skip, go to the next child
+        }
         // Instantiate the class and load the attributes
         //
 
