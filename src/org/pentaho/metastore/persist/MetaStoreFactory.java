@@ -4,6 +4,7 @@ import java.lang.reflect.Field;
 import java.lang.reflect.Method;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
@@ -77,7 +78,12 @@ public class MetaStoreFactory<T> {
     if ( element == null ) {
       return null;
     }
-
+    return loadElement( element );
+  }
+  
+  /** Load an element from the metastore, straight into the appropriate class 
+   */
+  private T loadElement( IMetaStoreElement element ) throws MetaStoreException {
     T object;
 
     try {
@@ -88,7 +94,7 @@ public class MetaStoreFactory<T> {
 
     // Set the name of the object...
     //
-    setAttributeValue( clazz, object, "name", "setName", String.class, name );
+    setAttributeValue( clazz, object, "name", "setName", String.class, element.getName() );
 
     loadAttributes( object, element, clazz );
     return object;
@@ -221,11 +227,13 @@ public class MetaStoreFactory<T> {
   private Map<String, String> getObjectFactoryContext( IMetaStoreAttribute parentElement ) {
     Map<String, String> context = new HashMap<String, String>();
 
-    IMetaStoreAttribute contextChild = parentElement.getChild( OBJECT_FACTORY_CONTEXT );
-    if ( contextChild != null ) {
-      for ( IMetaStoreAttribute child : contextChild.getChildren() ) {
-        if ( child.getId() != null && child.getValue() != null ) {
-          context.put( child.getId(), child.getValue().toString() );
+    if ( parentElement != null ) {
+      IMetaStoreAttribute contextChild = parentElement.getChild( OBJECT_FACTORY_CONTEXT );
+      if ( contextChild != null ) {
+        for ( IMetaStoreAttribute child : contextChild.getChildren() ) {
+          if ( child.getId() != null && child.getValue() != null ) {
+            context.put( child.getId(), child.getValue().toString() );
+          }
         }
       }
     }
@@ -275,6 +283,11 @@ public class MetaStoreFactory<T> {
       List<IMetaStoreAttribute> children = parentElement.getChildren();
       for ( int i = 0; i < children.size(); i++ ) {
         IMetaStoreAttribute child = parentElement.getChild( Integer.toString( i ) );
+        if ( child == null ) {
+          continue; // skip, go to the next child
+        }
+        // Instantiate the class and load the attributes
+        //
 
         if ( metaStoreAttribute != null && metaStoreAttribute.factoryNameReference() ) {
           // Name reference to another factory OR locally embedded POJO
@@ -480,7 +493,7 @@ public class MetaStoreFactory<T> {
     //
 
     String name = (String) getAttributeValue( clazz, t, "name", "getName" );
-    if ( name == null ) {
+    if ( name == null || name.trim().length() == 0 ) {
       throw new MetaStoreException( "Unable to find name of element class object '" + t.toString() + "'" );
     }
 
@@ -754,12 +767,18 @@ public class MetaStoreFactory<T> {
    * @throws MetaStoreException
    */
   public List<T> getElements() throws MetaStoreException {
-    List<T> list = new ArrayList<T>();
-
-    for ( String name : getElementNames() ) {
-      list.add( loadElement( name ) );
+    MetaStoreElementType elementTypeAnnotation = getElementTypeAnnotation();
+    
+    IMetaStoreElementType elementType = metaStore.getElementTypeByName( namespace, elementTypeAnnotation.name() );
+    if ( elementType == null ) {
+      return Collections.emptyList();
     }
-
+    
+    List<IMetaStoreElement> elements = metaStore.getElements( namespace, elementType );
+    List<T> list = new ArrayList<T>( elements.size() );
+    for ( IMetaStoreElement metaStoreElement : elements ) {
+      list.add( loadElement( metaStoreElement ) );
+    }
     return list;
   }
 

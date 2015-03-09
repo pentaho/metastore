@@ -50,6 +50,18 @@ import org.pentaho.metastore.util.MetaStoreUtil;
 
 public class MetaStoreFactoryTest extends TestCase {
 
+  public static final String PASSWORD = "my secret password";
+  public static final String ANOTHER = "2222222";
+  public static final String ATTR = "11111111";
+  public static final String NAME = "one";
+  public static final int INT = 3;
+  public static final long LONG = 4;
+  public static final boolean BOOL = true;
+  public static final Date DATE = new Date();
+  public static final int NR_ATTR = 10;
+  public static final int NR_NAME = 5;
+  public static final int NR_FILENAME = 5;
+
   @Test
   public void testIDMigration() throws Exception {
 
@@ -125,18 +137,6 @@ public class MetaStoreFactoryTest extends TestCase {
   public void testMyElement() throws Exception {
 
     IMetaStore metaStore = new MemoryMetaStore();
-
-    String NAME = "one";
-    String ATTR = "11111111";
-    String ANOTHER = "2222222";
-    String PASSWORD = "my secret password";
-    int INT = 3;
-    long LONG = 4;
-    boolean BOOL = true;
-    Date DATE = new Date();
-    final int NR_ATTR = 10;
-    final int NR_NAME = 5;
-    final int NR_FILENAME = 5;
 
     // List of named elements...
     //
@@ -488,6 +488,39 @@ public class MetaStoreFactoryTest extends TestCase {
     cube.setMainKpi( mainKpi );
 
     return cube;
+  }
+
+  public void testSanitizeName() throws Exception {
+    IMetaStore metaStore = new MemoryMetaStore();
+    MetaStoreFactory<MyOtherElement> factory = new MetaStoreFactory<MyOtherElement>( MyOtherElement.class, metaStore, "custom" );
+    MyOtherElement element = new MyOtherElement( null, ATTR );
+
+    try {
+      factory.saveElement( element );
+      fail( "Saved illegal element (name == null)" );
+    } catch ( MetaStoreException e ) {
+      assertNotNull( e );
+    }
+
+    try {
+      element.setName( "" );
+      factory.saveElement( element );
+      fail( "Saved illegal element (name.isEmpty())" );
+    } catch ( MetaStoreException e ) {
+      assertNotNull( e );
+    }
+
+    try {
+      element.setName( " " );
+      factory.saveElement( element );
+      fail( "Saved illegal element (name.isEmpty())" );
+    } catch ( MetaStoreException e ) {
+      assertNotNull( e );
+    }
+
+    element.setName( NAME );
+    factory.saveElement( element );
+    assertEquals( Arrays.asList( NAME ), factory.getElementNames() );
   }
 
   private List<Kpi> generateKpis() {

@@ -18,6 +18,8 @@
 package org.pentaho.metastore.stores.xml;
 
 import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileOutputStream;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -82,13 +84,15 @@ public class XmlMetaStoreElement extends XmlMetaStoreAttribute implements IMetaS
    */
   public XmlMetaStoreElement( String filename ) throws MetaStoreException {
     this();
-    File file = new File( filename );
     setIdWithFilename( filename );
 
+    FileInputStream in = null;
+
     try {
+      in = new FileInputStream( filename );
       DocumentBuilderFactory documentBuilderFactory = DocumentBuilderFactory.newInstance();
       DocumentBuilder documentBuilder = documentBuilderFactory.newDocumentBuilder();
-      Document document = documentBuilder.parse( file );
+      Document document = documentBuilder.parse( in );
       Element dataTypeElement = document.getDocumentElement();
 
       loadElement( dataTypeElement );
@@ -96,6 +100,11 @@ public class XmlMetaStoreElement extends XmlMetaStoreAttribute implements IMetaS
       loadSecurity( dataTypeElement );
     } catch ( Exception e ) {
       throw new MetaStoreException( "Unable to load XML metastore attribute from file '" + filename + "'", e );
+    } finally {
+      try {
+        in.close();
+      } catch ( Throwable ignored ) {
+      }
     }
   }
 
@@ -117,7 +126,10 @@ public class XmlMetaStoreElement extends XmlMetaStoreAttribute implements IMetaS
 
   public void save() throws MetaStoreException {
 
+    FileOutputStream out = null;
+
     try {
+      out = new FileOutputStream( filename );
 
       DocumentBuilderFactory factory = DocumentBuilderFactory.newInstance();
       DocumentBuilder builder = factory.newDocumentBuilder();
@@ -137,13 +149,18 @@ public class XmlMetaStoreElement extends XmlMetaStoreAttribute implements IMetaS
       transformer.setOutputProperty( OutputKeys.INDENT, "yes" );
       transformer.setOutputProperty( "{http://xml.apache.org/xslt}indent-amount", "2" );
       DOMSource source = new DOMSource( doc );
-      StreamResult result = new StreamResult( new File( filename ) );
+      StreamResult result = new StreamResult( out );
 
       // Do the actual saving...
       transformer.transform( source, result );
 
     } catch ( Exception e ) {
       throw new MetaStoreException( "Unable to save XML meta store element to file '" + filename + "'", e );
+    } finally {
+      try {
+        out.close();
+      } catch ( Throwable ignored ) {
+      }
     }
   }
 
