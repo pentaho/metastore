@@ -21,5 +21,6 @@
     <dependency org="com.google.guava"    name="guava"               rev="${dependency.guava.revision}"              transitive="false"/>
     <dependency org="junit"               name="junit"               rev="${dependency.junit.revision}"              transitive="false" conf="test->default"/>
     <dependency org="org.mockito"         name="mockito-all"         rev="${dependency.mockito-all.revision}"        transitive="false" conf="test->default"/>
+    <dependency org="commons-io"          name="commons-io"          rev="${dependency.commons.revision}"            transitive="false" conf="test->default"/>
   </dependencies>
 </ivy-module>
