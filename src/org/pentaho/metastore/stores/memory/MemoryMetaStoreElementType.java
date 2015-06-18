@@ -17,6 +17,12 @@
 
 package org.pentaho.metastore.stores.memory;
 
+import org.pentaho.metastore.api.BaseElementType;
+import org.pentaho.metastore.api.IMetaStoreElement;
+import org.pentaho.metastore.api.IMetaStoreElementType;
+import org.pentaho.metastore.api.exceptions.MetaStoreException;
+import org.pentaho.metastore.util.MetaStoreUtil;
+
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -26,31 +32,21 @@ import java.util.concurrent.locks.ReentrantReadWriteLock;
 import java.util.concurrent.locks.ReentrantReadWriteLock.ReadLock;
 import java.util.concurrent.locks.ReentrantReadWriteLock.WriteLock;
 
-import org.pentaho.metastore.api.IMetaStoreElement;
-import org.pentaho.metastore.api.IMetaStoreElementType;
-import org.pentaho.metastore.api.exceptions.MetaStoreException;
-import org.pentaho.metastore.util.MetaStoreUtil;
+public class MemoryMetaStoreElementType extends BaseElementType {
 
-public class MemoryMetaStoreElementType implements IMetaStoreElementType {
-
-  private String namespace;
-  private String id;
-  private String name;
-  private String description;
-  private String metaStoreName;
-
-  private final Map<String, MemoryMetaStoreElement> elementMap;
+  private final Map<String, MemoryMetaStoreElement> elementMap = new HashMap<String, MemoryMetaStoreElement>();
 
   private final ReadLock readLock;
   private final WriteLock writeLock;
 
-  public MemoryMetaStoreElementType( String namespace ) {
-    this.namespace = namespace;
-    this.elementMap = new HashMap<String, MemoryMetaStoreElement>();
-
+  {
     ReentrantReadWriteLock lock = new ReentrantReadWriteLock();
     readLock = lock.readLock();
     writeLock = lock.writeLock();
+  }
+
+  public MemoryMetaStoreElementType( String namespace ) {
+    super( namespace );
   }
 
   /**
@@ -61,9 +57,7 @@ public class MemoryMetaStoreElementType implements IMetaStoreElementType {
    */
   public MemoryMetaStoreElementType( IMetaStoreElementType elementType ) {
     this( elementType.getNamespace() );
-    this.id = elementType.getId();
-    this.name = elementType.getName();
-    this.description = elementType.getDescription();
+    copyFrom( elementType );
   }
 
   @Override
@@ -79,74 +73,6 @@ public class MemoryMetaStoreElementType implements IMetaStoreElementType {
         return new HashMap<String, MemoryMetaStoreElement>( elementMap );
       }
     } );
-  }
-
-  /**
-   * @return the namespace
-   */
-  public String getNamespace() {
-    return namespace;
-  }
-
-  /**
-   * @param namespace
-   *          the namespace to set
-   */
-  public void setNamespace( String namespace ) {
-    this.namespace = namespace;
-  }
-
-  /**
-   * @return the id
-   */
-  public String getId() {
-    return id;
-  }
-
-  /**
-   * @param id
-   *          the id to set
-   */
-  public void setId( String id ) {
-    this.id = id;
-  }
-
-  /**
-   * @return the name
-   */
-  public String getName() {
-    return name;
-  }
-
-  /**
-   * @param name
-   *          the name to set
-   */
-  public void setName( String name ) {
-    this.name = name;
-  }
-
-  /**
-   * @return the description
-   */
-  public String getDescription() {
-    return description;
-  }
-
-  /**
-   * @param description
-   *          the description to set
-   */
-  public void setDescription( String description ) {
-    this.description = description;
-  }
-
-  public String getMetaStoreName() {
-    return metaStoreName;
-  }
-
-  public void setMetaStoreName( String metaStoreName ) {
-    this.metaStoreName = metaStoreName;
   }
 
   public List<String> getElementIds() {
