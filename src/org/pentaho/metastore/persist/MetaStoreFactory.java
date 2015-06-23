@@ -80,7 +80,7 @@ public class MetaStoreFactory<T> {
     }
     return loadElement( element );
   }
-  
+
   /** Load an element from the metastore, straight into the appropriate class 
    */
   private T loadElement( IMetaStoreElement element ) throws MetaStoreException {
@@ -191,13 +191,20 @@ public class MetaStoreFactory<T> {
     // There are 2 possible attributes in the child attribute: the object factory and/or the pojo top level attributes
     // If there is no pojo attribute it means the value of the object was null when save so we can stop if that's the case.
     //
+    String pojoChildClassName;
     IMetaStoreAttribute pojoChild = child.getChild( POJO_CHILD );
     if ( pojoChild == null ) {
+      // Support legacy code (backwards compatibility)
+      pojoChildClassName = MetaStoreUtil.getAttributeString( child );
+      pojoChild = child;
+    } else {
+      pojoChildClassName = pojoChild.getValue().toString();
+    }
+
+    if ( pojoChildClassName == null ) {
       // Nothing to load, move along
       return null;
     }
-
-    String pojoChildClassName = pojoChild.getValue().toString();
 
     try {
       Class<?> pojoClass;
@@ -768,12 +775,12 @@ public class MetaStoreFactory<T> {
    */
   public List<T> getElements() throws MetaStoreException {
     MetaStoreElementType elementTypeAnnotation = getElementTypeAnnotation();
-    
+
     IMetaStoreElementType elementType = metaStore.getElementTypeByName( namespace, elementTypeAnnotation.name() );
     if ( elementType == null ) {
       return Collections.emptyList();
     }
-    
+
     List<IMetaStoreElement> elements = metaStore.getElements( namespace, elementType );
     List<T> list = new ArrayList<T>( elements.size() );
     for ( IMetaStoreElement metaStoreElement : elements ) {
