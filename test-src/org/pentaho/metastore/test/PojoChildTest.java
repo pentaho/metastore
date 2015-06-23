@@ -41,8 +41,7 @@ public class PojoChildTest {
   public MetaStoreFactory<ParentElement> getMetaStoreFactory( IMetaStore metaStore ) {
 
     MetaStoreFactory<ParentElement>
-      factory =
-      new MetaStoreFactory( ParentElement.class, metaStore, "pentaho" );
+        factory = new MetaStoreFactory( ParentElement.class, metaStore, "pentaho" );
     return factory;
   }
 
@@ -59,6 +58,14 @@ public class PojoChildTest {
     ParentElement p = createSample();
     XmlMetaStore xmlMetaStore = new XmlMetaStore( XML_METASTORE );
     ParentElement lp = getMetaStoreFactory( xmlMetaStore ).loadElement( "test" );
+    verify( p, lp );
+  }
+
+  @Test
+  public void testLoadFromFileLegacy() throws Exception {
+    ParentElement p = createSample();
+    XmlMetaStore xmlMetaStore = new XmlMetaStore( XML_METASTORE );
+    ParentElement lp = getMetaStoreFactory( xmlMetaStore ).loadElement( "test_legacy" );
     verify( p, lp );
   }
 
