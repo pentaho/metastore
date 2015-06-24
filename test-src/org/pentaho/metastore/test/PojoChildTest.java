@@ -7,6 +7,7 @@ import org.junit.Test;
 import org.pentaho.metastore.api.IMetaStore;
 import org.pentaho.metastore.api.exceptions.MetaStoreException;
 import org.pentaho.metastore.persist.MetaStoreFactory;
+import org.pentaho.metastore.stores.memory.MemoryMetaStore;
 import org.pentaho.metastore.stores.xml.XmlMetaStore;
 import org.pentaho.metastore.test.testclasses.my.ChildElement;
 import org.pentaho.metastore.test.testclasses.my.ParentElement;
@@ -41,7 +42,7 @@ public class PojoChildTest {
   public MetaStoreFactory<ParentElement> getMetaStoreFactory( IMetaStore metaStore ) {
 
     MetaStoreFactory<ParentElement>
-        factory = new MetaStoreFactory( ParentElement.class, metaStore, "pentaho" );
+      factory = new MetaStoreFactory( ParentElement.class, metaStore, "pentaho" );
     return factory;
   }
 
@@ -50,6 +51,15 @@ public class PojoChildTest {
     ParentElement p = createSample();
     getMetaStoreFactory( this.metaStore ).saveElement( p );
     ParentElement lp = getMetaStoreFactory( this.metaStore ).loadElement( "test" );
+    verify( p, lp );
+  }
+
+  @Test
+  public void testSaveAndLoadInMemory() throws Exception {
+    ParentElement p = createSample();
+    IMetaStore memory = new MemoryMetaStore();
+    getMetaStoreFactory( memory ).saveElement( p );
+    ParentElement lp = getMetaStoreFactory( memory ).loadElement( "test" );
     verify( p, lp );
   }
 
