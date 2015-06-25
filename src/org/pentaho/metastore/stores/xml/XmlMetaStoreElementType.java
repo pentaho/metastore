@@ -17,9 +17,12 @@
 
 package org.pentaho.metastore.stores.xml;
 
-import java.io.File;
-import java.io.FileOutputStream;
-import java.io.StringWriter;
+import org.pentaho.metastore.api.BaseElementType;
+import org.pentaho.metastore.api.exceptions.MetaStoreException;
+import org.w3c.dom.Document;
+import org.w3c.dom.Element;
+import org.w3c.dom.Node;
+import org.w3c.dom.NodeList;
 
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
@@ -28,23 +31,13 @@ import javax.xml.transform.Transformer;
 import javax.xml.transform.TransformerFactory;
 import javax.xml.transform.dom.DOMSource;
 import javax.xml.transform.stream.StreamResult;
+import java.io.File;
+import java.io.FileOutputStream;
+import java.io.StringWriter;
 
-import org.pentaho.metastore.api.IMetaStoreElementType;
-import org.pentaho.metastore.api.exceptions.MetaStoreException;
-import org.w3c.dom.Document;
-import org.w3c.dom.Element;
-import org.w3c.dom.Node;
-import org.w3c.dom.NodeList;
-
-public class XmlMetaStoreElementType implements IMetaStoreElementType {
+public class XmlMetaStoreElementType extends BaseElementType {
 
   public static final String XML_TAG = "data-type";
-
-  private String namespace;
-  private String id;
-  private String name;
-  private String description;
-  private String metaStoreName;
 
   private String filename;
 
@@ -55,10 +48,10 @@ public class XmlMetaStoreElementType implements IMetaStoreElementType {
    * @param description
    */
   public XmlMetaStoreElementType( String namespace, String id, String name, String description ) {
-    this.namespace = namespace;
-    this.id = id;
-    this.name = name;
-    this.description = description;
+    super( namespace );
+    setId( id );
+    setName( name );
+    setDescription( description );
   }
 
   /**
@@ -70,10 +63,10 @@ public class XmlMetaStoreElementType implements IMetaStoreElementType {
    *          the file to load from
    */
   public XmlMetaStoreElementType( String namespace, String filename ) throws MetaStoreException {
-    this.namespace = namespace;
+    super( namespace );
 
     File file = new File( filename );
-    this.id = file.getParentFile().getName();
+    this.setId( file.getParentFile().getName() );
 
     try {
 
@@ -93,10 +86,10 @@ public class XmlMetaStoreElementType implements IMetaStoreElementType {
     for ( int e = 0; e < childNodes.getLength(); e++ ) {
       Node childNode = childNodes.item( e );
       if ( "name".equals( childNode.getNodeName() ) ) {
-        name = XmlUtil.getNodeValue( childNode );
+        setName( XmlUtil.getNodeValue( childNode ) );
       }
       if ( "description".equals( childNode.getNodeName() ) ) {
-        description = XmlUtil.getNodeValue( childNode );
+        setDescription( XmlUtil.getNodeValue( childNode ) );
       }
     }
   }
@@ -163,73 +156,13 @@ public class XmlMetaStoreElementType implements IMetaStoreElementType {
 
   protected void appendElementType( Document doc, Element elementTypeElement ) {
     Element nameElement = doc.createElement( "name" );
-    nameElement.appendChild( doc.createTextNode( name ) );
+    nameElement.appendChild( doc.createTextNode( getName() ) );
     elementTypeElement.appendChild( nameElement );
 
     Element descriptionElement = doc.createElement( "description" );
-    descriptionElement.appendChild( doc.createTextNode( description ) );
+    descriptionElement.appendChild( doc.createTextNode( getDescription() ) );
     elementTypeElement.appendChild( descriptionElement );
 
-  }
-
-  /**
-   * @return the namespace
-   */
-  public String getNamespace() {
-    return namespace;
-  }
-
-  /**
-   * @param namespace
-   *          the namespace to set
-   */
-  public void setNamespace( String namespace ) {
-    this.namespace = namespace;
-  }
-
-  /**
-   * @return the id
-   */
-  public String getId() {
-    return id;
-  }
-
-  /**
-   * @param id
-   *          the id to set
-   */
-  public void setId( String id ) {
-    this.id = id;
-  }
-
-  /**
-   * @return the name
-   */
-  public String getName() {
-    return name;
-  }
-
-  /**
-   * @param name
-   *          the name to set
-   */
-  public void setName( String name ) {
-    this.name = name;
-  }
-
-  /**
-   * @return the description
-   */
-  public String getDescription() {
-    return description;
-  }
-
-  /**
-   * @param description
-   *          the description to set
-   */
-  public void setDescription( String description ) {
-    this.description = description;
   }
 
   /**
@@ -245,14 +178,6 @@ public class XmlMetaStoreElementType implements IMetaStoreElementType {
    */
   public void setFilename( String filename ) {
     this.filename = filename;
-  }
-
-  public String getMetaStoreName() {
-    return metaStoreName;
-  }
-
-  public void setMetaStoreName( String metaStoreName ) {
-    this.metaStoreName = metaStoreName;
   }
 
 }
