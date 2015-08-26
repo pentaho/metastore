@@ -19,6 +19,7 @@ package org.pentaho.metastore.stores.xml;
 
 import java.io.File;
 import java.io.FileInputStream;
+import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.util.ArrayList;
 import java.util.List;
@@ -153,7 +154,8 @@ public class XmlMetaStoreElement extends XmlMetaStoreAttribute implements IMetaS
 
       // Do the actual saving...
       transformer.transform( source, result );
-
+    } catch ( FileNotFoundException ex ) {
+      throw new MetaStoreException( "The Annotation Group name is too long. Please try something shorter.", ex );
     } catch ( Exception e ) {
       throw new MetaStoreException( "Unable to save XML meta store element to file '" + filename + "'", e );
     } finally {
