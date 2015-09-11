@@ -256,7 +256,7 @@ public class XmlMetaStore extends BaseMetaStore implements IMetaStore {
         elementType.setId( elementType.getName() );
       }
 
-      String elementTypeFolder = XmlUtil.getElementTypeFolder( rootFolder, namespace, elementType.getId() );
+      String elementTypeFolder = XmlUtil.getElementTypeFolder( rootFolder, namespace, elementType.getName() );
       File elementTypeFolderFile = new File( elementTypeFolder );
       if ( elementTypeFolderFile.exists() ) {
         throw new MetaStoreElementTypeExistsException( getElementTypes( namespace, false ),
@@ -266,7 +266,7 @@ public class XmlMetaStore extends BaseMetaStore implements IMetaStore {
         throw new MetaStoreException( "Unable to create XML meta store element type folder '" + elementTypeFolder + "'" );
       }
 
-      String elementTypeFilename = XmlUtil.getElementTypeFile( rootFolder, namespace, elementType.getId() );
+      String elementTypeFilename = XmlUtil.getElementTypeFile( rootFolder, namespace, elementType.getName() );
 
       // Copy the element type information to the XML meta store
       //
@@ -291,14 +291,14 @@ public class XmlMetaStore extends BaseMetaStore implements IMetaStore {
     throws MetaStoreException {
     lockStore();
     try {
-      String elementTypeFolder = XmlUtil.getElementTypeFolder( rootFolder, namespace, elementType.getId() );
+      String elementTypeFolder = XmlUtil.getElementTypeFolder( rootFolder, namespace, elementType.getName() );
       File elementTypeFolderFile = new File( elementTypeFolder );
       if ( !elementTypeFolderFile.exists() ) {
         throw new MetaStoreException( "The specified element type with ID '" + elementType.getId()
             + "' doesn't exists so we can't update it." );
       }
 
-      String elementTypeFilename = XmlUtil.getElementTypeFile( rootFolder, namespace, elementType.getId() );
+      String elementTypeFilename = XmlUtil.getElementTypeFile( rootFolder, namespace, elementType.getName() );
 
       // Save the element type information to the XML meta store
       //
