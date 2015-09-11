@@ -27,7 +27,10 @@ import org.pentaho.metastore.api.IMetaStore;
 import org.pentaho.metastore.api.IMetaStoreAttribute;
 import org.pentaho.metastore.api.IMetaStoreElement;
 import org.pentaho.metastore.api.IMetaStoreElementType;
+import org.pentaho.metastore.api.exceptions.MetaStoreElementExistException;
+import org.pentaho.metastore.api.exceptions.MetaStoreElementTypeExistsException;
 import org.pentaho.metastore.api.exceptions.MetaStoreException;
+import org.pentaho.metastore.api.exceptions.MetaStoreNamespaceExistsException;
 
 /**
  * Generally useful methods for extracting data
@@ -124,5 +127,40 @@ public class MetaStoreUtil {
     Collections.sort( names );
 
     return names.toArray( new String[names.size()] );
+  }
+
+  public static void copy( IMetaStore from, IMetaStore to ) throws MetaStoreException {
+
+    // get all of the namespace in the "from" metastore
+    List<String> namespaces = from.getNamespaces();
+    for ( String namespace : namespaces ) {
+      // create the sme namespace in the "to" metastore
+      try {
+        to.createNamespace( namespace );
+      } catch ( MetaStoreNamespaceExistsException e ) {
+        // already there
+      }
+      // get all of the element types defined in this namespace
+      List<IMetaStoreElementType> elementTypes = from.getElementTypes( namespace );
+      for ( IMetaStoreElementType elementType : elementTypes ) {
+        // create the elementType in the "to" metastore
+        try {
+          to.createElementType( namespace, elementType );
+        } catch ( MetaStoreElementTypeExistsException e ) {
+          // already there
+        }
+        // get all of the elements defined for this type
+        List<IMetaStoreElement> elements = from.getElements( namespace, elementType );
+        for ( IMetaStoreElement element : elements ) {
+          // create the element in the "to" metastore
+          try {
+            to.createElement( namespace, elementType, element );
+          } catch ( MetaStoreElementExistException e ) {
+            // already there
+          }
+        }
+      }
+    }
+
   }
 }
