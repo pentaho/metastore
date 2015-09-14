@@ -84,6 +84,174 @@ public class MetaStoreUtilTest {
     verify( to, never() ).createElement( eq( "hitachi" ), any( IMetaStoreElementType.class ), any( IMetaStoreElement.class ) );
   }
 
+  @Test
+  public void testCopy_existingElementType_overwriteFalse() throws Exception {
+    IMetaStore from = mock( IMetaStore.class );
+    IMetaStore to = mock( IMetaStore.class );
 
+    String[] namespaces = new String[] { "pentaho", "hitachi" };
+    List<IMetaStoreElementType> penElementTypes = new ArrayList<>();
+    IMetaStoreElementType type1 = mock( IMetaStoreElementType.class );
+    IMetaStoreElementType type2 = mock( IMetaStoreElementType.class );
+    when( type1.getName() ).thenReturn( "type1" );
+    when( type2.getName() ).thenReturn( "type2" );
+    penElementTypes.add( type1 );
+    penElementTypes.add( type2 );
 
+    List<IMetaStoreElement> elements = new ArrayList<>();
+    IMetaStoreElement elem1 = mock( IMetaStoreElement.class );
+    IMetaStoreElement elem2 = mock( IMetaStoreElement.class );
+    IMetaStoreElement elem3 = mock( IMetaStoreElement.class );
+    elements.add( elem1 );
+    elements.add( elem2 );
+    elements.add( elem3 );
+
+    when( from.getNamespaces() ).thenReturn( Arrays.asList( namespaces ) );
+    when( from.getElementTypes( "pentaho" ) ).thenReturn( penElementTypes );
+    when( from.getElements( "pentaho", type1 ) ).thenReturn( elements );
+    when( from.getElements( "pentaho", type2 ) ).thenReturn( elements );
+
+    // set up an existing element type
+    IMetaStoreElementType existingType = mock( IMetaStoreElementType.class );
+    when( to.getElementTypeByName( anyString(), anyString() ) ).thenReturn( existingType );
+    when( existingType.getId() ).thenReturn( "existingID" );
+
+    MetaStoreUtil.copy( from, to, false );
+
+    verify( to ).createNamespace( "pentaho" );
+    verify( to ).createNamespace( "hitachi" );
+    verify( to, never() ).createElementType( "pentaho", type1 );
+    verify( to, never() ).createElementType( "pentaho", type2 );
+
+    verify( type1, never() ).setId( "existingID" );
+    verify( type2, never() ).setId( "existingID" );
+    verify( to, never() ).updateElementType( "pentaho", type1 );
+    verify( to, never() ).updateElementType( "pentaho", type2 );
+
+    verify( to, never() ).createElement( eq( "pentaho" ), any( IMetaStoreElementType.class ), eq( elem1 ) );
+    verify( to, never() ).createElement( eq( "pentaho" ), any( IMetaStoreElementType.class ), eq( elem2 ) );
+    verify( to, never() ).createElement( eq( "pentaho" ), any( IMetaStoreElementType.class ), eq( elem3 ) );
+
+    verify( to, never() ).updateElement( eq( "pentaho" ), any( IMetaStoreElementType.class ), anyString(), eq( elem1 ) );
+    verify( to, never() ).updateElement( eq( "pentaho" ), any( IMetaStoreElementType.class ), anyString(), eq( elem2 ) );
+    verify( to, never() ).updateElement( eq( "pentaho" ), any( IMetaStoreElementType.class ), anyString(), eq( elem3 ) );
+
+    verify( to, never() ).createElementType( eq( "hitachi" ), any( IMetaStoreElementType.class ) );
+    verify( to, never() ).createElement( eq( "hitachi" ), any( IMetaStoreElementType.class ),
+      any( IMetaStoreElement.class ) );
+
+  }
+
+  @Test
+  public void testCopy_existingElementType_overwriteTrue() throws Exception {
+    IMetaStore from = mock( IMetaStore.class );
+    IMetaStore to = mock( IMetaStore.class );
+
+    String[] namespaces = new String[] { "pentaho", "hitachi" };
+    List<IMetaStoreElementType> penElementTypes = new ArrayList<>();
+    IMetaStoreElementType type1 = mock( IMetaStoreElementType.class );
+    IMetaStoreElementType type2 = mock( IMetaStoreElementType.class );
+    when( type1.getName() ).thenReturn( "type1" );
+    when( type2.getName() ).thenReturn( "type2" );
+    penElementTypes.add( type1 );
+    penElementTypes.add( type2 );
+
+    List<IMetaStoreElement> elements = new ArrayList<>();
+    IMetaStoreElement elem1 = mock( IMetaStoreElement.class );
+    IMetaStoreElement elem2 = mock( IMetaStoreElement.class );
+    IMetaStoreElement elem3 = mock( IMetaStoreElement.class );
+    elements.add( elem1 );
+    elements.add( elem2 );
+    elements.add( elem3 );
+
+    when( from.getNamespaces() ).thenReturn( Arrays.asList( namespaces ) );
+    when( from.getElementTypes( "pentaho" ) ).thenReturn( penElementTypes );
+    when( from.getElements( "pentaho", type1 ) ).thenReturn( elements );
+    when( from.getElements( "pentaho", type2 ) ).thenReturn( elements );
+
+    // set up an existing element type
+    IMetaStoreElementType existingType = mock( IMetaStoreElementType.class );
+    when( to.getElementTypeByName( anyString(), anyString() ) ).thenReturn( existingType );
+    when( existingType.getId() ).thenReturn( "existingID" );
+
+    MetaStoreUtil.copy( from, to, true );
+
+    verify( to ).createNamespace( "pentaho" );
+    verify( to ).createNamespace( "hitachi" );
+    verify( to, never() ).createElementType( "pentaho", type1 );
+    verify( to, never() ).createElementType( "pentaho", type2 );
+
+    verify( type1 ).setId( "existingID" );
+    verify( type2 ).setId( "existingID" );
+    verify( to ).updateElementType( "pentaho", type1 );
+    verify( to ).updateElementType( "pentaho", type2 );
+
+    verify( to, times( 2 ) ).createElement( eq( "pentaho" ), any( IMetaStoreElementType.class ), eq( elem1 ) );
+    verify( to, times( 2 ) ).createElement( eq( "pentaho" ), any( IMetaStoreElementType.class ), eq( elem2 ) );
+    verify( to, times( 2 ) ).createElement( eq( "pentaho" ), any( IMetaStoreElementType.class ), eq( elem3 ) );
+
+    verify( to, never() ).updateElement( eq( "pentaho" ), any( IMetaStoreElementType.class ), anyString(), eq( elem1 ) );
+    verify( to, never() ).updateElement( eq( "pentaho" ), any( IMetaStoreElementType.class ), anyString(), eq( elem2 ) );
+    verify( to, never() ).updateElement( eq( "pentaho" ), any( IMetaStoreElementType.class ), anyString(), eq( elem3 ) );
+
+    verify( to, never() ).createElementType( eq( "hitachi" ), any( IMetaStoreElementType.class ) );
+    verify( to, never() ).createElement( eq( "hitachi" ), any( IMetaStoreElementType.class ),
+      any( IMetaStoreElement.class ) );
+
+  }
+
+  @Test
+  public void testCopy_existingElementTypeAndElement_overwriteTrue() throws Exception {
+    IMetaStore from = mock( IMetaStore.class );
+    IMetaStore to = mock( IMetaStore.class );
+
+    String[] namespaces = new String[] { "pentaho", "hitachi" };
+    List<IMetaStoreElementType> penElementTypes = new ArrayList<>();
+    IMetaStoreElementType type1 = mock( IMetaStoreElementType.class );
+    when( type1.getName() ).thenReturn( "type1" );
+    penElementTypes.add( type1 );
+
+    List<IMetaStoreElement> elements = new ArrayList<>();
+    IMetaStoreElement elem1 = mock( IMetaStoreElement.class );
+    IMetaStoreElement elem2 = mock( IMetaStoreElement.class );
+    IMetaStoreElement elem3 = mock( IMetaStoreElement.class );
+    when( elem1.getId() ).thenReturn( "elementID" );
+    when( elem1.getName() ).thenReturn( "elementName" );
+    elements.add( elem1 );
+    elements.add( elem2 );
+    elements.add( elem3 );
+
+    when( from.getNamespaces() ).thenReturn( Arrays.asList( namespaces ) );
+    when( from.getElementTypes( "pentaho" ) ).thenReturn( penElementTypes );
+    when( from.getElements( eq( "pentaho" ), any( IMetaStoreElementType.class ) ) ).thenReturn( elements );
+
+    // set up an existing element type
+    IMetaStoreElementType existingType = mock( IMetaStoreElementType.class );
+    when( to.getElementTypeByName( anyString(), anyString() ) ).thenReturn( existingType );
+    when( existingType.getId() ).thenReturn( "existingID" );
+
+    when( to.getElementByName( eq( "pentaho" ), any( IMetaStoreElementType.class ), eq( "elementName" ) ) ).thenReturn(
+      elem1 );
+
+    MetaStoreUtil.copy( from, to, true );
+
+    verify( to ).createNamespace( "pentaho" );
+    verify( to, never() ).createElementType( "pentaho", type1 );
+
+    verify( type1 ).setId( "existingID" );
+    verify( to ).updateElementType( "pentaho", type1 );
+
+    verify( to, never() ).createElement( eq( "pentaho" ), any( IMetaStoreElementType.class ), eq( elem1 ) );
+    verify( to ).createElement( eq( "pentaho" ), any( IMetaStoreElementType.class ), eq( elem2 ) );
+    verify( to ).createElement( eq( "pentaho" ), any( IMetaStoreElementType.class ), eq( elem3 ) );
+
+    verify( to ).updateElement( eq( "pentaho" ), any( IMetaStoreElementType.class ), eq( "elementID" ), eq( elem1 ) );
+    verify( to, never() ).updateElement( eq( "pentaho" ), any( IMetaStoreElementType.class ), anyString(), eq( elem2 ) );
+    verify( to, never() ).updateElement( eq( "pentaho" ), any( IMetaStoreElementType.class ), anyString(), eq( elem3 ) );
+
+    verify( to, never() ).createElementType( eq( "hitachi" ), any( IMetaStoreElementType.class ) );
+    verify( to, never() ).createElement( eq( "hitachi" ), any( IMetaStoreElementType.class ),
+      any( IMetaStoreElement.class ) );
+
+  }
 }

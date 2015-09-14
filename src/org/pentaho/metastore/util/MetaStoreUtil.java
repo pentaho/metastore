@@ -130,6 +130,10 @@ public class MetaStoreUtil {
   }
 
   public static void copy( IMetaStore from, IMetaStore to ) throws MetaStoreException {
+    copy( from, to, false );
+  }
+
+  public static void copy( IMetaStore from, IMetaStore to, boolean overwrite ) throws MetaStoreException {
 
     // get all of the namespace in the "from" metastore
     List<String> namespaces = from.getNamespaces();
@@ -143,20 +147,32 @@ public class MetaStoreUtil {
       // get all of the element types defined in this namespace
       List<IMetaStoreElementType> elementTypes = from.getElementTypes( namespace );
       for ( IMetaStoreElementType elementType : elementTypes ) {
-        // create the elementType in the "to" metastore
-        try {
+        // See if it's already there
+        IMetaStoreElementType existingType = to.getElementTypeByName( namespace, elementType.getName() );
+        if ( existingType != null ) {
+          if ( overwrite ) {
+            // we looked it up by name, but need to update it by id
+            elementType.setId( existingType.getId() );
+            to.updateElementType( namespace, elementType );
+          } else {
+            elementType = existingType;
+          }
+        } else {
+          // create the elementType in the "to" metastore
           to.createElementType( namespace, elementType );
-        } catch ( MetaStoreElementTypeExistsException e ) {
-          // already there
         }
+
         // get all of the elements defined for this type
         List<IMetaStoreElement> elements = from.getElements( namespace, elementType );
         for ( IMetaStoreElement element : elements ) {
-          // create the element in the "to" metastore
-          try {
+          IMetaStoreElement existingElement = to.getElementByName( namespace, elementType, element.getName() );
+          if ( existingElement != null ) {
+            element.setId( existingElement.getId() );
+            if ( overwrite ) {
+              to.updateElement( namespace, elementType, existingElement.getId(), element );
+            }
+          } else {
             to.createElement( namespace, elementType, element );
-          } catch ( MetaStoreElementExistException e ) {
-            // already there
           }
         }
       }
