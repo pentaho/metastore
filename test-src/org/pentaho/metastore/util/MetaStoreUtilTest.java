@@ -17,8 +17,10 @@
 
 package org.pentaho.metastore.util;
 
+import org.junit.Before;
 import org.junit.Test;
 import org.pentaho.metastore.api.IMetaStore;
+import org.pentaho.metastore.api.IMetaStoreAttribute;
 import org.pentaho.metastore.api.IMetaStoreElement;
 import org.pentaho.metastore.api.IMetaStoreElementType;
 import org.pentaho.metastore.stores.memory.MemoryMetaStore;
@@ -27,10 +29,59 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
 import static org.mockito.Mockito.*;
 
 public class MetaStoreUtilTest {
+  private MetaStoreUtil metaStoreUtil;
+  private IMetaStore mockMetaStore;
+  private IMetaStoreAttribute mockIMetaStoreAttribute;
+  private String namespace = "test_namespace";
+
+  @Before
+  public void setUp() throws Exception {
+    metaStoreUtil = new MetaStoreUtil();
+    mockMetaStore = mock( IMetaStore.class );
+    mockIMetaStoreAttribute = mock( IMetaStoreAttribute.class );
+  }
+
+  @Test
+  public void testVerifyNamespaceCreated() throws Exception {
+    when( mockMetaStore.namespaceExists( namespace ) ).thenReturn( false );
+    metaStoreUtil.verifyNamespaceCreated( mockMetaStore, namespace );
+    verify( mockMetaStore ).createNamespace( namespace );
+  }
+
+  @Test
+  public void testGetChildString() throws Exception {
+    IMetaStoreAttribute mockIMetaStoreAttributeChild = mock( IMetaStoreAttribute.class );
+    when( mockIMetaStoreAttribute.getChild( "id" ) ).thenReturn( mockIMetaStoreAttributeChild );
+    when( mockIMetaStoreAttributeChild.getValue() ).thenReturn( "attrString" );
+    String childString = MetaStoreUtil.getChildString( mockIMetaStoreAttribute, "id" );
+    assertEquals( childString, "attrString" );
+  }
+
+  @Test
+  public void testGetAttributeBoolean() throws Exception {
+    boolean attrBool = MetaStoreUtil.getAttributeBoolean( mockIMetaStoreAttribute, "id" );
+    assertFalse( attrBool );
+  }
+
+  @Test
+  public void testGetElementNames() throws Exception {
+    IMetaStoreElementType metaStoreElementType = mock( IMetaStoreElementType.class );
+
+    List<IMetaStoreElement> elements = new ArrayList<>();
+    IMetaStoreElement elem1 = mock( IMetaStoreElement.class );
+    elements.add( elem1 );
+
+    when( mockMetaStore.getElements( namespace, metaStoreElementType ) ).thenReturn( elements );
+    when( elem1.getName() ).thenReturn( "test" );
+
+    String[] names = metaStoreUtil.getElementNames( namespace, mockMetaStore, metaStoreElementType );
+    assertEquals( names.length, 1 );
+  }
 
   @Test
   public void testCopyElements_empty() throws Exception {
@@ -81,7 +132,8 @@ public class MetaStoreUtilTest {
     verify( to ).createElement( "pentaho", type2, elem3 );
 
     verify( to, never() ).createElementType( eq( "hitachi" ), any( IMetaStoreElementType.class ) );
-    verify( to, never() ).createElement( eq( "hitachi" ), any( IMetaStoreElementType.class ), any( IMetaStoreElement.class ) );
+    verify( to, never() )
+      .createElement( eq( "hitachi" ), any( IMetaStoreElementType.class ), any( IMetaStoreElement.class ) );
   }
 
   @Test
@@ -132,13 +184,15 @@ public class MetaStoreUtilTest {
     verify( to, never() ).createElement( eq( "pentaho" ), any( IMetaStoreElementType.class ), eq( elem2 ) );
     verify( to, never() ).createElement( eq( "pentaho" ), any( IMetaStoreElementType.class ), eq( elem3 ) );
 
-    verify( to, never() ).updateElement( eq( "pentaho" ), any( IMetaStoreElementType.class ), anyString(), eq( elem1 ) );
-    verify( to, never() ).updateElement( eq( "pentaho" ), any( IMetaStoreElementType.class ), anyString(), eq( elem2 ) );
-    verify( to, never() ).updateElement( eq( "pentaho" ), any( IMetaStoreElementType.class ), anyString(), eq( elem3 ) );
+    verify( to, never() )
+      .updateElement( eq( "pentaho" ), any( IMetaStoreElementType.class ), anyString(), eq( elem1 ) );
+    verify( to, never() )
+      .updateElement( eq( "pentaho" ), any( IMetaStoreElementType.class ), anyString(), eq( elem2 ) );
+    verify( to, never() )
+      .updateElement( eq( "pentaho" ), any( IMetaStoreElementType.class ), anyString(), eq( elem3 ) );
 
     verify( to, never() ).createElementType( eq( "hitachi" ), any( IMetaStoreElementType.class ) );
-    verify( to, never() ).createElement( eq( "hitachi" ), any( IMetaStoreElementType.class ),
-      any( IMetaStoreElement.class ) );
+    verify( to, never() ).createElement( eq( "hitachi" ), any( IMetaStoreElementType.class ), any( IMetaStoreElement.class ) );
 
   }
 
@@ -190,13 +244,15 @@ public class MetaStoreUtilTest {
     verify( to, times( 2 ) ).createElement( eq( "pentaho" ), any( IMetaStoreElementType.class ), eq( elem2 ) );
     verify( to, times( 2 ) ).createElement( eq( "pentaho" ), any( IMetaStoreElementType.class ), eq( elem3 ) );
 
-    verify( to, never() ).updateElement( eq( "pentaho" ), any( IMetaStoreElementType.class ), anyString(), eq( elem1 ) );
-    verify( to, never() ).updateElement( eq( "pentaho" ), any( IMetaStoreElementType.class ), anyString(), eq( elem2 ) );
-    verify( to, never() ).updateElement( eq( "pentaho" ), any( IMetaStoreElementType.class ), anyString(), eq( elem3 ) );
+    verify( to, never() )
+      .updateElement( eq( "pentaho" ), any( IMetaStoreElementType.class ), anyString(), eq( elem1 ) );
+    verify( to, never() )
+      .updateElement( eq( "pentaho" ), any( IMetaStoreElementType.class ), anyString(), eq( elem2 ) );
+    verify( to, never() )
+      .updateElement( eq( "pentaho" ), any( IMetaStoreElementType.class ), anyString(), eq( elem3 ) );
 
     verify( to, never() ).createElementType( eq( "hitachi" ), any( IMetaStoreElementType.class ) );
-    verify( to, never() ).createElement( eq( "hitachi" ), any( IMetaStoreElementType.class ),
-      any( IMetaStoreElement.class ) );
+    verify( to, never() ).createElement( eq( "hitachi" ), any( IMetaStoreElementType.class ), any( IMetaStoreElement.class ) );
 
   }
 
@@ -230,8 +286,7 @@ public class MetaStoreUtilTest {
     when( to.getElementTypeByName( anyString(), anyString() ) ).thenReturn( existingType );
     when( existingType.getId() ).thenReturn( "existingID" );
 
-    when( to.getElementByName( eq( "pentaho" ), any( IMetaStoreElementType.class ), eq( "elementName" ) ) ).thenReturn(
-      elem1 );
+    when( to.getElementByName( eq( "pentaho" ), any( IMetaStoreElementType.class ), eq( "elementName" ) ) ).thenReturn( elem1 );
 
     MetaStoreUtil.copy( from, to, true );
 
@@ -246,12 +301,13 @@ public class MetaStoreUtilTest {
     verify( to ).createElement( eq( "pentaho" ), any( IMetaStoreElementType.class ), eq( elem3 ) );
 
     verify( to ).updateElement( eq( "pentaho" ), any( IMetaStoreElementType.class ), eq( "elementID" ), eq( elem1 ) );
-    verify( to, never() ).updateElement( eq( "pentaho" ), any( IMetaStoreElementType.class ), anyString(), eq( elem2 ) );
-    verify( to, never() ).updateElement( eq( "pentaho" ), any( IMetaStoreElementType.class ), anyString(), eq( elem3 ) );
+    verify( to, never() )
+      .updateElement( eq( "pentaho" ), any( IMetaStoreElementType.class ), anyString(), eq( elem2 ) );
+    verify( to, never() )
+      .updateElement( eq( "pentaho" ), any( IMetaStoreElementType.class ), anyString(), eq( elem3 ) );
 
     verify( to, never() ).createElementType( eq( "hitachi" ), any( IMetaStoreElementType.class ) );
-    verify( to, never() ).createElement( eq( "hitachi" ), any( IMetaStoreElementType.class ),
-      any( IMetaStoreElement.class ) );
+    verify( to, never() ).createElement( eq( "hitachi" ), any( IMetaStoreElementType.class ), any( IMetaStoreElement.class ) );
 
   }
 }
