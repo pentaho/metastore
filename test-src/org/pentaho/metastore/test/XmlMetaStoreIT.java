@@ -26,7 +26,7 @@ import java.io.File;
 import java.util.ArrayList;
 import java.util.List;
 
-public class XmlMetaStoreTest extends MetaStoreTestBase {
+public class XmlMetaStoreIT extends MetaStoreTestBase {
 
   private XmlMetaStore metaStore;
 
