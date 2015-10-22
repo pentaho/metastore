@@ -17,9 +17,9 @@
 package org.pentaho.metastore.stores.xml;
 
 import org.pentaho.metastore.api.exceptions.MetaStoreException;
-import org.pentaho.metastore.test.XmlMetaStoreTest;
+import org.pentaho.metastore.test.XmlMetaStoreIT;
 
-public class XmlMetaStoreWithPersistentCacheTest extends XmlMetaStoreTest {
+public class XmlMetaStoreWithPersistentCacheIT extends XmlMetaStoreIT {
 
   @Override
   protected XmlMetaStore createMetaStore() throws MetaStoreException {
