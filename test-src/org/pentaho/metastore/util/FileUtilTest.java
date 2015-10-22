@@ -14,28 +14,29 @@
  *
  * Copyright (c) 2002-2013 Pentaho Corporation..  All rights reserved.
  */
-package org.pentaho.metastore.test.testclasses.my;
+package org.pentaho.metastore.util;
 
-import org.pentaho.metastore.persist.MetaStoreAttribute;
-import org.pentaho.metastore.persist.MetaStoreElementType;
+import junit.framework.TestCase;
+
+import java.io.File;
+
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.when;
 
 /**
- * @author Rowell Belen
+ * Created by saslan on 10/22/2015.
  */
-@MetaStoreElementType(
-    name = "Level3Element",
-    description = "My Level 3 Element" )
-public class Level3Element {
+public class FileUtilTest extends TestCase {
 
-  @MetaStoreAttribute
-  private String name;
+  public void testCleanFolder() throws Exception {
+    File mockFolder = mock( File.class );
+    when( mockFolder.isDirectory() ).thenReturn( true );
 
-  public String getName() {
-    return name;
+    String[] folderList = new String[ 0 ];
+    when( mockFolder.list() ).thenReturn( folderList );
+    boolean folderDeleted = FileUtil.cleanFolder( mockFolder, true );
+    assertEquals( folderDeleted, false );
+    folderDeleted = FileUtil.cleanFolder( mockFolder, false );
+    assertEquals( folderDeleted, true );
   }
-
-  public void setName( String name ) {
-    this.name = name;
-  }
-
 }
