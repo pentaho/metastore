@@ -20,10 +20,10 @@ import org.pentaho.metastore.api.exceptions.MetaStoreException;
 import org.pentaho.metastore.test.XmlMetaStoreTest;
 
 public class XmlMetaStoreWithAutomaticCacheTest extends XmlMetaStoreTest {
-  
+
   @Override
   protected XmlMetaStore createMetaStore() throws MetaStoreException {
     return new XmlMetaStore( new AutomaticXmlMetaStoreCache() );
   }
-  
+
 }
