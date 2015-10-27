@@ -16,31 +16,30 @@
  */
 package org.pentaho.metastore.stores.xml;
 
-import java.util.Map;
-
 import com.google.common.cache.CacheBuilder;
 
+import java.util.Map;
+
 /**
- * This implementation of XmlMetaStoreCache stores the cache using soft references.
- * But client is still able to clear it manually.
- *
+ * This implementation of XmlMetaStoreCache stores the cache using soft references. But client is still able to clear it
+ * manually.
  */
 public class AutomaticXmlMetaStoreCache extends BaseXmlMetaStoreCache implements XmlMetaStoreCache {
 
   @Override
   protected <K, V> Map<K, V> createStorage() {
-    return CacheBuilder.newBuilder().softValues().<K, V> build().asMap();
+    return CacheBuilder.newBuilder().softValues().<K, V>build().asMap();
   }
 
   @Override
   protected ElementType createElementType( String elementId ) {
     return new ElementType( elementId, this.<String, String>createStorage() );
   }
-  
+
   protected static class ElementType extends BaseXmlMetaStoreCache.ElementType {
 
     private final Map<String, String> elementNameToIdMap;
-    
+
     public ElementType( String id, Map<String, String> elementNameToIdMap ) {
       super( id );
       this.elementNameToIdMap = elementNameToIdMap;
@@ -50,7 +49,7 @@ public class AutomaticXmlMetaStoreCache extends BaseXmlMetaStoreCache implements
     protected Map<String, String> getElementNameToIdMap() {
       return elementNameToIdMap;
     }
-    
+
   }
-  
+
 }

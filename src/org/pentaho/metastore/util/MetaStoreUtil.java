@@ -17,20 +17,18 @@
 
 package org.pentaho.metastore.util;
 
+import org.pentaho.metastore.api.IMetaStore;
+import org.pentaho.metastore.api.IMetaStoreAttribute;
+import org.pentaho.metastore.api.IMetaStoreElement;
+import org.pentaho.metastore.api.IMetaStoreElementType;
+import org.pentaho.metastore.api.exceptions.MetaStoreException;
+import org.pentaho.metastore.api.exceptions.MetaStoreNamespaceExistsException;
+
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.concurrent.Callable;
 import java.util.concurrent.locks.Lock;
-
-import org.pentaho.metastore.api.IMetaStore;
-import org.pentaho.metastore.api.IMetaStoreAttribute;
-import org.pentaho.metastore.api.IMetaStoreElement;
-import org.pentaho.metastore.api.IMetaStoreElementType;
-import org.pentaho.metastore.api.exceptions.MetaStoreElementExistException;
-import org.pentaho.metastore.api.exceptions.MetaStoreElementTypeExistsException;
-import org.pentaho.metastore.api.exceptions.MetaStoreException;
-import org.pentaho.metastore.api.exceptions.MetaStoreNamespaceExistsException;
 
 /**
  * Generally useful methods for extracting data

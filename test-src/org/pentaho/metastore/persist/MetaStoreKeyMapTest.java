@@ -14,28 +14,20 @@
  *
  * Copyright (c) 2002-2013 Pentaho Corporation..  All rights reserved.
  */
-package org.pentaho.metastore.test.testclasses.my;
 
-import org.pentaho.metastore.persist.MetaStoreAttribute;
-import org.pentaho.metastore.persist.MetaStoreElementType;
+package org.pentaho.metastore.persist;
+
+import junit.framework.TestCase;
 
 /**
- * @author Rowell Belen
+ * Created by saslan on 10/23/2015.
  */
-@MetaStoreElementType(
-    name = "Level3Element",
-    description = "My Level 3 Element" )
-public class Level3Element {
+public class MetaStoreKeyMapTest extends TestCase {
 
-  @MetaStoreAttribute
-  private String name;
-
-  public String getName() {
-    return name;
+  public void testGet() throws Exception {
+    String [] keys = MetaStoreKeyMap.get( "host_name" );
+    assertEquals( keys[ 0 ], "hostname" );
+    keys = MetaStoreKeyMap.get( "" );
+    assertEquals( keys.length, 0 );
   }
-
-  public void setName( String name ) {
-    this.name = name;
-  }
-
 }

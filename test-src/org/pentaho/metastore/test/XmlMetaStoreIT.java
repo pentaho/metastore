@@ -17,16 +17,16 @@
 
 package org.pentaho.metastore.test;
 
-import java.io.File;
-import java.util.ArrayList;
-import java.util.List;
-
 import org.pentaho.metastore.api.IMetaStore;
 import org.pentaho.metastore.api.exceptions.MetaStoreException;
 import org.pentaho.metastore.stores.xml.XmlMetaStore;
 import org.pentaho.metastore.util.FileUtil;
 
-public class XmlMetaStoreTest extends MetaStoreTestBase {
+import java.io.File;
+import java.util.ArrayList;
+import java.util.List;
+
+public class XmlMetaStoreIT extends MetaStoreTestBase {
 
   private XmlMetaStore metaStore;
 
@@ -35,7 +35,7 @@ public class XmlMetaStoreTest extends MetaStoreTestBase {
     super.setUp();
     metaStore = createMetaStore();
   }
-  
+
   protected XmlMetaStore createMetaStore() throws MetaStoreException {
     return new XmlMetaStore();
   }
@@ -127,3 +127,4 @@ public class XmlMetaStoreTest extends MetaStoreTestBase {
   }
 
 }
+

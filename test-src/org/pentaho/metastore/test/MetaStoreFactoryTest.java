@@ -1,23 +1,22 @@
+/*!
+ * This program is free software; you can redistribute it and/or modify it under the
+ * terms of the GNU Lesser General Public License, version 2.1 as published by the Free Software
+ * Foundation.
+ *
+ * You should have received a copy of the GNU Lesser General Public License along with this
+ * program; if not, you can obtain a copy at http://www.gnu.org/licenses/old-licenses/lgpl-2.1.html
+ * or from the Free Software Foundation, Inc.,
+ * 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
+ *
+ * This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY;
+ * without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+ * See the GNU Lesser General Public License for more details.
+ *
+ * Copyright (c) 2002-2013 Pentaho Corporation..  All rights reserved.
+ */
 package org.pentaho.metastore.test;
 
-import static org.mockito.Matchers.anyMap;
-import static org.mockito.Matchers.anyObject;
-import static org.mockito.Matchers.anyString;
-import static org.mockito.Matchers.eq;
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.when;
-
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Date;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.concurrent.atomic.AtomicInteger;
-
 import junit.framework.TestCase;
-
 import org.junit.Test;
 import org.mockito.invocation.InvocationOnMock;
 import org.mockito.stubbing.Answer;
@@ -27,7 +26,6 @@ import org.pentaho.metastore.api.IMetaStoreElement;
 import org.pentaho.metastore.api.IMetaStoreElementType;
 import org.pentaho.metastore.api.exceptions.MetaStoreException;
 import org.pentaho.metastore.persist.IMetaStoreObjectFactory;
-import org.pentaho.metastore.persist.MetaStoreAttribute;
 import org.pentaho.metastore.persist.MetaStoreElementType;
 import org.pentaho.metastore.persist.MetaStoreFactory;
 import org.pentaho.metastore.stores.memory.MemoryMetaStore;
@@ -47,6 +45,20 @@ import org.pentaho.metastore.test.testclasses.my.MyMigrationElement;
 import org.pentaho.metastore.test.testclasses.my.MyNameElement;
 import org.pentaho.metastore.test.testclasses.my.MyOtherElement;
 import org.pentaho.metastore.util.MetaStoreUtil;
+
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Date;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.concurrent.atomic.AtomicInteger;
+
+import static org.mockito.Matchers.anyMap;
+import static org.mockito.Matchers.anyObject;
+import static org.mockito.Matchers.anyString;
+import static org.mockito.Matchers.eq;
+import static org.mockito.Mockito.*;
 
 public class MetaStoreFactoryTest extends TestCase {
 
