@@ -71,6 +71,7 @@ public class DelegatingMetaStore implements IMetaStore {
 
   public DelegatingMetaStore( IMetaStore... stores ) {
     metaStoreList = new ArrayList<IMetaStore>( Arrays.asList( stores ) );
+    passwordEncoder = new Base64TwoWayPasswordEncoder();
   }
 
   public void addMetaStore( IMetaStore metaStore ) throws MetaStoreException {
