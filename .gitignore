@@ -1,8 +1,2 @@
-/classes
-/distrib
-/bin
-/dev-lib
-/dist
-/test-lib
-/lib
+/target
 *.iml
