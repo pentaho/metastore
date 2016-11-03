@@ -12,7 +12,7 @@
  * without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
  * See the GNU Lesser General Public License for more details.
  *
- * Copyright (c) 2002-2013 Pentaho Corporation..  All rights reserved.
+ * Copyright (c) 2002-2016 Pentaho Corporation..  All rights reserved.
  */
 
 package org.pentaho.metastore.stores.xml;
@@ -69,8 +69,7 @@ public class XmlMetaStoreElementType extends BaseElementType {
     this.setId( file.getParentFile().getName() );
 
     try {
-
-      DocumentBuilderFactory documentBuilderFactory = DocumentBuilderFactory.newInstance();
+      DocumentBuilderFactory documentBuilderFactory = XmlUtil.createSafeDocumentBuilderFactory();
       DocumentBuilder documentBuilder = documentBuilderFactory.newDocumentBuilder();
       Document document = documentBuilder.parse( file );
       Element elementTypeElement = document.getDocumentElement();
@@ -128,8 +127,7 @@ public class XmlMetaStoreElementType extends BaseElementType {
 
   public void saveToStreamResult( StreamResult streamResult ) throws MetaStoreException {
     try {
-
-      DocumentBuilderFactory factory = DocumentBuilderFactory.newInstance();
+      DocumentBuilderFactory factory = XmlUtil.createSafeDocumentBuilderFactory();
       DocumentBuilder builder = factory.newDocumentBuilder();
       Document doc = builder.newDocument();
 
