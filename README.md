@@ -1,4 +1,3 @@
-
 metastore
 ----------
 This project contains a flexible metadata, data and configuration information store. 
@@ -20,3 +19,9 @@ The hierarchy:
 * Element Type
 * Element
 * Attributes
+
+Building
+----------
+````
+mvn install
+````

@@ -40,7 +40,7 @@ public class PojoChildTest {
   private String tempDir = null;
   private IMetaStore metaStore = null;
 
-  private static String XML_METASTORE = "test-res/metastore_test";
+  private static String XML_METASTORE = "src/test/resources/metastore_test";
 
   @Before
   public void before() throws IOException, MetaStoreException {
