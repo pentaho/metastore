@@ -12,7 +12,7 @@
  * without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
  * See the GNU Lesser General Public License for more details.
  *
- * Copyright (c) 2002-2013 Pentaho Corporation..  All rights reserved.
+ * Copyright (c) 2002-2016 Pentaho Corporation..  All rights reserved.
  */
 
 package org.pentaho.metastore.stores.xml;
@@ -21,6 +21,10 @@ import java.io.File;
 
 import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
+
+import javax.xml.XMLConstants;
+import javax.xml.parsers.DocumentBuilderFactory;
+import javax.xml.parsers.ParserConfigurationException;
 
 public class XmlUtil {
 
@@ -56,5 +60,12 @@ public class XmlUtil {
 
   public static String getElementFile( String rootFolder, String namespace, String elementTypeId, String elementId ) {
     return getElementTypeFolder( rootFolder, namespace, elementTypeId ) + File.separator + elementId + ".xml";
+  }
+
+  public static DocumentBuilderFactory createSafeDocumentBuilderFactory() throws ParserConfigurationException {
+    DocumentBuilderFactory factory = DocumentBuilderFactory.newInstance();
+    factory.setFeature( XMLConstants.FEATURE_SECURE_PROCESSING, true );
+    factory.setFeature( "http://apache.org/xml/features/disallow-doctype-decl", true );
+    return factory;
   }
 }
