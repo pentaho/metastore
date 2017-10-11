@@ -12,7 +12,7 @@
  * without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
  * See the GNU Lesser General Public License for more details.
  *
- * Copyright (c) 2002-2013 Pentaho Corporation..  All rights reserved.
+ * Copyright (c) 2002-2017 Hitachi Vantara..  All rights reserved.
  */
 
 package org.pentaho.metastore.test;
@@ -43,7 +43,7 @@ public class MetaStoreTestBase extends TestCase {
   // MetaStore Name
   protected static String META_STORE_NAME = "TestMetaStore";
 
-  // Namespace: Pentaho
+  // Namespace: Hitachi Vantara
   //
   protected static String namespace = PentahoDefaults.NAMESPACE;
 
