@@ -257,7 +257,7 @@ public class DelegatingMetaStore implements IMetaStore {
 
   private IMetaStoreElement getElementByName( List<IMetaStoreElement> elements, String name ) {
     for ( IMetaStoreElement element : elements ) {
-      if ( element.getName().equalsIgnoreCase( name ) ) {
+      if ( element.getName().equals( name ) ) {
         return element;
       }
     }
