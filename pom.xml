@@ -5,12 +5,11 @@
   <parent>
     <groupId>org.pentaho</groupId>
     <artifactId>pentaho-ce-jar-parent-pom</artifactId>
-    <version>7.1-SNAPSHOT</version>
+    <version>7.1.0.9-101</version>
   </parent>
   <groupId>pentaho</groupId>
   <artifactId>metastore</artifactId>
-  <version>7.1-SNAPSHOT</version>
-  <packaging>jar</packaging>
+  <version>7.1.0.9-101</version>
   <name>Pentaho Community Edition Project: ${project.artifactId}</name>
   <description>A flexible metadata, data and configuration information store</description>
   <url>http://www.pentaho.com</url>
@@ -20,11 +19,11 @@
     <url>scm:git:git@github.com:pentaho/${project.artifactId}.git</url>
   </scm>
   <properties>
-    <commons-codec.version>1.5</commons-codec.version>
     <guava.version>17.0</guava.version>
-    <junit.version>4.7</junit.version>
-    <mockito-all.version>1.8.4</mockito-all.version>
     <commons-io.version>2.1</commons-io.version>
+    <mockito-all.version>1.8.4</mockito-all.version>
+    <commons-codec.version>1.5</commons-codec.version>
+    <junit.version>4.7</junit.version>
   </properties>
   <dependencies>
     <dependency>
@@ -58,7 +57,6 @@
   <build>
     <plugins>
       <plugin>
-        <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-jar-plugin</artifactId>
         <version>3.0.2</version>
         <executions>
