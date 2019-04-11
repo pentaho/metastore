@@ -12,7 +12,7 @@
  * without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
  * See the GNU Lesser General Public License for more details.
  *
- * Copyright (c) 2002-2017 Hitachi Vantara..  All rights reserved.
+ * Copyright (c) 2002-2019 Hitachi Vantara..  All rights reserved.
  */
 
 package org.pentaho.metastore.stores.delegate;
@@ -95,8 +95,9 @@ public class DelegatingMetaStore implements IMetaStore {
   }
 
   private List<IMetaStore> getReadMetaStoreList() throws MetaStoreException {
-    if ( activeMetaStoreName != null ) {
-      return Arrays.asList( getMetaStore( activeMetaStoreName ) );
+    IMetaStore activeMetaStore;
+    if ( activeMetaStoreName != null && ( activeMetaStore = getMetaStore( activeMetaStoreName ) ) != null ) {
+      return Arrays.asList( activeMetaStore );
     }
     return metaStoreList;
   }

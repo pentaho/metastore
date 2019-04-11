@@ -12,7 +12,7 @@
  * without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
  * See the GNU Lesser General Public License for more details.
  *
- * Copyright (c) 2002-2017 Hitachi Vantara..  All rights reserved.
+ * Copyright (c) 2002-2019 Hitachi Vantara..  All rights reserved.
  */
 
 package org.pentaho.metastore.test;
@@ -21,6 +21,7 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.fail;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyString;
 import static org.mockito.Mockito.mock;
@@ -1295,6 +1296,17 @@ public class DelegatingMetastoreTest {
     verify( activeMetaStore ).newElementOwner( mockElementId, ownerType );
     verify( inactiveMetaStore1, never() ).newAttribute( anyString(), any( MetaStoreElementOwnerType.class ) );
     verify( inactiveMetaStore2, never() ).newAttribute( anyString(), any( MetaStoreElementOwnerType.class ) );
+  }
+
+  @Test
+  public void testDelegatingMetaStoreDoesNotHoldListOfNullObjects() throws MetaStoreException {
+    DelegatingMetaStore delegatingMetaStore =
+        new DelegatingMetaStore( mock( IMetaStore.class ), mock( IMetaStore.class ) );
+    try {
+      assertFalse( delegatingMetaStore.namespaceExists( "some-dummy-namespace" ) );
+    } catch ( MetaStoreException me ) {
+      fail();
+    }
   }
 
   private IMetaStore getMockMetaStoreWithName( String name ) throws MetaStoreException {
