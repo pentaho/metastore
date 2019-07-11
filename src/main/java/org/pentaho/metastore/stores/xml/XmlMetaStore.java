@@ -241,6 +241,17 @@ public class XmlMetaStore extends BaseMetaStore implements IMetaStore {
     return null;
   }
 
+  @Override
+  public synchronized XmlMetaStoreElementType getElementTypeByName( String namespace, String elementTypeName, boolean lock )
+          throws MetaStoreException {
+    for ( IMetaStoreElementType elementType : getElementTypes( namespace, lock ) ) {
+      if ( elementType.getName() != null && elementType.getName().equalsIgnoreCase( elementTypeName ) ) {
+        return (XmlMetaStoreElementType) elementType;
+      }
+    }
+    return null;
+  }
+
   public IMetaStoreAttribute newAttribute( String id, Object value ) throws MetaStoreException {
     return new XmlMetaStoreAttribute( id, value );
   }
@@ -360,6 +371,12 @@ public class XmlMetaStore extends BaseMetaStore implements IMetaStore {
   public List<IMetaStoreElement> getElements( String namespace, IMetaStoreElementType elementType )
     throws MetaStoreException {
     return getElements( namespace, elementType, true, true );
+  }
+
+  @Override
+  public List<IMetaStoreElement> getElements( String namespace, IMetaStoreElementType elementType, boolean lock )
+          throws MetaStoreException {
+    return getElements( namespace, elementType, lock, true );
   }
 
   protected synchronized List<IMetaStoreElement> getElements( String namespace, IMetaStoreElementType elementType,
