@@ -124,6 +124,21 @@ public interface IMetaStore {
     throws MetaStoreException;
 
   /**
+   * @return An element type or null if the type name couldn't be found.
+   * @param namespace
+   *          the namespace to look in.
+   * @param elementTypeName
+   *          the name of the element type to reference
+   * @param lock
+   *          lock the Metastore for modification
+   * @throws MetaStoreException
+   *           in case there is a problem in the underlying store
+   */
+  public default IMetaStoreElementType getElementTypeByName( String namespace, String elementTypeName, boolean lock ) throws MetaStoreException {
+    return getElementTypeByName( namespace, elementTypeName );
+  }
+
+  /**
    * Create a new element type in the metastore
    * 
    * @param namespace
@@ -179,6 +194,23 @@ public interface IMetaStore {
    */
   public List<IMetaStoreElement> getElements( String namespace, IMetaStoreElementType elementType )
     throws MetaStoreException;
+
+  /**
+   * Retrieve all the elements belonging to an element type
+   * 
+   * @param namespace
+   *          The namespace to reference
+   * @param elementType
+   *          The type of element to retrieve
+   * @param lock
+   *          lock the metastore for modification
+   * @return A list of entities
+   * @throws MetaStoreException
+   *           in case there is a problem in the underlying store
+   */
+  public default List<IMetaStoreElement> getElements( String namespace, IMetaStoreElementType elementType, boolean lock ) throws MetaStoreException {
+    return getElements( namespace, elementType );
+  }
 
   /**
    * Retrieve all the element IDs belonging to a meta store element type
