@@ -790,6 +790,27 @@ public class MetaStoreFactory<T> {
   }
 
   /**
+   * @param  Lock the metastore for modification
+   * @return A list of all the de-serialized objects of this class in the metastore
+   * @throws MetaStoreException
+   */
+  public List<T> getElements( boolean lock ) throws MetaStoreException {
+    MetaStoreElementType elementTypeAnnotation = getElementTypeAnnotation();
+
+    IMetaStoreElementType elementType = metaStore.getElementTypeByName( namespace, elementTypeAnnotation.name(), lock );
+    if ( elementType == null ) {
+      return Collections.emptyList();
+    }
+
+    List<IMetaStoreElement> elements = metaStore.getElements( namespace, elementType, lock );
+    List<T> list = new ArrayList<T>( elements.size() );
+    for ( IMetaStoreElement metaStoreElement : elements ) {
+      list.add( loadElement( metaStoreElement ) );
+    }
+    return list;
+  }
+
+  /**
    * Remove an element with a specific name from the metastore
    * @param name The name of the element to delete
    * @throws MetaStoreException In case either the element type or the element to delete doesn't exists
