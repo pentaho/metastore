@@ -12,7 +12,7 @@
  * without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
  * See the GNU Lesser General Public License for more details.
  *
- * Copyright (c) 2002-2017 Hitachi Vantara..  All rights reserved.
+ * Copyright (c) 2002-2019 Hitachi Vantara..  All rights reserved.
  */
 
 package org.pentaho.metastore.stores.xml;
@@ -461,9 +461,17 @@ public class XmlMetaStore extends BaseMetaStore implements IMetaStore {
   }
 
   @Override
-  public synchronized IMetaStoreElement getElementByName( String namespace, IMetaStoreElementType elementType, String name )
+  public IMetaStoreElement getElementByName( String namespace, IMetaStoreElementType elementType, String name )
     throws MetaStoreException {
-    lockStore();
+    return getElementByName( namespace, elementType, name, true );
+  }
+
+  @Override
+  public synchronized IMetaStoreElement getElementByName( String namespace, IMetaStoreElementType elementType, String name, boolean lock )
+    throws MetaStoreException {
+    if ( lock ) {
+      lockStore();
+    }
     try {
       String chachedElementId = metaStoreCache.getElementIdByName( namespace, elementType, name );
       if ( chachedElementId != null ) {
@@ -480,7 +488,9 @@ public class XmlMetaStore extends BaseMetaStore implements IMetaStore {
       }
       return null;
     } finally {
-      unlockStore();
+      if ( lock ) {
+        unlockStore();
+      }
     }
   }
 
