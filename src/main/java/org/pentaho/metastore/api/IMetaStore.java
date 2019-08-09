@@ -258,6 +258,27 @@ public interface IMetaStore {
     throws MetaStoreException;
 
   /**
+   * Find an element in a namespace with a particular type, using its name
+   *
+   * @param namespace
+   *          The namespace to reference
+   * @param elementType
+   *          The element type to search
+   * @param name
+   *          The name fo look for
+   * @param lock
+   *          Lock the metastore for modification
+   * @return The first encountered element with the given name or null if no element name could be matched.
+   * @throws MetaStoreException
+   *           in case there is a problem in the underlying store
+   */
+  public default IMetaStoreElement getElementByName(
+    String namespace, IMetaStoreElementType elementType, String name, boolean lock )
+    throws MetaStoreException {
+    return getElementByName( namespace, elementType, name );
+  }
+
+  /**
    * Create a new element for a element type in a namespace
    * 
    * @param namespace

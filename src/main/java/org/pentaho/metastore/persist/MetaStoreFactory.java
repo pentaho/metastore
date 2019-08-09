@@ -81,6 +81,28 @@ public class MetaStoreFactory<T> {
     return loadElement( element );
   }
 
+  /** Load an element from the metastore, straight into the appropriate class
+   */
+  public T loadElement( String name, boolean lock ) throws MetaStoreException {
+
+    if ( name == null || name.length() == 0 ) {
+      throw new MetaStoreException( "You need to specify the name of an element to load" );
+    }
+
+    MetaStoreElementType elementTypeAnnotation = getElementTypeAnnotation();
+
+    IMetaStoreElementType elementType = metaStore.getElementTypeByName( namespace, elementTypeAnnotation.name(), lock );
+    if ( elementType == null ) {
+      return null;
+    }
+
+    IMetaStoreElement element = metaStore.getElementByName( namespace, elementType, name, lock );
+    if ( element == null ) {
+      return null;
+    }
+    return loadElement( element );
+  }
+
   /** Load an element from the metastore, straight into the appropriate class 
    */
   private T loadElement( IMetaStoreElement element ) throws MetaStoreException {
