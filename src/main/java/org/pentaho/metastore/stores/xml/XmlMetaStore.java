@@ -12,7 +12,7 @@
  * without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
  * See the GNU Lesser General Public License for more details.
  *
- * Copyright (c) 2002-2017 Hitachi Vantara..  All rights reserved.
+ * Copyright (c) 2002-2019 Hitachi Vantara..  All rights reserved.
  */
 
 package org.pentaho.metastore.stores.xml;
@@ -241,6 +241,17 @@ public class XmlMetaStore extends BaseMetaStore implements IMetaStore {
     return null;
   }
 
+  @Override
+  public synchronized XmlMetaStoreElementType getElementTypeByName( String namespace, String elementTypeName, boolean lock )
+          throws MetaStoreException {
+    for ( IMetaStoreElementType elementType : getElementTypes( namespace, lock ) ) {
+      if ( elementType.getName() != null && elementType.getName().equalsIgnoreCase( elementTypeName ) ) {
+        return (XmlMetaStoreElementType) elementType;
+      }
+    }
+    return null;
+  }
+
   public IMetaStoreAttribute newAttribute( String id, Object value ) throws MetaStoreException {
     return new XmlMetaStoreAttribute( id, value );
   }
@@ -362,6 +373,12 @@ public class XmlMetaStore extends BaseMetaStore implements IMetaStore {
     return getElements( namespace, elementType, true, true );
   }
 
+  @Override
+  public List<IMetaStoreElement> getElements( String namespace, IMetaStoreElementType elementType, boolean lock )
+          throws MetaStoreException {
+    return getElements( namespace, elementType, lock, true );
+  }
+
   protected synchronized List<IMetaStoreElement> getElements( String namespace, IMetaStoreElementType elementType,
       boolean lock, boolean includeProcessedFiles ) throws MetaStoreException {
     if ( lock ) {
@@ -444,9 +461,17 @@ public class XmlMetaStore extends BaseMetaStore implements IMetaStore {
   }
 
   @Override
-  public synchronized IMetaStoreElement getElementByName( String namespace, IMetaStoreElementType elementType, String name )
+  public IMetaStoreElement getElementByName( String namespace, IMetaStoreElementType elementType, String name )
     throws MetaStoreException {
-    lockStore();
+    return getElementByName( namespace, elementType, name, true );
+  }
+
+  @Override
+  public synchronized IMetaStoreElement getElementByName( String namespace, IMetaStoreElementType elementType, String name, boolean lock )
+    throws MetaStoreException {
+    if ( lock ) {
+      lockStore();
+    }
     try {
       String chachedElementId = metaStoreCache.getElementIdByName( namespace, elementType, name );
       if ( chachedElementId != null ) {
@@ -463,7 +488,9 @@ public class XmlMetaStore extends BaseMetaStore implements IMetaStore {
       }
       return null;
     } finally {
-      unlockStore();
+      if ( lock ) {
+        unlockStore();
+      }
     }
   }
 

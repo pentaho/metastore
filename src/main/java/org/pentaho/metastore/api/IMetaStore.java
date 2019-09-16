@@ -12,7 +12,7 @@
  * without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
  * See the GNU Lesser General Public License for more details.
  *
- * Copyright (c) 2002-2017 Hitachi Vantara..  All rights reserved.
+ * Copyright (c) 2002-2019 Hitachi Vantara..  All rights reserved.
  */
 
 package org.pentaho.metastore.api;
@@ -124,6 +124,21 @@ public interface IMetaStore {
     throws MetaStoreException;
 
   /**
+   * @return An element type or null if the type name couldn't be found.
+   * @param namespace
+   *          the namespace to look in.
+   * @param elementTypeName
+   *          the name of the element type to reference
+   * @param lock
+   *          lock the Metastore for modification
+   * @throws MetaStoreException
+   *           in case there is a problem in the underlying store
+   */
+  public default IMetaStoreElementType getElementTypeByName( String namespace, String elementTypeName, boolean lock ) throws MetaStoreException {
+    return getElementTypeByName( namespace, elementTypeName );
+  }
+
+  /**
    * Create a new element type in the metastore
    * 
    * @param namespace
@@ -181,6 +196,23 @@ public interface IMetaStore {
     throws MetaStoreException;
 
   /**
+   * Retrieve all the elements belonging to an element type
+   * 
+   * @param namespace
+   *          The namespace to reference
+   * @param elementType
+   *          The type of element to retrieve
+   * @param lock
+   *          lock the metastore for modification
+   * @return A list of entities
+   * @throws MetaStoreException
+   *           in case there is a problem in the underlying store
+   */
+  public default List<IMetaStoreElement> getElements( String namespace, IMetaStoreElementType elementType, boolean lock ) throws MetaStoreException {
+    return getElements( namespace, elementType );
+  }
+
+  /**
    * Retrieve all the element IDs belonging to a meta store element type
    * 
    * @param namespace
@@ -224,6 +256,27 @@ public interface IMetaStore {
    */
   public IMetaStoreElement getElementByName( String namespace, IMetaStoreElementType elementType, String name )
     throws MetaStoreException;
+
+  /**
+   * Find an element in a namespace with a particular type, using its name
+   *
+   * @param namespace
+   *          The namespace to reference
+   * @param elementType
+   *          The element type to search
+   * @param name
+   *          The name fo look for
+   * @param lock
+   *          Lock the metastore for modification
+   * @return The first encountered element with the given name or null if no element name could be matched.
+   * @throws MetaStoreException
+   *           in case there is a problem in the underlying store
+   */
+  public default IMetaStoreElement getElementByName(
+    String namespace, IMetaStoreElementType elementType, String name, boolean lock )
+    throws MetaStoreException {
+    return getElementByName( namespace, elementType, name );
+  }
 
   /**
    * Create a new element for a element type in a namespace
