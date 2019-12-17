@@ -56,8 +56,8 @@ public class XmlMetaStoreIT extends MetaStoreTestBase {
   }
 
   public void testParallelDifferentStores() throws Exception {
-    List<XmlMetaStore> stores = new ArrayList<XmlMetaStore>();
-    final List<Throwable> exceptions = new ArrayList<Throwable>();
+    List<XmlMetaStore> stores = new ArrayList<>();
+    final List<Throwable> exceptions = new ArrayList<>();
     // Run the test against the XML metadata store.
     //
     try {
@@ -113,21 +113,19 @@ public class XmlMetaStoreIT extends MetaStoreTestBase {
   }
 
   public void testParallelOneStore() throws Exception {
-    final List<Exception> exceptions = new ArrayList<Exception>();
+    final List<Exception> exceptions = new ArrayList<>();
 
-    List<Thread> threads = new ArrayList<Thread>();
+    List<Thread> threads = new ArrayList<>();
 
     for ( int i = 9000; i < 9020; i++ ) {
       final int index = i;
-      Thread thread = new Thread() {
-        public void run() {
-          try {
-            parallelStoreRetrieve( metaStore, index );
-          } catch ( Exception e ) {
-            exceptions.add( e );
-          }
+      Thread thread = new Thread( () -> {
+        try {
+          parallelStoreRetrieve( metaStore, index );
+        } catch ( Exception e ) {
+          exceptions.add( e );
         }
-      };
+      } );
       threads.add( thread );
       thread.start();
     }
