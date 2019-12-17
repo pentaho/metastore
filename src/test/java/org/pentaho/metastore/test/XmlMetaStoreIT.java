@@ -12,17 +12,22 @@
  * without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
  * See the GNU Lesser General Public License for more details.
  *
- * Copyright (c) 2002-2017 Hitachi Vantara..  All rights reserved.
+ * Copyright (c) 2002-2019 Hitachi Vantara..  All rights reserved.
  */
 
 package org.pentaho.metastore.test;
 
 import org.pentaho.metastore.api.IMetaStore;
+import org.pentaho.metastore.api.IMetaStoreElementType;
 import org.pentaho.metastore.api.exceptions.MetaStoreException;
 import org.pentaho.metastore.stores.xml.XmlMetaStore;
+import org.pentaho.metastore.stores.xml.XmlMetaStoreElementType;
 import org.pentaho.metastore.util.FileUtil;
 
 import java.io.File;
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -51,8 +56,8 @@ public class XmlMetaStoreIT extends MetaStoreTestBase {
   }
 
   public void testParallelDifferentStores() throws Exception {
-    List<XmlMetaStore> stores = new ArrayList<XmlMetaStore>();
-    final List<Throwable> exceptions = new ArrayList<Throwable>();
+    List<XmlMetaStore> stores = new ArrayList<>();
+    final List<Throwable> exceptions = new ArrayList<>();
     // Run the test against the XML metadata store.
     //
     try {
@@ -93,22 +98,34 @@ public class XmlMetaStoreIT extends MetaStoreTestBase {
 
   }
 
-  public void testParallelOneStore() throws Exception {
-    final List<Exception> exceptions = new ArrayList<Exception>();
+  public void testUnmanagedFoldersAreAllowed() throws IOException, MetaStoreException {
+    Path rootPath = Files.createTempDirectory( "XmlMetaStoreIT" );
+    Path metastorePath = rootPath.resolve( "metastore" ).resolve( "pentaho" ).resolve( "NamedCluster" );
+    Files.createDirectories( metastorePath );
+    XmlMetaStore metaStore = new XmlMetaStore( rootPath.toString() );
+    assertTrue( metaStore.getElementTypes( "pentaho" ).isEmpty() );
 
-    List<Thread> threads = new ArrayList<Thread>();
+    IMetaStoreElementType elementType =
+      new XmlMetaStoreElementType( "pentaho", "NamedCluster", "NamedCluster", "A Named Cluster" );
+    metaStore.createElementType( "pentaho", elementType );  //throws an exception before change
+
+    assertEquals( 1, metaStore.getElementTypes( "pentaho" ).size() );
+  }
+
+  public void testParallelOneStore() throws Exception {
+    final List<Exception> exceptions = new ArrayList<>();
+
+    List<Thread> threads = new ArrayList<>();
 
     for ( int i = 9000; i < 9020; i++ ) {
       final int index = i;
-      Thread thread = new Thread() {
-        public void run() {
-          try {
-            parallelStoreRetrieve( metaStore, index );
-          } catch ( Exception e ) {
-            exceptions.add( e );
-          }
+      Thread thread = new Thread( () -> {
+        try {
+          parallelStoreRetrieve( metaStore, index );
+        } catch ( Exception e ) {
+          exceptions.add( e );
         }
-      };
+      } );
       threads.add( thread );
       thread.start();
     }

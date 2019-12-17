@@ -18,8 +18,8 @@
 package org.pentaho.metastore.stores.xml;
 
 import java.io.File;
-import java.io.FileFilter;
 import java.io.IOException;
+import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -43,17 +43,17 @@ public class XmlMetaStore extends BaseMetaStore implements IMetaStore {
   private String rootFolder;
 
   private File rootFile;
-  
+
   private final XmlMetaStoreCache metaStoreCache;
 
   public XmlMetaStore() throws MetaStoreException {
     this( new AutomaticXmlMetaStoreCache() );
   }
-  
+
   public XmlMetaStore( XmlMetaStoreCache metaStoreCacheImpl ) throws MetaStoreException {
     this( System.getProperty( "java.io.tmpdir" ) + File.separator + UUID.randomUUID(), metaStoreCacheImpl );
   }
-  
+
   public XmlMetaStore( String rootFolder ) throws MetaStoreException {
     this( rootFolder, new AutomaticXmlMetaStoreCache() );
   }
@@ -90,7 +90,7 @@ public class XmlMetaStore extends BaseMetaStore implements IMetaStore {
     lockStore();
     try {
       File[] files = listFolders( rootFile );
-      List<String> namespaces = new ArrayList<String>( files.length );
+      List<String> namespaces = new ArrayList<>( files.length );
       for ( File file : files ) {
         namespaces.add( file.getName() );
       }
@@ -113,8 +113,7 @@ public class XmlMetaStore extends BaseMetaStore implements IMetaStore {
   }
 
   @Override
-  public synchronized void createNamespace( String namespace ) throws MetaStoreException,
-    MetaStoreNamespaceExistsException {
+  public synchronized void createNamespace( String namespace ) throws MetaStoreException {
     lockStore();
     try {
       String spaceFolder = XmlUtil.getNamespaceFolder( rootFolder, namespace );
@@ -131,8 +130,7 @@ public class XmlMetaStore extends BaseMetaStore implements IMetaStore {
   }
 
   @Override
-  public synchronized void deleteNamespace( String namespace ) throws MetaStoreException,
-    MetaStoreElementTypeExistsException {
+  public synchronized void deleteNamespace( String namespace ) throws MetaStoreException {
     lockStore();
     try {
       String spaceFolder = XmlUtil.getNamespaceFolder( rootFolder, namespace );
@@ -143,7 +141,7 @@ public class XmlMetaStore extends BaseMetaStore implements IMetaStore {
       List<IMetaStoreElementType> elementTypes = getElementTypes( namespace, false );
 
       if ( !elementTypes.isEmpty() ) {
-        List<String> dependencies = new ArrayList<String>( elementTypes.size() );
+        List<String> dependencies = new ArrayList<>( elementTypes.size() );
         for ( IMetaStoreElementType elementType : elementTypes ) {
           dependencies.add( elementType.getId() );
         }
@@ -174,13 +172,14 @@ public class XmlMetaStore extends BaseMetaStore implements IMetaStore {
       String spaceFolder = XmlUtil.getNamespaceFolder( rootFolder, namespace );
       File spaceFolderFile = new File( spaceFolder );
       File[] elementTypeFolders = listFolders( spaceFolderFile );
-      List<IMetaStoreElementType> elementTypes = new ArrayList<IMetaStoreElementType>( elementTypeFolders.length );
+      List<IMetaStoreElementType> elementTypes = new ArrayList<>( elementTypeFolders.length );
       for ( File elementTypeFolder : elementTypeFolders ) {
         String elementTypeId = elementTypeFolder.getName();
         IMetaStoreElementType elementType = getElementType( namespace, elementTypeId, false );
-        elementTypes.add( elementType );
+        if ( elementType != null ) {
+          elementTypes.add( elementType );
+        }
       }
-
       return elementTypes;
     } finally {
       if ( lock ) {
@@ -196,7 +195,7 @@ public class XmlMetaStore extends BaseMetaStore implements IMetaStore {
       String spaceFolder = XmlUtil.getNamespaceFolder( rootFolder, namespace );
       File spaceFolderFile = new File( spaceFolder );
       File[] elementTypeFolders = listFolders( spaceFolderFile );
-      List<String> ids = new ArrayList<String>( elementTypeFolders.length );
+      List<String> ids = new ArrayList<>( elementTypeFolders.length );
       for ( File elementTypeFolder : elementTypeFolders ) {
         String elementTypeId = elementTypeFolder.getName();
         ids.add( elementTypeId );
@@ -215,9 +214,13 @@ public class XmlMetaStore extends BaseMetaStore implements IMetaStore {
     }
     try {
       String elementTypeFile = XmlUtil.getElementTypeFile( rootFolder, namespace, elementTypeId );
-      XmlMetaStoreElementType elementType = new XmlMetaStoreElementType( namespace, elementTypeFile );
-      elementType.setMetaStoreName( getName() );
-      return elementType;
+      if ( Paths.get( elementTypeFile ).toFile().exists() ) {
+        XmlMetaStoreElementType elementType = new XmlMetaStoreElementType( namespace, elementTypeFile );
+        elementType.setMetaStoreName( getName() );
+        return elementType;
+      } else {
+        return null;
+      }
     } finally {
       if ( lock ) {
         unlockStore();
@@ -258,7 +261,7 @@ public class XmlMetaStore extends BaseMetaStore implements IMetaStore {
 
   @Override
   public synchronized void createElementType( String namespace, IMetaStoreElementType elementType )
-    throws MetaStoreException, MetaStoreElementTypeExistsException {
+    throws MetaStoreException {
     lockStore();
     try {
       // In the case of a file, the ID is the name
@@ -269,15 +272,15 @@ public class XmlMetaStore extends BaseMetaStore implements IMetaStore {
 
       String elementTypeFolder = XmlUtil.getElementTypeFolder( rootFolder, namespace, elementType.getName() );
       File elementTypeFolderFile = new File( elementTypeFolder );
-      if ( elementTypeFolderFile.exists() ) {
+      String elementTypeFilename = XmlUtil.getElementTypeFile( rootFolder, namespace, elementType.getName() );
+      if ( elementTypeFolderFile.exists()  && Paths.get( elementTypeFilename ).toFile().exists() ) {
         throw new MetaStoreElementTypeExistsException( getElementTypes( namespace, false ),
             "The specified element type already exists with the same ID" );
       }
-      if ( !elementTypeFolderFile.mkdir() ) {
+      if ( !elementTypeFolderFile.exists() && !elementTypeFolderFile.mkdir() ) {
         throw new MetaStoreException( "Unable to create XML meta store element type folder '" + elementTypeFolder + "'" );
       }
 
-      String elementTypeFilename = XmlUtil.getElementTypeFile( rootFolder, namespace, elementType.getName() );
 
       // Copy the element type information to the XML meta store
       //
@@ -286,10 +289,10 @@ public class XmlMetaStore extends BaseMetaStore implements IMetaStore {
               .getDescription() );
       xmlType.setFilename( elementTypeFilename );
       xmlType.save();
-      
+
       metaStoreCache.registerElementTypeIdForName( namespace, elementType.getName(), elementType.getId() );
       metaStoreCache.registerProcessedFile( elementTypeFolder, new File( elementTypeFolder ).lastModified() );
-      
+
       xmlType.setMetaStoreName( getName() );
       elementType.setMetaStoreName( getName() );
     } finally {
@@ -318,7 +321,7 @@ public class XmlMetaStore extends BaseMetaStore implements IMetaStore {
               .getDescription() );
       xmlType.setFilename( elementTypeFilename );
       xmlType.save();
-      
+
       metaStoreCache.registerElementTypeIdForName( namespace, elementType.getName(), elementType.getId() );
       metaStoreCache.registerProcessedFile( elementTypeFolder, elementTypeFolderFile.lastModified() );
     } finally {
@@ -328,7 +331,7 @@ public class XmlMetaStore extends BaseMetaStore implements IMetaStore {
 
   @Override
   public synchronized void deleteElementType( String namespace, IMetaStoreElementType elementType )
-    throws MetaStoreException, MetaStoreDependenciesExistsException {
+    throws MetaStoreException {
     lockStore();
     try {
       String elementTypeFilename = XmlUtil.getElementTypeFile( rootFolder, namespace, elementType.getName() );
@@ -339,7 +342,7 @@ public class XmlMetaStore extends BaseMetaStore implements IMetaStore {
       // Check if the element type has no remaining elements
       List<IMetaStoreElement> elements = getElements( namespace, elementType, false, true );
       if ( !elements.isEmpty() ) {
-        List<String> dependencies = new ArrayList<String>();
+        List<String> dependencies = new ArrayList<>();
         for ( IMetaStoreElement element : elements ) {
           dependencies.add( element.getId() );
         }
@@ -388,7 +391,7 @@ public class XmlMetaStore extends BaseMetaStore implements IMetaStore {
       String elementTypeFolder = XmlUtil.getElementTypeFolder( rootFolder, namespace, elementType.getName() );
       File elementTypeFolderFile = new File( elementTypeFolder );
       File[] elementTypeFiles = listFiles( elementTypeFolderFile, includeProcessedFiles );
-      List<IMetaStoreElement> elements = new ArrayList<IMetaStoreElement>( elementTypeFiles.length );
+      List<IMetaStoreElement> elements = new ArrayList<>( elementTypeFiles.length );
       for ( File elementTypeFile : elementTypeFiles ) {
         String elementId = elementTypeFile.getName();
         // File .type.xml doesn't hidden in OS Windows so better to ignore it explicitly
@@ -415,7 +418,7 @@ public class XmlMetaStore extends BaseMetaStore implements IMetaStore {
       String elementTypeFolder = XmlUtil.getElementTypeFolder( rootFolder, namespace, elementType.getName() );
       File elementTypeFolderFile = new File( elementTypeFolder );
       File[] elementTypeFiles = listFiles( elementTypeFolderFile, true );
-      List<String> elementIds = new ArrayList<String>( elementTypeFiles.length );
+      List<String> elementIds = new ArrayList<>( elementTypeFiles.length );
       for ( File elementTypeFile : elementTypeFiles ) {
         String elementId = elementTypeFile.getName();
         // File .type.xml doesn't hidden in OS Windows so better to ignore it explicitly
@@ -496,7 +499,7 @@ public class XmlMetaStore extends BaseMetaStore implements IMetaStore {
 
   public synchronized void
     createElement( String namespace, IMetaStoreElementType elementType, IMetaStoreElement element )
-      throws MetaStoreException, MetaStoreElementExistException {
+      throws MetaStoreException {
     lockStore();
     try {
       // In the case of a file, the ID is the name
@@ -514,9 +517,9 @@ public class XmlMetaStore extends BaseMetaStore implements IMetaStore {
       XmlMetaStoreElement xmlElement = new XmlMetaStoreElement( element );
       xmlElement.setFilename( elementFilename );
       xmlElement.save();
-      
+
       metaStoreCache.registerElementIdForName( namespace, elementType, xmlElement.getName(), element.getId() );
-      metaStoreCache.registerProcessedFile( elementFilename , new File( elementFilename ).lastModified() );
+      metaStoreCache.registerProcessedFile( elementFilename, new File( elementFilename ).lastModified() );
       // In the case of the XML store, the name is the same as the ID
       //
       element.setId( xmlElement.getName() );
@@ -548,7 +551,7 @@ public class XmlMetaStore extends BaseMetaStore implements IMetaStore {
       xmlElement.setFilename( elementFilename );
       xmlElement.setIdWithFilename( elementFilename );
       xmlElement.save();
-      
+
       metaStoreCache.registerElementIdForName( namespace, elementType, xmlElement.getName(), xmlElement.getId() );
       metaStoreCache.registerProcessedFile( elementFilename, elementFile.lastModified() );
     } finally {
@@ -571,7 +574,7 @@ public class XmlMetaStore extends BaseMetaStore implements IMetaStore {
         throw new MetaStoreException( "Unable to delete element with ID '" + elementId + "' in filename '"
             + elementFilename + "'" );
       }
-      
+
       metaStoreCache.unregisterElementId( namespace, elementType, elementId );
       metaStoreCache.unregisterProcessedFile( elementFilename );
     } finally {
@@ -599,12 +602,7 @@ public class XmlMetaStore extends BaseMetaStore implements IMetaStore {
    * @return the non-hidden folders in the specified folder
    */
   protected File[] listFolders( File folder ) {
-    File[] folders = folder.listFiles( new FileFilter() {
-      @Override
-      public boolean accept( File file ) {
-        return !file.isHidden() && file.isDirectory();
-      }
-    } );
+    File[] folders = folder.listFiles( file -> !file.isHidden() && file.isDirectory() );
     if ( folders == null ) {
       folders = new File[] {};
     }
@@ -617,18 +615,15 @@ public class XmlMetaStore extends BaseMetaStore implements IMetaStore {
    * @return the non-hidden files in the specified folder
    */
   protected File[] listFiles( File folder, final boolean includeProcessedFiles ) {
-    File[] files = folder.listFiles( new FileFilter() {
-      @Override
-      public boolean accept( File file ) {
-        if ( !includeProcessedFiles ) {
-          Map<String, Long> processedFiles = metaStoreCache.getProcessedFiles();
-          Long fileLastModified = processedFiles.get( file.getPath() );
-          if ( fileLastModified != null && fileLastModified.equals( file.lastModified() ) ) {
-            return false;
-          }
+    File[] files = folder.listFiles( file -> {
+      if ( !includeProcessedFiles ) {
+        Map<String, Long> processedFiles = metaStoreCache.getProcessedFiles();
+        Long fileLastModified = processedFiles.get( file.getPath() );
+        if ( fileLastModified != null && fileLastModified.equals( file.lastModified() ) ) {
+          return false;
         }
-        return !file.isHidden() && file.isFile();
       }
+      return !file.isHidden() && file.isFile();
     } );
     if ( files == null ) {
       files = new File[] {};
