@@ -12,17 +12,22 @@
  * without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
  * See the GNU Lesser General Public License for more details.
  *
- * Copyright (c) 2002-2017 Hitachi Vantara..  All rights reserved.
+ * Copyright (c) 2002-2019 Hitachi Vantara..  All rights reserved.
  */
 
 package org.pentaho.metastore.test;
 
 import org.pentaho.metastore.api.IMetaStore;
+import org.pentaho.metastore.api.IMetaStoreElementType;
 import org.pentaho.metastore.api.exceptions.MetaStoreException;
 import org.pentaho.metastore.stores.xml.XmlMetaStore;
+import org.pentaho.metastore.stores.xml.XmlMetaStoreElementType;
 import org.pentaho.metastore.util.FileUtil;
 
 import java.io.File;
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -91,6 +96,20 @@ public class XmlMetaStoreIT extends MetaStoreTestBase {
       fail( exceptions.size() + " exceptions encountered during parallel store/retrieve" );
     }
 
+  }
+
+  public void testUnmanagedFoldersAreAllowed() throws IOException, MetaStoreException {
+    Path rootPath = Files.createTempDirectory( "XmlMetaStoreIT" );
+    Path metastorePath = rootPath.resolve( "metastore" ).resolve( "pentaho" ).resolve( "NamedCluster" );
+    Files.createDirectories( metastorePath );
+    XmlMetaStore metaStore = new XmlMetaStore( rootPath.toString() );
+    assertTrue( metaStore.getElementTypes( "pentaho" ).isEmpty() );
+
+    IMetaStoreElementType elementType =
+      new XmlMetaStoreElementType( "pentaho", "NamedCluster", "NamedCluster", "A Named Cluster" );
+    metaStore.createElementType( "pentaho", elementType );  //throws an exception before change
+
+    assertEquals( 1, metaStore.getElementTypes( "pentaho" ).size() );
   }
 
   public void testParallelOneStore() throws Exception {

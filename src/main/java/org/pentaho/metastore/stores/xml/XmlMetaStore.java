@@ -20,6 +20,7 @@ package org.pentaho.metastore.stores.xml;
 import java.io.File;
 import java.io.FileFilter;
 import java.io.IOException;
+import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -178,9 +179,10 @@ public class XmlMetaStore extends BaseMetaStore implements IMetaStore {
       for ( File elementTypeFolder : elementTypeFolders ) {
         String elementTypeId = elementTypeFolder.getName();
         IMetaStoreElementType elementType = getElementType( namespace, elementTypeId, false );
-        elementTypes.add( elementType );
+        if ( elementType != null ) {
+          elementTypes.add( elementType );
+        }
       }
-
       return elementTypes;
     } finally {
       if ( lock ) {
@@ -215,9 +217,13 @@ public class XmlMetaStore extends BaseMetaStore implements IMetaStore {
     }
     try {
       String elementTypeFile = XmlUtil.getElementTypeFile( rootFolder, namespace, elementTypeId );
-      XmlMetaStoreElementType elementType = new XmlMetaStoreElementType( namespace, elementTypeFile );
-      elementType.setMetaStoreName( getName() );
-      return elementType;
+      if ( Paths.get( elementTypeFile ).toFile().exists() ) {
+        XmlMetaStoreElementType elementType = new XmlMetaStoreElementType( namespace, elementTypeFile );
+        elementType.setMetaStoreName( getName() );
+        return elementType;
+      } else {
+        return null;
+      }
     } finally {
       if ( lock ) {
         unlockStore();
@@ -269,15 +275,15 @@ public class XmlMetaStore extends BaseMetaStore implements IMetaStore {
 
       String elementTypeFolder = XmlUtil.getElementTypeFolder( rootFolder, namespace, elementType.getName() );
       File elementTypeFolderFile = new File( elementTypeFolder );
-      if ( elementTypeFolderFile.exists() ) {
+      String elementTypeFilename = XmlUtil.getElementTypeFile( rootFolder, namespace, elementType.getName() );
+      if ( elementTypeFolderFile.exists()  && Paths.get( elementTypeFilename ).toFile().exists() ) {
         throw new MetaStoreElementTypeExistsException( getElementTypes( namespace, false ),
             "The specified element type already exists with the same ID" );
       }
-      if ( !elementTypeFolderFile.mkdir() ) {
+      if ( !elementTypeFolderFile.exists() && !elementTypeFolderFile.mkdir() ) {
         throw new MetaStoreException( "Unable to create XML meta store element type folder '" + elementTypeFolder + "'" );
       }
 
-      String elementTypeFilename = XmlUtil.getElementTypeFile( rootFolder, namespace, elementType.getName() );
 
       // Copy the element type information to the XML meta store
       //
