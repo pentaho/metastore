@@ -875,16 +875,25 @@ public class MetaStoreFactory<T> {
    * @throws MetaStoreException
    */
   public List<String> getElementNames() throws MetaStoreException {
+    return getElementNames( true );
+  }
+
+  /**
+   * @param  Lock the metastore for modification
+   * @return The list of element names
+   * @throws MetaStoreException
+   */
+  public List<String> getElementNames( boolean lock ) throws MetaStoreException {
     List<String> names = new ArrayList<String>();
 
     MetaStoreElementType elementTypeAnnotation = getElementTypeAnnotation();
 
-    IMetaStoreElementType elementType = metaStore.getElementTypeByName( namespace, elementTypeAnnotation.name() );
+    IMetaStoreElementType elementType = metaStore.getElementTypeByName( namespace, elementTypeAnnotation.name(), lock );
     if ( elementType == null ) {
       return names;
     }
 
-    List<IMetaStoreElement> elements = metaStore.getElements( namespace, elementType );
+    List<IMetaStoreElement> elements = metaStore.getElements( namespace, elementType, lock );
     for ( IMetaStoreElement element : elements ) {
       names.add( element.getName() );
     }
