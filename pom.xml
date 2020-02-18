@@ -22,14 +22,12 @@
     <guava.version>17.0</guava.version>
     <commons-io.version>2.1</commons-io.version>
     <mockito-all.version>1.8.4</mockito-all.version>
-    <commons-codec.version>1.5</commons-codec.version>
     <junit.version>4.7</junit.version>
   </properties>
   <dependencies>
     <dependency>
       <groupId>commons-codec</groupId>
       <artifactId>commons-codec</artifactId>
-      <version>${commons-codec.version}</version>
     </dependency>
     <dependency>
       <groupId>com.google.guava</groupId>
