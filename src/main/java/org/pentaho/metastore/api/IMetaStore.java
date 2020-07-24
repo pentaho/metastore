@@ -12,7 +12,7 @@
  * without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
  * See the GNU Lesser General Public License for more details.
  *
- * Copyright (c) 2002-2019 Hitachi Vantara..  All rights reserved.
+ * Copyright (c) 2002-2020 Hitachi Vantara..  All rights reserved.
  */
 
 package org.pentaho.metastore.api;
@@ -210,6 +210,29 @@ public interface IMetaStore {
    */
   public default List<IMetaStoreElement> getElements( String namespace, IMetaStoreElementType elementType, boolean lock ) throws MetaStoreException {
     return getElements( namespace, elementType );
+  }
+
+  /**
+   * Retrieve all the elements belonging to an element type. if an error occurs retrieving a single element, add it to
+   * exceptionList and continue loading if possible.  This method was added so that if one cluster.xml file gets
+   * corrupted it does not take down the entire cluster list.
+   *
+   * @param namespace
+   *          The namespace to reference
+   * @param elementType
+   *          The type of element to retrieve
+   * @param lock
+   *          lock the metastore for modification
+   * @param exceptionList
+   *          An empty list to be populated by any MetaStoreException that occur on single entries in the list.
+   * @return A list of entities
+   * @throws MetaStoreException
+   *           In case there is a problem in the underlying store that was not added to the exceptionList (ie: the
+   *           default method kicked in or error occurred before the element loop).
+   */
+  public default List<IMetaStoreElement> getElements( String namespace, IMetaStoreElementType elementType, boolean lock,
+                                                      List<MetaStoreException> exceptionList ) throws MetaStoreException {
+    return getElements( namespace, elementType, lock );
   }
 
   /**

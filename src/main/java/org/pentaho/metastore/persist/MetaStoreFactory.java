@@ -12,7 +12,7 @@
  * without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
  * See the GNU Lesser General Public License for more details.
  *
- * Copyright (c) 2002-2019 Hitachi Vantara..  All rights reserved.
+ * Copyright (c) 2002-2020 Hitachi Vantara..  All rights reserved.
  */
 
 package org.pentaho.metastore.persist;
@@ -813,36 +813,34 @@ public class MetaStoreFactory<T> {
    * @throws MetaStoreException
    */
   public List<T> getElements() throws MetaStoreException {
-    MetaStoreElementType elementTypeAnnotation = getElementTypeAnnotation();
-
-    IMetaStoreElementType elementType = metaStore.getElementTypeByName( namespace, elementTypeAnnotation.name() );
-    if ( elementType == null ) {
-      return Collections.emptyList();
-    }
-
-    List<IMetaStoreElement> elements = metaStore.getElements( namespace, elementType );
-    List<T> list = new ArrayList<T>( elements.size() );
-    for ( IMetaStoreElement metaStoreElement : elements ) {
-      list.add( loadElement( metaStoreElement ) );
-    }
-    return list;
+    return getElements( true, null );
   }
 
   /**
-   * @param  Lock the metastore for modification
+   * @param  lock the metastore for modification
    * @return A list of all the de-serialized objects of this class in the metastore
    * @throws MetaStoreException
    */
   public List<T> getElements( boolean lock ) throws MetaStoreException {
-    MetaStoreElementType elementTypeAnnotation = getElementTypeAnnotation();
+    return getElements( lock, null );
+  }
 
+  /**
+   * @param  lock the metastore for modification
+   * @param exceptionList If not null and an exception is thrown while getting an element. add the exception to
+   *                      this list and return all elements that did not error.  If null then bubble up the exception
+   *                      and abort the method.
+   * @return A list of all the de-serialized objects of this class in the metastore.
+   * @throws MetaStoreException
+   */
+  public List<T> getElements( boolean lock, List<MetaStoreException> exceptionList ) throws MetaStoreException {
+    MetaStoreElementType elementTypeAnnotation = getElementTypeAnnotation();
     IMetaStoreElementType elementType = metaStore.getElementTypeByName( namespace, elementTypeAnnotation.name(), lock );
     if ( elementType == null ) {
       return Collections.emptyList();
     }
-
-    List<IMetaStoreElement> elements = metaStore.getElements( namespace, elementType, lock );
-    List<T> list = new ArrayList<>( elements.size() );
+    List<IMetaStoreElement> elements = metaStore.getElements( namespace, elementType, lock, exceptionList );
+    List<T> list = new ArrayList<T>( elements.size() );
     for ( IMetaStoreElement metaStoreElement : elements ) {
       list.add( loadElement( metaStoreElement ) );
     }
@@ -893,7 +891,7 @@ public class MetaStoreFactory<T> {
       return names;
     }
 
-    List<IMetaStoreElement> elements = metaStore.getElements( namespace, elementType, lock );
+    List<IMetaStoreElement> elements = metaStore.getElements( namespace, elementType, lock, new ArrayList<MetaStoreException>() );
     for ( IMetaStoreElement element : elements ) {
       names.add( element.getName() );
     }

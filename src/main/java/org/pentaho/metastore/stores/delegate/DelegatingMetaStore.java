@@ -12,7 +12,7 @@
  * without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
  * See the GNU Lesser General Public License for more details.
  *
- * Copyright (c) 2002-2019 Hitachi Vantara..  All rights reserved.
+ * Copyright (c) 2002-2020 Hitachi Vantara..  All rights reserved.
  */
 
 package org.pentaho.metastore.stores.delegate;
@@ -268,11 +268,18 @@ public class DelegatingMetaStore implements IMetaStore {
   @Override
   public List<IMetaStoreElement> getElements( String namespace, IMetaStoreElementType elementType )
     throws MetaStoreException {
+
+    return getElements( namespace, elementType, true, null );
+  }
+
+  @Override
+  public List<IMetaStoreElement> getElements( String namespace, IMetaStoreElementType elementType, boolean lock,
+                                              List<MetaStoreException> exceptionList ) throws MetaStoreException {
     List<IMetaStoreElement> elements = new ArrayList<IMetaStoreElement>();
     for ( IMetaStore metaStore : getReadMetaStoreList() ) {
       IMetaStoreElementType localElementType = metaStore.getElementTypeByName( namespace, elementType.getName() );
       if ( localElementType != null ) {
-        for ( IMetaStoreElement element : metaStore.getElements( namespace, localElementType ) ) {
+        for ( IMetaStoreElement element : metaStore.getElements( namespace, localElementType, lock, exceptionList ) ) {
           if ( getElementByName( elements, element.getName() ) == null ) {
             elements.add( element );
           }
@@ -312,7 +319,7 @@ public class DelegatingMetaStore implements IMetaStore {
   @Override
   public IMetaStoreElement getElementByName( String namespace, IMetaStoreElementType elementType, String name )
     throws MetaStoreException {
-    return getElementByName( getElements( namespace, elementType ), name );
+    return getElementByName( getElements( namespace, elementType, true, new ArrayList<MetaStoreException>() ), name );
   }
 
   @Override
