@@ -12,7 +12,7 @@
  * without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
  * See the GNU Lesser General Public License for more details.
  *
- * Copyright (c) 2002-2019 Hitachi Vantara..  All rights reserved.
+ * Copyright (c) 2002-2020 Hitachi Vantara..  All rights reserved.
  */
 
 package org.pentaho.metastore.stores.xml;
@@ -340,7 +340,7 @@ public class XmlMetaStore extends BaseMetaStore implements IMetaStore {
         return;
       }
       // Check if the element type has no remaining elements
-      List<IMetaStoreElement> elements = getElements( namespace, elementType, false, true );
+      List<IMetaStoreElement> elements = getElements( namespace, elementType, false, true, new ArrayList<MetaStoreException>() );
       if ( !elements.isEmpty() ) {
         List<String> dependencies = new ArrayList<>();
         for ( IMetaStoreElement element : elements ) {
@@ -373,17 +373,23 @@ public class XmlMetaStore extends BaseMetaStore implements IMetaStore {
   @Override
   public List<IMetaStoreElement> getElements( String namespace, IMetaStoreElementType elementType )
     throws MetaStoreException {
-    return getElements( namespace, elementType, true, true );
+    return getElements( namespace, elementType, true, true, null );
   }
 
   @Override
   public List<IMetaStoreElement> getElements( String namespace, IMetaStoreElementType elementType, boolean lock )
           throws MetaStoreException {
-    return getElements( namespace, elementType, lock, true );
+    return getElements( namespace, elementType, lock, true, null );
+  }
+
+  @Override
+  public List<IMetaStoreElement> getElements( String namespace, IMetaStoreElementType elementType, boolean lock,
+                                              List<MetaStoreException> exceptionList ) throws MetaStoreException {
+    return getElements( namespace, elementType, lock, true, exceptionList );
   }
 
   protected synchronized List<IMetaStoreElement> getElements( String namespace, IMetaStoreElementType elementType,
-      boolean lock, boolean includeProcessedFiles ) throws MetaStoreException {
+      boolean lock, boolean includeProcessedFiles, List<MetaStoreException> exceptionList ) throws MetaStoreException {
     if ( lock ) {
       lockStore();
     }
@@ -399,7 +405,17 @@ public class XmlMetaStore extends BaseMetaStore implements IMetaStore {
           continue;
         }
         elementId = elementId.substring( 0, elementId.length() - 4 ); // remove .xml to get the ID
-        elements.add( getElement( namespace, elementType, elementId, false ) );
+        try {
+          elements.add( getElement( namespace, elementType, elementId, false ) );
+        } catch ( Exception e ) {
+          // If we are collecting exceptions instead of fatally exiting, add to the list of exceptions and continue
+          if ( exceptionList != null ) {
+            exceptionList.add( new MetaStoreException( "Could not load metaStore element '" + elementId + "'", e ) );
+          } else {
+            // Strict run. abort list
+            throw e;
+          }
+        }
       }
 
       return elements;
@@ -484,7 +500,7 @@ public class XmlMetaStore extends BaseMetaStore implements IMetaStore {
         }
       }
 
-      for ( IMetaStoreElement element : getElements( namespace, elementType, false, false ) ) {
+      for ( IMetaStoreElement element : getElements( namespace, elementType, false, false, new ArrayList<MetaStoreException>() ) ) {
         if ( element.getName() != null && element.getName().equalsIgnoreCase( name ) ) {
           return element;
         }
@@ -511,8 +527,9 @@ public class XmlMetaStore extends BaseMetaStore implements IMetaStore {
       String elementFilename = XmlUtil.getElementFile( rootFolder, namespace, elementType.getName(), element.getId() );
       File elementFile = new File( elementFilename );
       if ( elementFile.exists() ) {
-        throw new MetaStoreElementExistException( getElements( namespace, elementType, false, true ),
-            "The specified element already exists with the same ID: '" + element.getId() + "'" );
+        throw new MetaStoreElementExistException(
+          getElements( namespace, elementType, false, true, new ArrayList<MetaStoreException>() ),
+          "The specified element already exists with the same ID: '" + element.getId() + "'" );
       }
       XmlMetaStoreElement xmlElement = new XmlMetaStoreElement( element );
       xmlElement.setFilename( elementFilename );

@@ -12,7 +12,7 @@
  * without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
  * See the GNU Lesser General Public License for more details.
  *
- * Copyright (c) 2002-2019 Hitachi Vantara..  All rights reserved.
+ * Copyright (c) 2002-2020 Hitachi Vantara..  All rights reserved.
  */
 
 package org.pentaho.metastore.test;
@@ -22,8 +22,7 @@ import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
-import static org.mockito.Matchers.any;
-import static org.mockito.Matchers.anyString;
+import static org.mockito.Matchers.*;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
@@ -741,12 +740,12 @@ public class DelegatingMetastoreTest {
     IMetaStore inactiveMetaStore1 = getMockMetaStoreWithName( inactiveName1 );
     List<IMetaStoreElement> type1Elements = Arrays.asList( inactiveElement1, inactiveElement2, inactiveElement3 );
     when( inactiveMetaStore1.getElementTypeByName( testNamespace, inactiveType1 ) ).thenReturn( inactiveElementType1 );
-    when( inactiveMetaStore1.getElements( testNamespace, inactiveElementType1 ) ).thenReturn( type1Elements );
+    when( inactiveMetaStore1.getElements( testNamespace, inactiveElementType1, true, null ) ).thenReturn( type1Elements );
 
     List<IMetaStoreElement> type2Elements = Arrays.asList( inactiveElement4 );
     IMetaStore inactiveMetaStore2 = getMockMetaStoreWithName( inactiveName2 );
     when( inactiveMetaStore2.getElementTypeByName( testNamespace, inactiveType2 ) ).thenReturn( inactiveElementType2 );
-    when( inactiveMetaStore2.getElements( testNamespace, inactiveElementType2 ) ).thenReturn( type2Elements );
+    when( inactiveMetaStore2.getElements( testNamespace, inactiveElementType2, true, null ) ).thenReturn( type2Elements );
 
     DelegatingMetaStore delegatingMetaStore = new DelegatingMetaStore( inactiveMetaStore1, inactiveMetaStore2 );
     List<IMetaStoreElement> elementsType1 = delegatingMetaStore.getElements( testNamespace, inactiveElementType1 );
@@ -781,12 +780,12 @@ public class DelegatingMetastoreTest {
     IMetaStore inactiveMetaStore1 = getMockMetaStoreWithName( inactiveName1 );
     List<IMetaStoreElement> type1Elements = Arrays.asList( inactiveElement1, inactiveElement2, inactiveElement3 );
     when( inactiveMetaStore1.getElementTypeByName( testNamespace, inactiveType1 ) ).thenReturn( inactiveElementType1 );
-    when( inactiveMetaStore1.getElements( testNamespace, inactiveElementType1 ) ).thenReturn( type1Elements );
+    when( inactiveMetaStore1.getElements( testNamespace, inactiveElementType1, true, null ) ).thenReturn( type1Elements );
 
     List<IMetaStoreElement> type2Elements = Arrays.asList( inactiveElement4 );
     IMetaStore activeMetaStore2 = getMockMetaStoreWithName( activeName2 );
     when( activeMetaStore2.getElementTypeByName( testNamespace, inactiveType2 ) ).thenReturn( inactiveElementType2 );
-    when( activeMetaStore2.getElements( testNamespace, inactiveElementType2 ) ).thenReturn( type2Elements );
+    when( activeMetaStore2.getElements( testNamespace, inactiveElementType2, true, null ) ).thenReturn( type2Elements );
 
     DelegatingMetaStore delegatingMetaStore = new DelegatingMetaStore( inactiveMetaStore1, activeMetaStore2 );
     delegatingMetaStore.setActiveMetaStoreName( activeName2 );
@@ -821,12 +820,12 @@ public class DelegatingMetastoreTest {
     IMetaStore inactiveMetaStore1 = getMockMetaStoreWithName( inactiveName1 );
     List<IMetaStoreElement> type1Elements = Arrays.asList( inactiveElement1, inactiveElement2, inactiveElement3 );
     when( inactiveMetaStore1.getElementTypeByName( testNamespace, inactiveType1 ) ).thenReturn( inactiveElementType1 );
-    when( inactiveMetaStore1.getElements( testNamespace, inactiveElementType1 ) ).thenReturn( type1Elements );
+    when( inactiveMetaStore1.getElements( testNamespace, inactiveElementType1, true, null ) ).thenReturn( type1Elements );
 
     List<IMetaStoreElement> type2Elements = Arrays.asList( inactiveElement4 );
     IMetaStore inactiveMetaStore2 = getMockMetaStoreWithName( inactiveName2 );
     when( inactiveMetaStore2.getElementTypeByName( testNamespace, inactiveType2 ) ).thenReturn( inactiveElementType2 );
-    when( inactiveMetaStore2.getElements( testNamespace, inactiveElementType2 ) ).thenReturn( type2Elements );
+    when( inactiveMetaStore2.getElements( testNamespace, inactiveElementType2, true, null ) ).thenReturn( type2Elements );
 
     DelegatingMetaStore delegatingMetaStore = new DelegatingMetaStore( inactiveMetaStore1, inactiveMetaStore2 );
     List<String> elementsType1 = delegatingMetaStore.getElementIds( testNamespace, inactiveElementType1 );
@@ -862,12 +861,12 @@ public class DelegatingMetastoreTest {
     IMetaStore activeMetaStore1 = getMockMetaStoreWithName( activeName1 );
     List<IMetaStoreElement> type1Elements = Arrays.asList( inactiveElement1, inactiveElement2, inactiveElement3 );
     when( activeMetaStore1.getElementTypeByName( testNamespace, inactiveType1 ) ).thenReturn( inactiveElementType1 );
-    when( activeMetaStore1.getElements( testNamespace, inactiveElementType1 ) ).thenReturn( type1Elements );
+    when( activeMetaStore1.getElements( eq(testNamespace), eq(inactiveElementType1), eq(true), anyList() ) ).thenReturn( type1Elements );
 
     List<IMetaStoreElement> type2Elements = Arrays.asList( inactiveElement4 );
     IMetaStore inactiveMetaStore2 = getMockMetaStoreWithName( inactiveName2 );
     when( inactiveMetaStore2.getElementTypeByName( testNamespace, inactiveType2 ) ).thenReturn( inactiveElementType2 );
-    when( inactiveMetaStore2.getElements( testNamespace, inactiveElementType2 ) ).thenReturn( type2Elements );
+    when( inactiveMetaStore2.getElements( eq(testNamespace), eq(inactiveElementType2), eq(true), anyList() ) ).thenReturn( type2Elements );
 
     DelegatingMetaStore delegatingMetaStore = new DelegatingMetaStore( activeMetaStore1, inactiveMetaStore2 );
     delegatingMetaStore.setActiveMetaStoreName( activeName1 );
@@ -986,12 +985,14 @@ public class DelegatingMetastoreTest {
     IMetaStore inactiveMetaStore1 = getMockMetaStoreWithName( inactiveName1 );
     List<IMetaStoreElement> type1Elements = Arrays.asList( inactiveElement1, inactiveElement2, inactiveElement3 );
     when( inactiveMetaStore1.getElementTypeByName( testNamespace, inactiveType1 ) ).thenReturn( inactiveElementType1 );
-    when( inactiveMetaStore1.getElements( testNamespace, inactiveElementType1 ) ).thenReturn( type1Elements );
+    when( inactiveMetaStore1.getElements( eq( testNamespace ), eq( inactiveElementType1 ), eq( true ), anyList() ) )
+      .thenReturn( type1Elements );
 
     List<IMetaStoreElement> type2Elements = Arrays.asList( inactiveElement4 );
     IMetaStore inactiveMetaStore2 = getMockMetaStoreWithName( inactiveName2 );
     when( inactiveMetaStore2.getElementTypeByName( testNamespace, inactiveType2 ) ).thenReturn( inactiveElementType2 );
-    when( inactiveMetaStore2.getElements( testNamespace, inactiveElementType2 ) ).thenReturn( type2Elements );
+    when( inactiveMetaStore2.getElements( eq( testNamespace ), eq( inactiveElementType2 ), eq( true ), anyList() ) )
+      .thenReturn( type2Elements );
 
     DelegatingMetaStore delegatingMetaStore = new DelegatingMetaStore( inactiveMetaStore1, inactiveMetaStore2 );
     assertEquals( inactiveElement1, delegatingMetaStore.getElementByName( testNamespace, inactiveElementType1,
@@ -1028,12 +1029,14 @@ public class DelegatingMetastoreTest {
     IMetaStore activeMetaStore1 = getMockMetaStoreWithName( inactiveName1 );
     List<IMetaStoreElement> type1Elements = Arrays.asList( inactiveElement1, inactiveElement2, inactiveElement3 );
     when( activeMetaStore1.getElementTypeByName( testNamespace, inactiveType1 ) ).thenReturn( inactiveElementType1 );
-    when( activeMetaStore1.getElements( testNamespace, inactiveElementType1 ) ).thenReturn( type1Elements );
+    when( activeMetaStore1.getElements( eq( testNamespace ), eq( inactiveElementType1 ), eq( true ), anyList() ) )
+      .thenReturn( type1Elements );
 
     List<IMetaStoreElement> type2Elements = Arrays.asList( inactiveElement4 );
     IMetaStore inactiveMetaStore2 = getMockMetaStoreWithName( inactiveName2 );
     when( inactiveMetaStore2.getElementTypeByName( testNamespace, inactiveType2 ) ).thenReturn( inactiveElementType2 );
-    when( inactiveMetaStore2.getElements( testNamespace, inactiveElementType2 ) ).thenReturn( type2Elements );
+    when( inactiveMetaStore2.getElements( eq( testNamespace ), eq( inactiveElementType2 ), eq( true ), anyList() ) )
+      .thenReturn( type2Elements );
 
     DelegatingMetaStore delegatingMetaStore = new DelegatingMetaStore( activeMetaStore1, inactiveMetaStore2 );
     delegatingMetaStore.setActiveMetaStoreName( activeMetaStore1.getName() );
