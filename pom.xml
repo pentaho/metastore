@@ -20,7 +20,6 @@
   </scm>
   <properties>
     <guava.version>17.0</guava.version>
-    <commons-io.version>2.1</commons-io.version>
     <mockito-all.version>1.8.4</mockito-all.version>
     <junit.version>4.7</junit.version>
   </properties>
