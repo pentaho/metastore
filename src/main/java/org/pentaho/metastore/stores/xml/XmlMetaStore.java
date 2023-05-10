@@ -20,6 +20,7 @@ package org.pentaho.metastore.stores.xml;
 import org.pentaho.metastore.api.exceptions.MetaStoreException;
 import org.pentaho.metastore.api.IMetaStoreElement;
 import org.pentaho.metastore.api.IMetaStoreElementType;
+import org.pentaho.metastore.api.security.MetaStoreElementOwnerType;
 
 import java.io.File;
 import java.io.IOException;
