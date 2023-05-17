@@ -45,12 +45,25 @@ public abstract class BaseXmlMetaStore<T> extends BaseMetaStore implements IMeta
   private final XmlMetaStoreCache metaStoreCache;
   // root path. This is never interpreted by this class directly, but is used to
   // generate paths for subclasses to use.
-  private final String rootFolder;
+  private volatile String rootFolder;
 
+  /**
+   *
+   * @param rootFolder
+   *          the folder that should contain the metastore. note that XmlUtil.META_FOLDER_NAME will be added to this
+   *          path.
+   */
   protected BaseXmlMetaStore( String rootFolder ) throws MetaStoreException {
     this( rootFolder, defaultCache() );
   }
 
+  /**
+   *
+   * @param rootFolder
+   *          the folder that should contain the metastore. note that XmlUtil.META_FOLDER_NAME will be added to this
+   *          path.
+   * @param metaStoreCacheImpl
+   */
   protected BaseXmlMetaStore( String rootFolder, XmlMetaStoreCache metaStoreCacheImpl ) throws MetaStoreException {
     metaStoreCache = metaStoreCacheImpl;
     this.rootFolder = rootFolder + "/" + XmlUtil.META_FOLDER_NAME;
@@ -61,10 +74,21 @@ public abstract class BaseXmlMetaStore<T> extends BaseMetaStore implements IMeta
   }
 
   /**
-   * @return the rootFolder
+   * @return the rootFolder in use
    */
   public String getRootFolder() {
     return rootFolder;
+  }
+
+  /**
+   * Set the root folder. This will be the exact path that the metastore will operate in (namespaces will be created
+   * immediately below this). It will not have XmlUtil.META_FOLDER_NAME appended.
+   *
+   *
+   * @param rootFolder
+   */
+  public void setRootFolder( String rootFolder ) {
+    this.rootFolder = rootFolder;
   }
 
   @Override
