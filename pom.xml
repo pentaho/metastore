@@ -19,7 +19,6 @@
     <url>scm:git:git@github.com:pentaho/${project.artifactId}.git</url>
   </scm>
   <properties>
-    <guava.version>17.0</guava.version>
     <mockito-all.version>1.8.4</mockito-all.version>
     <junit.version>4.7</junit.version>
   </properties>
