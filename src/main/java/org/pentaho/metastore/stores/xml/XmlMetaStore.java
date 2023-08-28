@@ -24,6 +24,8 @@ import org.pentaho.metastore.api.security.MetaStoreElementOwnerType;
 
 import java.io.File;
 import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
@@ -206,11 +208,16 @@ public class XmlMetaStore extends BaseXmlMetaStore<File> {
     while ( waiting ) {
       File lockFile = new File( rootFile, ".lock" );
       try {
-        if ( lockFile.createNewFile() ) {
+        // PDI-19756: make fewer calls to createNewFile() to prevent random Windows error
+        if ( !lockFile.exists() && lockFile.createNewFile() ) {
           return;
         }
       } catch ( IOException e ) {
-        throw new MetaStoreException( "Unable to create lock file: " + lockFile.toString(), e );
+        // PDI-19756: Due to known issue with createNewFile()
+        // we are trying to understand if the exception is due to lack of permissions or just a random fail
+        if ( e.getMessage().contains( "Access is denied" ) && Files.isWritable( Paths.get( rootFile.getPath() ) ) ) {
+          continue;
+        }
       }
       try {
         Thread.sleep( 100 );
