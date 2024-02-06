@@ -20,7 +20,7 @@
   </scm>
   <properties>
     <mockito-all.version>1.8.4</mockito-all.version>
-    <junit.version>4.7</junit.version>
+    <junit.version>4.13.1</junit.version>
   </properties>
   <dependencies>
     <dependency>
