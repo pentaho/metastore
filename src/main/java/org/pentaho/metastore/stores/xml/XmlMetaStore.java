@@ -12,7 +12,7 @@
  * without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
  * See the GNU Lesser General Public License for more details.
  *
- * Copyright (c) 2002-2023 Hitachi Vantara..  All rights reserved.
+ * Copyright (c) 2002-2024 Hitachi Vantara..  All rights reserved.
  */
 
 package org.pentaho.metastore.stores.xml;
@@ -226,7 +226,9 @@ public class XmlMetaStore extends BaseXmlMetaStore<File> {
       }
       totalTime += 100;
       if ( totalTime > 10000 ) {
-        throw new MetaStoreException( "Maximum wait time of 10 seconds exceed while acquiring lock" );
+        throw new MetaStoreException( "Maximum wait time of 10 seconds exceed while acquiring lock. "
+          + "If there is only one instance of this application running, "
+          + "try deleting the '.lock' file in the metastore folder if the problem reoccurs on startup" );
       }
     }
   }
