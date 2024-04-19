@@ -12,7 +12,7 @@
  * without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
  * See the GNU Lesser General Public License for more details.
  *
- * Copyright (c) 2002-2020 Hitachi Vantara..  All rights reserved.
+ * Copyright (c) 2002-2024 Hitachi Vantara..  All rights reserved.
  */
 
 package org.pentaho.metastore.persist;
@@ -26,6 +26,7 @@ import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Arrays;
 
 import org.pentaho.metastore.api.IMetaStore;
 import org.pentaho.metastore.api.IMetaStoreAttribute;
@@ -144,7 +145,7 @@ public class MetaStoreFactory<T> {
 
     // Which are the attributes to load?
     //
-    Field[] fields = parentClass.getDeclaredFields();
+    Field[] fields = getFields( parentClass );
     for ( Field field : fields ) {
       MetaStoreAttribute attributeAnnotation = field.getAnnotation( MetaStoreAttribute.class );
       if ( attributeAnnotation != null ) {
@@ -564,7 +565,7 @@ public class MetaStoreFactory<T> {
 
   private void saveAttributes( IMetaStoreAttribute parentElement, Class<?> parentClass, Object parentObject ) throws MetaStoreException {
     try {
-      Field[] fields = parentClass.getDeclaredFields();
+      Field[] fields = getFields( parentClass );
       for ( Field field : fields ) {
         MetaStoreAttribute attributeAnnotation = field.getAnnotation( MetaStoreAttribute.class );
         if ( attributeAnnotation != null ) {
@@ -964,11 +965,9 @@ public class MetaStoreFactory<T> {
    * @throws MetaStoreException
    */
   private void setAttributeValue( Class<?> parentClass, Object object, String fieldName, String setterName, Class<?> valueClass, Object value ) throws MetaStoreException {
-    Method method;
-    try {
-      method = parentClass.getDeclaredMethod( setterName, valueClass );
-    } catch ( Exception e ) {
-      throw new MetaStoreException( "Unable to find setter for attribute field : " + fieldName + ". Expected '" + setterName + "'", e );
+    Method method = getDeclaredMethod( parentClass, setterName, valueClass );
+    if( method == null ) {
+      throw new MetaStoreException( "Unable to find setter for attribute field : " + fieldName + ". Expected '" + setterName + "'" );
     }
 
     try {
@@ -979,11 +978,9 @@ public class MetaStoreFactory<T> {
   }
 
   private Object getAttributeValue( Class<?> parentClass, Object object, String fieldName, String getterName ) throws MetaStoreException {
-    Method method;
-    try {
-      method = parentClass.getDeclaredMethod( getterName );
-    } catch ( Exception e ) {
-      throw new MetaStoreException( "Unable to find getter for attribute field : " + fieldName + ". Expected '" + getterName + "'", e );
+    Method method =  getDeclaredMethod( parentClass, getterName );
+    if( method == null ) {
+      throw new MetaStoreException( "Unable to find getter for attribute field : " + fieldName + ". Expected '" + getterName + "'" );
     }
 
     try {
@@ -993,6 +990,18 @@ public class MetaStoreFactory<T> {
       throw new MetaStoreException( "Unable to get value using method '" + getterName + "' on class " + parentClass.getName(), e );
     }
 
+  }
+
+  private Method getDeclaredMethod( Class<?> parentClass, String name, Class<?>... parameterTypes ) {
+    if( parentClass == Object.class ) {
+      return null;
+    }
+    try {
+      return parentClass.getDeclaredMethod( name, parameterTypes );
+    } catch ( NoSuchMethodException | SecurityException e ) {
+      parentClass = parentClass.getSuperclass();
+      return getDeclaredMethod( parentClass, name, parameterTypes );
+    }
   }
 
   /**
@@ -1075,4 +1084,12 @@ public class MetaStoreFactory<T> {
     this.objectFactory = objectFactory;
   }
 
+  private Field[] getFields( Class<?> clazz ) {
+    List<Field> fields = new ArrayList<>();
+    while ( clazz != Object.class ) {
+      fields.addAll( Arrays.asList( clazz.getDeclaredFields() ) );
+      clazz = clazz.getSuperclass();
+    }
+    return fields.toArray( new Field[0] );
+  }
 }
