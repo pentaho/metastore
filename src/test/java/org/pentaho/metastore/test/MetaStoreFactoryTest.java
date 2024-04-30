@@ -44,6 +44,7 @@ import org.pentaho.metastore.test.testclasses.my.MyFilenameElement;
 import org.pentaho.metastore.test.testclasses.my.MyMigrationElement;
 import org.pentaho.metastore.test.testclasses.my.MyNameElement;
 import org.pentaho.metastore.test.testclasses.my.MyOtherElement;
+import org.pentaho.metastore.test.testclasses.my.MissingGetterElement;
 import org.pentaho.metastore.util.MetaStoreUtil;
 
 import java.util.ArrayList;
@@ -558,4 +559,16 @@ public class MetaStoreFactoryTest extends TestCase {
     return list;
   }
 
+  @Test
+  public void testGetterNotExists() {
+    IMetaStore metaStore = new MemoryMetaStore();
+    MetaStoreFactory<MissingGetterElement> factory =
+      new MetaStoreFactory<>( MissingGetterElement.class, metaStore, "custom" );
+    MissingGetterElement element = new MissingGetterElement( ANOTHER, ATTR );
+    try {
+      factory.saveElement( element );
+    } catch ( MetaStoreException e ) {
+      assertNotNull( e );
+    }
+  }
 }
