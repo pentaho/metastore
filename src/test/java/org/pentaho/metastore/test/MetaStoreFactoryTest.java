@@ -12,7 +12,7 @@
  * without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
  * See the GNU Lesser General Public License for more details.
  *
- * Copyright (c) 2002-2017 Hitachi Vantara..  All rights reserved.
+ * Copyright (c) 2002-2024 Hitachi Vantara..  All rights reserved.
  */
 package org.pentaho.metastore.test;
 
@@ -54,10 +54,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.concurrent.atomic.AtomicInteger;
 
-import static org.mockito.Matchers.anyMap;
-import static org.mockito.Matchers.anyObject;
-import static org.mockito.Matchers.anyString;
-import static org.mockito.Matchers.eq;
+
 import static org.mockito.Mockito.*;
 
 public class MetaStoreFactoryTest extends TestCase {
@@ -362,7 +359,7 @@ public class MetaStoreFactoryTest extends TestCase {
     factoryDimension.setObjectFactory( objectFactory );
 
     final AtomicInteger contextCount = new AtomicInteger( 0 );
-    when( objectFactory.getContext( anyObject() ) ).thenAnswer( new Answer<Object>() {
+    when( objectFactory.getContext( any() ) ).thenAnswer( new Answer<Object>() {
       @Override
       public Object answer( InvocationOnMock invocation ) throws Throwable {
         Map<String, String> context = new HashMap<String, String>();
