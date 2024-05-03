@@ -17,13 +17,22 @@
 
 package org.pentaho.metastore.persist;
 
+import org.pentaho.metastore.api.IMetaStore;
+import org.pentaho.metastore.api.IMetaStoreAttribute;
+import org.pentaho.metastore.api.IMetaStoreElement;
+import org.pentaho.metastore.api.IMetaStoreElementType;
+import org.pentaho.metastore.api.exceptions.MetaStoreException;
+import org.pentaho.metastore.util.MetaStoreUtil;
+
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
+import java.lang.reflect.Modifier;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Date;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Arrays;
@@ -34,6 +43,7 @@ import org.pentaho.metastore.api.IMetaStoreElement;
 import org.pentaho.metastore.api.IMetaStoreElementType;
 import org.pentaho.metastore.api.exceptions.MetaStoreException;
 import org.pentaho.metastore.util.MetaStoreUtil;
+import java.util.Set;
 
 public class MetaStoreFactory<T> {
 
@@ -267,7 +277,7 @@ public class MetaStoreFactory<T> {
 
   /**
    * There's an attribute in the parentElement called OBJECT_FACTORY_CONTEXT which contains a set of key/value pair attributes which we'll simply read and pass back.
-   * 
+   *
    * @param parentElement the parent element to read the object factory context from
    * @return
    */
@@ -292,7 +302,7 @@ public class MetaStoreFactory<T> {
    * Save contextual information about an object from an object factory
    * @param parentElement
    * @param context
-   * @throws MetaStoreException 
+   * @throws MetaStoreException
    */
   private void saveObjectFactoryContext( IMetaStoreAttribute parentElement, Map<String, String> context ) throws MetaStoreException {
     if ( context == null || context.isEmpty() ) {
@@ -511,7 +521,7 @@ public class MetaStoreFactory<T> {
   /**
    * Save the specified class into the metastore.
    * Create the namespace and element type if needed...
-   * 
+   *
    * @param t The element to store...
    * @throws MetaStoreException
    */
@@ -683,7 +693,7 @@ public class MetaStoreFactory<T> {
         } else {
           // POJO
           //
-          // See if we need to store additional information about this class 
+          // See if we need to store additional information about this class
           //
           if ( objectFactory != null ) {
             Map<String, String> context = objectFactory.getContext( object );
@@ -818,7 +828,7 @@ public class MetaStoreFactory<T> {
   }
 
   /**
-   * @param  lock the metastore for modification
+   * @param lock the metastore for modification
    * @return A list of all the de-serialized objects of this class in the metastore
    * @throws MetaStoreException
    */
@@ -827,7 +837,7 @@ public class MetaStoreFactory<T> {
   }
 
   /**
-   * @param  lock the metastore for modification
+   * @param lock          the metastore for modification
    * @param exceptionList If not null and an exception is thrown while getting an element. add the exception to
    *                      this list and return all elements that did not error.  If null then bubble up the exception
    *                      and abort the method.
@@ -870,7 +880,7 @@ public class MetaStoreFactory<T> {
   }
 
   /**
-   * @return The list of element names 
+   * @return The list of element names
    * @throws MetaStoreException
    */
   public List<String> getElementNames() throws MetaStoreException {
@@ -878,7 +888,7 @@ public class MetaStoreFactory<T> {
   }
 
   /**
-   * @param  Lock the metastore for modification
+   * @param Lock the metastore for modification
    * @return The list of element names
    * @throws MetaStoreException
    */
@@ -957,16 +967,16 @@ public class MetaStoreFactory<T> {
   /**
    * Set an attribute value in the specified object
    * @param parentClass The parent object class
-   * @param object The object to modify
-   * @param fieldName The field to modify
-   * @param setterName The setter method name
-   * @param valueClass The class value
-   * @param value The value to set
+   * @param object      The object to modify
+   * @param fieldName   The field to modify
+   * @param setterName  The setter method name
+   * @param valueClass  The class value
+   * @param value       The value to set
    * @throws MetaStoreException
    */
   private void setAttributeValue( Class<?> parentClass, Object object, String fieldName, String setterName, Class<?> valueClass, Object value ) throws MetaStoreException {
     Method method = getDeclaredMethod( parentClass, setterName, valueClass );
-    if( method == null ) {
+    if ( method == null ) {
       throw new MetaStoreException( "Unable to find setter for attribute field : " + fieldName + ". Expected '" + setterName + "'" );
     }
 
@@ -978,8 +988,8 @@ public class MetaStoreFactory<T> {
   }
 
   private Object getAttributeValue( Class<?> parentClass, Object object, String fieldName, String getterName ) throws MetaStoreException {
-    Method method =  getDeclaredMethod( parentClass, getterName );
-    if( method == null ) {
+    Method method = getDeclaredMethod( parentClass, getterName );
+    if ( method == null ) {
       throw new MetaStoreException( "Unable to find getter for attribute field : " + fieldName + ". Expected '" + getterName + "'" );
     }
 
@@ -993,7 +1003,7 @@ public class MetaStoreFactory<T> {
   }
 
   private Method getDeclaredMethod( Class<?> parentClass, String name, Class<?>... parameterTypes ) {
-    if( parentClass == Object.class ) {
+    if ( parentClass == Object.class ) {
       return null;
     }
     try {
@@ -1085,11 +1095,19 @@ public class MetaStoreFactory<T> {
   }
 
   private Field[] getFields( Class<?> clazz ) {
+    Set<String> visitedFieldNames = new HashSet<>();
     List<Field> fields = new ArrayList<>();
     while ( clazz != Object.class ) {
-      fields.addAll( Arrays.asList( clazz.getDeclaredFields() ) );
+      for ( Field field : clazz.getDeclaredFields() ) {
+        if ( !Modifier.isStatic( field.getModifiers() ) && !visitedFieldNames.contains( field.getName() ) ) {
+          visitedFieldNames.add( field.getName() );
+          fields.add( field );
+        }
+      }
+
       clazz = clazz.getSuperclass();
     }
-    return fields.toArray( new Field[0] );
+
+    return fields.toArray( new Field[ 0 ] );
   }
 }
