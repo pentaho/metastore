@@ -38,13 +38,14 @@ import org.pentaho.metastore.test.testclasses.factory.A;
 import org.pentaho.metastore.test.testclasses.factory.B;
 import org.pentaho.metastore.test.testclasses.factory_shared.X;
 import org.pentaho.metastore.test.testclasses.factory_shared.Y;
+import org.pentaho.metastore.test.testclasses.my.ChildElement;
+import org.pentaho.metastore.test.testclasses.my.InheritedElement;
 import org.pentaho.metastore.test.testclasses.my.MyElement;
 import org.pentaho.metastore.test.testclasses.my.MyElementAttr;
 import org.pentaho.metastore.test.testclasses.my.MyFilenameElement;
 import org.pentaho.metastore.test.testclasses.my.MyMigrationElement;
 import org.pentaho.metastore.test.testclasses.my.MyNameElement;
 import org.pentaho.metastore.test.testclasses.my.MyOtherElement;
-import org.pentaho.metastore.test.testclasses.my.MissingGetterElement;
 import org.pentaho.metastore.util.MetaStoreUtil;
 
 import java.util.ArrayList;
@@ -560,15 +561,30 @@ public class MetaStoreFactoryTest extends TestCase {
   }
 
   @Test
-  public void testGetterNotExists() {
+  public void testElementsWithFieldsInParent() throws MetaStoreException {
     IMetaStore metaStore = new MemoryMetaStore();
-    MetaStoreFactory<MissingGetterElement> factory =
-      new MetaStoreFactory<>( MissingGetterElement.class, metaStore, "custom" );
-    MissingGetterElement element = new MissingGetterElement( ANOTHER, ATTR );
-    try {
-      factory.saveElement( element );
-    } catch ( MetaStoreException e ) {
-      assertNotNull( e );
-    }
+    MetaStoreFactory<InheritedElement> factory =
+      new MetaStoreFactory<>( InheritedElement.class, metaStore, "custom" );
+    InheritedElement element = new InheritedElement( ANOTHER, ATTR );
+    element.setName( "name" );
+    ChildElement childElement = new ChildElement();
+    childElement.setProperty1( ATTR );
+    childElement.setProperty2( ANOTHER );
+    element.setChildElement( childElement );
+
+    assertEquals( 0, factory.getElements().size() );
+
+    factory.saveElement( element );
+
+    List<InheritedElement> elements = factory.getElements();
+    assertNotNull( elements );
+    assertEquals( 1, elements.size() );
+    InheritedElement elementAfterSave = elements.get( 0 );
+    assertEquals( "name", elementAfterSave.getName() );
+    assertEquals( ANOTHER, elementAfterSave.getProperty1() );
+    assertEquals( ATTR, elementAfterSave.getProperty2() );
+    assertNotNull( element.getChildElement() );
+    assertEquals( ATTR, elementAfterSave.getChildElement().getProperty1() );
+    assertEquals( ANOTHER, elementAfterSave.getChildElement().getProperty2() );
   }
 }

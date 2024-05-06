@@ -5,8 +5,8 @@ import org.pentaho.metastore.persist.MetaStoreElementType;
 
 @MetaStoreElementType(
         name = "custom",
-        description = "This is Missing Getter element type" )
-public class MissingGetterElement {
+        description = "This is Inherited element type" )
+public class InheritedElement extends ParentElement {
 
   @MetaStoreAttribute
   private String property1;
@@ -16,7 +16,21 @@ public class MissingGetterElement {
 
   public String getProperty1() { return property1; }
 
-  public MissingGetterElement( String property1, String property2 ) {
+  public String getProperty2() {
+    return property2;
+  }
+
+  public void setProperty1(String property1) {
+    this.property1 = property1;
+  }
+
+  public void setProperty2(String property2) {
+    this.property2 = property2;
+  }
+
+  public InheritedElement() { }
+
+  public InheritedElement(String property1, String property2 ) {
     this.property1 = property1;
     this.property2 = property2;
     }
