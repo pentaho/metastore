@@ -31,6 +31,9 @@ public class ParentElement {
   @MetaStoreAttribute
   private ChildElement childElement;
 
+  @MetaStoreAttribute
+  private String property1;
+
   public String getName() {
     return name;
   }
@@ -45,5 +48,13 @@ public class ParentElement {
 
   public void setChildElement( ChildElement childElement ) {
     this.childElement = childElement;
+  }
+
+  public String getProperty1() {
+    return property1;
+  }
+
+  public void setProperty1(String property1) {
+    this.property1 = property1;
   }
 }
