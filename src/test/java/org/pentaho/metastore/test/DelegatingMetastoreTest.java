@@ -12,25 +12,10 @@
  * without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
  * See the GNU Lesser General Public License for more details.
  *
- * Copyright (c) 2002-2020 Hitachi Vantara..  All rights reserved.
+ * Copyright (c) 2002-2024 Hitachi Vantara..  All rights reserved.
  */
 
 package org.pentaho.metastore.test;
-
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertNull;
-import static org.junit.Assert.assertTrue;
-import static org.junit.Assert.fail;
-import static org.mockito.Matchers.*;
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.never;
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.when;
-
-import java.util.Arrays;
-import java.util.Collection;
-import java.util.List;
 
 import org.junit.Test;
 import org.pentaho.metastore.api.IMetaStore;
@@ -39,6 +24,23 @@ import org.pentaho.metastore.api.IMetaStoreElementType;
 import org.pentaho.metastore.api.exceptions.MetaStoreException;
 import org.pentaho.metastore.api.security.MetaStoreElementOwnerType;
 import org.pentaho.metastore.stores.delegate.DelegatingMetaStore;
+
+import java.util.Arrays;
+import java.util.Collection;
+import java.util.List;
+
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNull;
+import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.fail;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyList;
+import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
 
 public class DelegatingMetastoreTest {
 
@@ -306,8 +308,8 @@ public class DelegatingMetastoreTest {
     delegatingMetaStore.setActiveMetaStoreName( activeName );
     delegatingMetaStore.createNamespace( testNamespace );
     verify( activeMetaStore ).createNamespace( testNamespace );
-    verify( inactiveMetaStore1, never() ).createNamespace( anyString() );
-    verify( inactiveMetaStore2, never() ).createNamespace( anyString() );
+    verify( inactiveMetaStore1, never() ).createNamespace( any() );
+    verify( inactiveMetaStore2, never() ).createNamespace( any() );
   }
 
   @Test( expected = MetaStoreException.class )
@@ -337,8 +339,8 @@ public class DelegatingMetastoreTest {
     delegatingMetaStore.setActiveMetaStoreName( activeName );
     delegatingMetaStore.deleteNamespace( testNamespace );
     verify( activeMetaStore ).deleteNamespace( testNamespace );
-    verify( inactiveMetaStore1, never() ).deleteNamespace( anyString() );
-    verify( inactiveMetaStore2, never() ).deleteNamespace( anyString() );
+    verify( inactiveMetaStore1, never() ).deleteNamespace( any() );
+    verify( inactiveMetaStore2, never() ).deleteNamespace( any() );
   }
 
   @Test
@@ -642,8 +644,8 @@ public class DelegatingMetastoreTest {
     delegatingMetaStore.setActiveMetaStoreName( activeName );
     delegatingMetaStore.createElementType( testNamespace, mockElementType );
     verify( activeMetaStore ).createElementType( testNamespace, mockElementType );
-    verify( inactiveMetaStore1, never() ).createElementType( anyString(), any( IMetaStoreElementType.class ) );
-    verify( inactiveMetaStore2, never() ).createElementType( anyString(), any( IMetaStoreElementType.class ) );
+    verify( inactiveMetaStore1, never() ).createElementType( any(), any( IMetaStoreElementType.class ) );
+    verify( inactiveMetaStore2, never() ).createElementType( any(), any( IMetaStoreElementType.class ) );
   }
 
   @Test( expected = MetaStoreException.class )
@@ -677,8 +679,8 @@ public class DelegatingMetastoreTest {
     delegatingMetaStore.setActiveMetaStoreName( activeName );
     delegatingMetaStore.updateElementType( testNamespace, mockElementType );
     verify( activeMetaStore ).updateElementType( testNamespace, mockElementType );
-    verify( inactiveMetaStore1, never() ).updateElementType( anyString(), any( IMetaStoreElementType.class ) );
-    verify( inactiveMetaStore2, never() ).updateElementType( anyString(), any( IMetaStoreElementType.class ) );
+    verify( inactiveMetaStore1, never() ).updateElementType( any(), any( IMetaStoreElementType.class ) );
+    verify( inactiveMetaStore2, never() ).updateElementType( any(), any( IMetaStoreElementType.class ) );
   }
 
   @Test( expected = MetaStoreException.class )
@@ -712,8 +714,8 @@ public class DelegatingMetastoreTest {
     delegatingMetaStore.setActiveMetaStoreName( activeName );
     delegatingMetaStore.deleteElementType( testNamespace, mockElementType );
     verify( activeMetaStore ).deleteElementType( testNamespace, mockElementType );
-    verify( inactiveMetaStore1, never() ).deleteElementType( anyString(), any( IMetaStoreElementType.class ) );
-    verify( inactiveMetaStore2, never() ).deleteElementType( anyString(), any( IMetaStoreElementType.class ) );
+    verify( inactiveMetaStore1, never() ).deleteElementType( any(), any( IMetaStoreElementType.class ) );
+    verify( inactiveMetaStore2, never() ).deleteElementType( any(), any( IMetaStoreElementType.class ) );
   }
 
   @Test
@@ -861,12 +863,12 @@ public class DelegatingMetastoreTest {
     IMetaStore activeMetaStore1 = getMockMetaStoreWithName( activeName1 );
     List<IMetaStoreElement> type1Elements = Arrays.asList( inactiveElement1, inactiveElement2, inactiveElement3 );
     when( activeMetaStore1.getElementTypeByName( testNamespace, inactiveType1 ) ).thenReturn( inactiveElementType1 );
-    when( activeMetaStore1.getElements( eq(testNamespace), eq(inactiveElementType1), eq(true), anyList() ) ).thenReturn( type1Elements );
+    when( activeMetaStore1.getElements( eq(testNamespace), eq(inactiveElementType1), eq(true), any() ) ).thenReturn( type1Elements );
 
     List<IMetaStoreElement> type2Elements = Arrays.asList( inactiveElement4 );
     IMetaStore inactiveMetaStore2 = getMockMetaStoreWithName( inactiveName2 );
     when( inactiveMetaStore2.getElementTypeByName( testNamespace, inactiveType2 ) ).thenReturn( inactiveElementType2 );
-    when( inactiveMetaStore2.getElements( eq(testNamespace), eq(inactiveElementType2), eq(true), anyList() ) ).thenReturn( type2Elements );
+    when( inactiveMetaStore2.getElements( eq(testNamespace), eq(inactiveElementType2), eq(true), any() ) ).thenReturn( type2Elements );
 
     DelegatingMetaStore delegatingMetaStore = new DelegatingMetaStore( activeMetaStore1, inactiveMetaStore2 );
     delegatingMetaStore.setActiveMetaStoreName( activeName1 );
@@ -1082,9 +1084,9 @@ public class DelegatingMetastoreTest {
     delegatingMetaStore.setActiveMetaStoreName( activeName );
     delegatingMetaStore.createElement( testNamespace, mockElementType, mockElement );
     verify( activeMetaStore ).createElement( testNamespace, mockElementType, mockElement );
-    verify( inactiveMetaStore1, never() ).createElement( anyString(), any( IMetaStoreElementType.class ),
+    verify( inactiveMetaStore1, never() ).createElement( any(), any( IMetaStoreElementType.class ),
         any( IMetaStoreElement.class ) );
-    verify( inactiveMetaStore2, never() ).createElement( anyString(), any( IMetaStoreElementType.class ),
+    verify( inactiveMetaStore2, never() ).createElement( any(), any( IMetaStoreElementType.class ),
         any( IMetaStoreElement.class ) );
   }
 
@@ -1121,8 +1123,8 @@ public class DelegatingMetastoreTest {
     delegatingMetaStore.setActiveMetaStoreName( activeName );
     delegatingMetaStore.deleteElement( testNamespace, mockElementType, mockElementId );
     verify( activeMetaStore ).deleteElement( testNamespace, mockElementType, mockElementId );
-    verify( inactiveMetaStore1, never() ).deleteElement( anyString(), any( IMetaStoreElementType.class ), anyString() );
-    verify( inactiveMetaStore2, never() ).deleteElement( anyString(), any( IMetaStoreElementType.class ), anyString() );
+    verify( inactiveMetaStore1, never() ).deleteElement( any(), any( IMetaStoreElementType.class ), any() );
+    verify( inactiveMetaStore2, never() ).deleteElement( any(), any( IMetaStoreElementType.class ), any() );
   }
 
   @Test( expected = MetaStoreException.class )
@@ -1160,9 +1162,9 @@ public class DelegatingMetastoreTest {
     delegatingMetaStore.setActiveMetaStoreName( activeName );
     delegatingMetaStore.updateElement( testNamespace, mockElementType, mockElementId, mockElement );
     verify( activeMetaStore ).updateElement( testNamespace, mockElementType, mockElementId, mockElement );
-    verify( inactiveMetaStore1, never() ).updateElement( anyString(), any( IMetaStoreElementType.class ), anyString(),
+    verify( inactiveMetaStore1, never() ).updateElement( any(), any( IMetaStoreElementType.class ), any(),
         any( IMetaStoreElement.class ) );
-    verify( inactiveMetaStore2, never() ).updateElement( anyString(), any( IMetaStoreElementType.class ), anyString(),
+    verify( inactiveMetaStore2, never() ).updateElement( any(), any( IMetaStoreElementType.class ), any(),
         any( IMetaStoreElement.class ) );
   }
 
@@ -1227,9 +1229,9 @@ public class DelegatingMetastoreTest {
     delegatingMetaStore.setActiveMetaStoreName( activeName );
     delegatingMetaStore.newElement( mockElementType, mockElementId, value );
     verify( activeMetaStore ).newElement( mockElementType, mockElementId, value );
-    verify( inactiveMetaStore1, never() ).newElement( any( IMetaStoreElementType.class ), anyString(),
+    verify( inactiveMetaStore1, never() ).newElement( any( IMetaStoreElementType.class ), any(),
         any( Object.class ) );
-    verify( inactiveMetaStore2, never() ).newElement( any( IMetaStoreElementType.class ), anyString(),
+    verify( inactiveMetaStore2, never() ).newElement( any( IMetaStoreElementType.class ), any(),
         any( Object.class ) );
   }
 
@@ -1263,8 +1265,8 @@ public class DelegatingMetastoreTest {
     delegatingMetaStore.setActiveMetaStoreName( activeName );
     delegatingMetaStore.newAttribute( mockElementId, value );
     verify( activeMetaStore ).newAttribute( mockElementId, value );
-    verify( inactiveMetaStore1, never() ).newAttribute( anyString(), any( Object.class ) );
-    verify( inactiveMetaStore2, never() ).newAttribute( anyString(), any( Object.class ) );
+    verify( inactiveMetaStore1, never() ).newAttribute( any(), any( Object.class ) );
+    verify( inactiveMetaStore2, never() ).newAttribute( any(), any( Object.class ) );
   }
 
   @Test( expected = MetaStoreException.class )
@@ -1297,8 +1299,8 @@ public class DelegatingMetastoreTest {
     delegatingMetaStore.setActiveMetaStoreName( activeName );
     delegatingMetaStore.newElementOwner( mockElementId, ownerType );
     verify( activeMetaStore ).newElementOwner( mockElementId, ownerType );
-    verify( inactiveMetaStore1, never() ).newAttribute( anyString(), any( MetaStoreElementOwnerType.class ) );
-    verify( inactiveMetaStore2, never() ).newAttribute( anyString(), any( MetaStoreElementOwnerType.class ) );
+    verify( inactiveMetaStore1, never() ).newAttribute( any(), any( MetaStoreElementOwnerType.class ) );
+    verify( inactiveMetaStore2, never() ).newAttribute( any(), any( MetaStoreElementOwnerType.class ) );
   }
 
   @Test
