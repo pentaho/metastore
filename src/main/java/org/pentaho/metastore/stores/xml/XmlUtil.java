@@ -61,11 +61,5 @@ public class XmlUtil {
   public static String getElementFile( String rootFolder, String namespace, String elementTypeId, String elementId ) {
     return getElementTypeFolder( rootFolder, namespace, elementTypeId ) + File.separator + elementId + ".xml";
   }
-
-  public static DocumentBuilderFactory createSafeDocumentBuilderFactory() throws ParserConfigurationException {
-    DocumentBuilderFactory factory = DocumentBuilderFactory.newInstance();
-    factory.setFeature( XMLConstants.FEATURE_SECURE_PROCESSING, true );
-    factory.setFeature( "http://apache.org/xml/features/disallow-doctype-decl", true );
-    return factory;
-  }
+  
 }
