@@ -28,7 +28,6 @@ import javax.xml.transform.TransformerFactory;
 import javax.xml.transform.dom.DOMSource;
 import javax.xml.transform.stream.StreamResult;
 
-import org.pentaho.di.core.xml.XMLParserFactoryProducer;
 import org.pentaho.metastore.api.IMetaStoreElement;
 import org.pentaho.metastore.api.IMetaStoreElementType;
 import org.pentaho.metastore.api.exceptions.MetaStoreException;
@@ -74,7 +73,7 @@ public abstract class BaseXmlMetaStoreElement extends XmlMetaStoreAttribute impl
    */
   protected void loadFromStream( InputStream in ) throws MetaStoreException {
     try {
-      DocumentBuilderFactory documentBuilderFactory = XMLParserFactoryProducer.createSecureDocBuilderFactory();
+      DocumentBuilderFactory documentBuilderFactory = XmlUtil.createSafeDocumentBuilderFactory();
       DocumentBuilder documentBuilder = documentBuilderFactory.newDocumentBuilder();
       Document document = documentBuilder.parse( in );
       Element dataTypeElement = document.getDocumentElement();
@@ -106,7 +105,7 @@ public abstract class BaseXmlMetaStoreElement extends XmlMetaStoreAttribute impl
   protected void save( OutputStream out ) throws MetaStoreException {
 
     try {
-      DocumentBuilderFactory factory = XMLParserFactoryProducer.createSecureDocBuilderFactory();
+      DocumentBuilderFactory factory = XmlUtil.createSafeDocumentBuilderFactory();
       DocumentBuilder builder = factory.newDocumentBuilder();
       Document doc = builder.newDocument();
 
