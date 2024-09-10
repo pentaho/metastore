@@ -107,7 +107,7 @@ public abstract class BaseXmlMetaStoreElement extends XmlMetaStoreAttribute impl
 
     try {
       DocumentBuilderFactory documentBuilderFactory = XMLParserFactoryProducer.createSecureDocBuilderFactory();
-      DocumentBuilder builder = factory.newDocumentBuilder();
+      DocumentBuilder builder = documentBuilderFactory.newDocumentBuilder();
       Document doc = builder.newDocument();
 
       Element element = doc.createElement( XML_TAG );
