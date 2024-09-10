@@ -40,6 +40,7 @@ import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
+import org.pentaho.di.core.xml.XMLParserFactoryProducer;
 
 public abstract class BaseXmlMetaStoreElement extends XmlMetaStoreAttribute implements IMetaStoreElement {
 
@@ -73,7 +74,7 @@ public abstract class BaseXmlMetaStoreElement extends XmlMetaStoreAttribute impl
    */
   protected void loadFromStream( InputStream in ) throws MetaStoreException {
     try {
-      DocumentBuilderFactory documentBuilderFactory = XmlUtil.createSafeDocumentBuilderFactory();
+      DocumentBuilderFactory documentBuilderFactory = XMLParserFactoryProducer.createSecureDocBuilderFactory();
       DocumentBuilder documentBuilder = documentBuilderFactory.newDocumentBuilder();
       Document document = documentBuilder.parse( in );
       Element dataTypeElement = document.getDocumentElement();
@@ -105,7 +106,7 @@ public abstract class BaseXmlMetaStoreElement extends XmlMetaStoreAttribute impl
   protected void save( OutputStream out ) throws MetaStoreException {
 
     try {
-      DocumentBuilderFactory factory = XmlUtil.createSafeDocumentBuilderFactory();
+      DocumentBuilderFactory documentBuilderFactory = XMLParserFactoryProducer.createSecureDocBuilderFactory();
       DocumentBuilder builder = factory.newDocumentBuilder();
       Document doc = builder.newDocument();
 
