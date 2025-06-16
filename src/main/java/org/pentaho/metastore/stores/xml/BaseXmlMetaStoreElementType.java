@@ -114,9 +114,9 @@ public abstract class BaseXmlMetaStoreElementType extends BaseElementType {
       // Write the document content into the data type XML file
       //
       TransformerFactory transformerFactory = TransformerFactory.newInstance();
-      transformerFactory.setFeature( XMLConstants.FEATURE_SECURE_PROCESSING, true);
-      transformerFactory.setAttribute(XMLConstants.ACCESS_EXTERNAL_DTD, "");
-      transformerFactory.setAttribute(XMLConstants.ACCESS_EXTERNAL_STYLESHEET, "");
+      transformerFactory.setFeature( XMLConstants.FEATURE_SECURE_PROCESSING, true );
+      transformerFactory.setAttribute( XMLConstants.ACCESS_EXTERNAL_DTD, "" );
+      transformerFactory.setAttribute( XMLConstants.ACCESS_EXTERNAL_STYLESHEET, "" );
       Transformer transformer = transformerFactory.newTransformer();
       transformer.setOutputProperty( "{http://xml.apache.org/xslt}indent-amount", "2" );
       transformer.setOutputProperty( OutputKeys.INDENT, "yes" );
