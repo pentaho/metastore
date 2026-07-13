@@ -29,9 +29,9 @@ import org.pentaho.metastore.api.security.MetaStoreElementOwnerType;
  * <p>
  * It can be used to store and retrieve all sorts of data and metadata through a key/value interface which is typed and
  * supports namespaces.
- * 
+ *
  * @author matt
- * 
+ *
  */
 public interface IMetaStore {
 
@@ -432,4 +432,13 @@ public interface IMetaStore {
    * @return The password encoder used by the MetaStore.
    */
   public ITwoWayPasswordEncoder getTwoWayPasswordEncoder();
+
+  /**
+   * Ensure this metastore will be accessing fresh data, if applicable.
+   * @throws MetaStoreException
+   *           in case there is a problem in the underlying store
+   */
+  public default void refresh() throws MetaStoreException {
+    // no-op by default
+  }
 }
