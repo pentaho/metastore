@@ -16,6 +16,9 @@ package org.pentaho.metastore.util;
 
 import java.io.File;
 
+/**
+ * Provides file system utility methods.
+ */
 public class FileUtil {
 
   /**

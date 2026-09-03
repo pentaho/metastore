@@ -19,11 +19,7 @@ import java.util.List;
 import org.pentaho.metastore.api.IMetaStoreElementType;
 
 /**
- * This exception is thrown in case an entity is created in a metadata store when it already exists for the certain
- * namespace and data type.
- * 
- * @author matt
- * 
+ * Signals that an element type already exists in a metastore.
  */
 
 public class MetaStoreElementTypeExistsException extends MetaStoreException {
@@ -32,30 +28,64 @@ public class MetaStoreElementTypeExistsException extends MetaStoreException {
 
   private List<IMetaStoreElementType> dataTypes;
 
+  /**
+   * Creates an exception with existing element types.
+   *
+   * @param dataTypes the existing element types
+   */
   public MetaStoreElementTypeExistsException( List<IMetaStoreElementType> dataTypes ) {
     super();
     this.dataTypes = dataTypes;
   }
 
+  /**
+   * Creates an exception with existing element types and a message.
+   *
+   * @param dataTypes the existing element types
+   * @param message the exception message
+   */
   public MetaStoreElementTypeExistsException( List<IMetaStoreElementType> dataTypes, String message ) {
     super( message );
     this.dataTypes = dataTypes;
   }
 
+  /**
+   * Creates an exception with existing element types and a cause.
+   *
+   * @param dataTypes the existing element types
+   * @param cause the cause
+   */
   public MetaStoreElementTypeExistsException( List<IMetaStoreElementType> dataTypes, Throwable cause ) {
     super( cause );
     this.dataTypes = dataTypes;
   }
 
+  /**
+   * Creates an exception with existing element types, a message, and a cause.
+   *
+   * @param dataTypes the existing element types
+   * @param message the exception message
+   * @param cause the cause
+   */
   public MetaStoreElementTypeExistsException( List<IMetaStoreElementType> dataTypes, String message, Throwable cause ) {
     super( message, cause );
     this.dataTypes = dataTypes;
   }
 
+  /**
+   * Sets the existing element types.
+   *
+   * @param dataTypes the existing element types
+   */
   public void setDataTypes( List<IMetaStoreElementType> dataTypes ) {
     this.dataTypes = dataTypes;
   }
 
+  /**
+   * Gets the existing element types.
+   *
+   * @return the existing element types
+   */
   public List<IMetaStoreElementType> getDataTypes() {
     return dataTypes;
   }

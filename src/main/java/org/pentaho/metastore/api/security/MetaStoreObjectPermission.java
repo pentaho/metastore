@@ -14,6 +14,9 @@
 
 package org.pentaho.metastore.api.security;
 
+/**
+ * Identifies an operation that a user can perform on a metastore object.
+ */
 public enum MetaStoreObjectPermission {
   CREATE, READ, UPDATE, DELETE;
 }

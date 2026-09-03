@@ -12,8 +12,21 @@
 
 package org.pentaho.metastore.persist;
 
+/**
+ * Marks a field as a metastore element reference.
+ */
 public @interface MetaStoreElement {
+  /**
+   * Gets the element type for the reference.
+   *
+   * @return the element type
+   */
   MetaStoreElementType elementType();
 
+  /**
+   * Gets the reference name.
+   *
+   * @return the reference name
+   */
   String name();
 }

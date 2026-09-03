@@ -18,9 +18,6 @@ import org.pentaho.metastore.api.IMetaStoreElement;
 
 /**
  * Set of methods that are called in various parts of the meta store element life-cycle.
- * 
- * @author matt
- * 
  */
 public interface MetaStoreElementListener {
 
@@ -41,8 +38,8 @@ public interface MetaStoreElementListener {
    * 
    * @param namespace
    *          The namespace of the element
-   * @param dataType
-   *          The element type of the element
+  * @param elementTypeId
+  *          The element type ID of the element
    * @param oldElement
    *          The element before the change
    * @param newElement
@@ -56,8 +53,8 @@ public interface MetaStoreElementListener {
    * 
    * @param namespace
    *          The namespace of the element
-   * @param dataType
-   *          The element type ID of the element
+  * @param elementTypeId
+  *          The element type ID of the element
    * @param element
    *          The element that was deleted
    */
