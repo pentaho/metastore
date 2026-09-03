@@ -47,8 +47,6 @@ import org.pentaho.metastore.api.security.MetaStoreElementOwnerType;
  * operating mode will prevent write operations.
  * 
  * That way, if you ask for the list of elements, you will get a unique list (by element ID) based on all stores.
- * 
- * @author matt
  */
 public class DelegatingMetaStore implements IMetaStore {
 
@@ -61,32 +59,70 @@ public class DelegatingMetaStore implements IMetaStore {
   /** The two way password encoder to use */
   protected ITwoWayPasswordEncoder passwordEncoder;
 
+  /**
+   * Creates an empty delegating metastore.
+   */
   public DelegatingMetaStore() {
     metaStoreList = new ArrayList<IMetaStore>();
     passwordEncoder = new Base64TwoWayPasswordEncoder();
   }
 
+  /**
+   * Creates a delegating metastore with the specified stores.
+   *
+   * @param stores the stores to delegate to, in read order
+   */
   public DelegatingMetaStore( IMetaStore... stores ) {
     metaStoreList = new ArrayList<IMetaStore>( Arrays.asList( stores ) );
     passwordEncoder = new Base64TwoWayPasswordEncoder();
   }
 
+  /**
+   * Adds a metastore to the end of the delegation list.
+   *
+   * @param metaStore the metastore to add
+   * @throws MetaStoreException if the store cannot provide its name
+   */
   public void addMetaStore( IMetaStore metaStore ) throws MetaStoreException {
     metaStoreList.add( metaStore );
   }
 
+  /**
+   * Adds a metastore at the specified position.
+   *
+   * @param index the insertion position
+   * @param metaStore the metastore to add
+   * @throws MetaStoreException if the store cannot provide its name
+   */
   public void addMetaStore( int index, IMetaStore metaStore ) throws MetaStoreException {
     metaStoreList.add( index, metaStore );
   }
 
+  /**
+   * Removes a metastore by its name.
+   *
+   * @param metaStore the metastore to remove
+   * @return {@code true} when the metastore was removed
+   * @throws MetaStoreException if the store cannot provide its name
+   */
   public boolean removeMetaStore( IMetaStore metaStore ) throws MetaStoreException {
     return removeMetaStore( metaStore.getName() );
   }
 
+  /**
+   * Gets the configured metastore list.
+   *
+   * @return the metastore list
+   */
   public List<IMetaStore> getMetaStoreList() {
     return metaStoreList;
   }
 
+  /**
+   * Sets the configured metastore list.
+   *
+   * @param metaStoreList the metastore list
+   */
   public void setMetaStoreList( List<IMetaStore> metaStoreList ) {
     this.metaStoreList = metaStoreList;
   }
@@ -110,6 +146,13 @@ public class DelegatingMetaStore implements IMetaStore {
     throw new MetaStoreException( "Active metaStore not set but required for write operations." );
   }
 
+  /**
+   * Removes a metastore by name.
+   *
+   * @param metaStoreName the metastore name
+   * @return {@code true} when the metastore was removed
+   * @throws MetaStoreException if a metastore cannot provide its name
+   */
   public boolean removeMetaStore( String metaStoreName ) throws MetaStoreException {
     for ( Iterator<IMetaStore> it = metaStoreList.iterator(); it.hasNext(); ) {
       IMetaStore store = it.next();
@@ -124,14 +167,30 @@ public class DelegatingMetaStore implements IMetaStore {
     return false;
   }
 
+  /**
+   * Sets the active metastore name for write operations.
+   *
+   * @param activeMetaStoreName the active metastore name
+   */
   public void setActiveMetaStoreName( String activeMetaStoreName ) {
     this.activeMetaStoreName = activeMetaStoreName;
   }
 
+  /**
+   * Gets the active metastore name.
+   *
+   * @return the active metastore name, or {@code null} when no active store exists
+   */
   public String getActiveMetaStoreName() {
     return activeMetaStoreName;
   }
 
+  /**
+   * Gets the active metastore.
+   *
+   * @return the active metastore, or {@code null} when no active store exists
+   * @throws MetaStoreException if the active store cannot be found
+   */
   public IMetaStore getActiveMetaStore() throws MetaStoreException {
     if ( activeMetaStoreName == null ) {
       return null;
@@ -141,6 +200,13 @@ public class DelegatingMetaStore implements IMetaStore {
     return metaStore;
   }
 
+  /**
+   * Gets a configured metastore by name.
+   *
+   * @param metaStoreName the metastore name
+   * @return the matching metastore, or {@code null} when none matches
+   * @throws MetaStoreException if a metastore cannot provide its name
+   */
   public IMetaStore getMetaStore( String metaStoreName ) throws MetaStoreException {
     for ( IMetaStore metaStore : metaStoreList ) {
       if ( metaStore.getName().equalsIgnoreCase( metaStoreName ) ) {
@@ -353,6 +419,14 @@ public class DelegatingMetaStore implements IMetaStore {
     return getWriteMetaStore().newElement( elementType, id, value );
   }
 
+  /**
+   * Creates a new attribute through the active metastore.
+   *
+   * @param id the attribute ID
+   * @param value the attribute value
+   * @return the new attribute
+   * @throws MetaStoreException if no active metastore exists
+   */
   public IMetaStoreAttribute newAttribute( String id, Object value ) throws MetaStoreException {
     return getWriteMetaStore().newAttribute( id, value );
   }

@@ -14,9 +14,18 @@
 
 package org.pentaho.metastore.api.security;
 
+/**
+ * Identifies the type of owner for a metastore element.
+ */
 public enum MetaStoreElementOwnerType {
   USER, ROLE, SYSTEM_ROLE;
 
+  /**
+   * Converts a name to an owner type.
+   *
+   * @param string the owner type name
+   * @return the matching owner type, or {@code null} for an empty name
+   */
   public static MetaStoreElementOwnerType getOwnerType( String string ) {
     if ( string == null || string.length() == 0 ) {
       return null;
