@@ -13,8 +13,8 @@
 
 package org.pentaho.metastore.test.testclasses.my;
 
+import java.time.LocalDateTime;
 import java.util.ArrayList;
-import java.util.Date;
 import java.util.List;
 
 import org.pentaho.metastore.persist.MetaStoreAttribute;
@@ -49,7 +49,7 @@ public class MyElement {
   private boolean boolAttribute;
 
   @MetaStoreAttribute
-  private Date dateAttribute;
+  private LocalDateTime dateAttribute;
 
   @MetaStoreAttribute
   private List<MyElementAttr> subAttributes;
@@ -74,7 +74,7 @@ public class MyElement {
     stringList = new ArrayList<String>();
   }
 
-  public MyElement( String name, String myAttribute, String anotherAttribute, String passwordAttribute, int intAttribute, long longAttribute, boolean boolAttribute, Date dateAttribute ) {
+  public MyElement( String name, String myAttribute, String anotherAttribute, String passwordAttribute, int intAttribute, long longAttribute, boolean boolAttribute, LocalDateTime dateAttribute ) {
     this();
     this.name = name;
     this.myAttribute = myAttribute;
@@ -134,11 +134,11 @@ public class MyElement {
     this.longAttribute = longAttribute;
   }
 
-  public Date getDateAttribute() {
+  public LocalDateTime getDateAttribute() {
     return dateAttribute;
   }
 
-  public void setDateAttribute( Date dateAttribute ) {
+  public void setDateAttribute( LocalDateTime dateAttribute ) {
     this.dateAttribute = dateAttribute;
   }
 
