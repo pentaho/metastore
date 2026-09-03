@@ -30,9 +30,6 @@ import org.pentaho.metastore.api.security.MetaStoreElementOwnerType;
  * <p>
  * It can be used to store and retrieve all sorts of data and metadata through a key/value interface which is typed and
  * supports namespaces.
- *
- * @author matt
- *
  */
 public interface IMetaStore {
 

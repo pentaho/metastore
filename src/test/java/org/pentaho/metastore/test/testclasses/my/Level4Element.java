@@ -18,9 +18,6 @@ import org.pentaho.metastore.persist.MetaStoreElementType;
 
 import java.util.List;
 
-/**
- * @author Rowell Belen
- */
 @MetaStoreElementType(
     name = "Level4Element",
     description = "My Level 4 Element" )
