@@ -28,7 +28,6 @@ import java.util.EnumMap;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Date;
 
 final class MetaStoreAttributeLoader {
 
@@ -168,8 +167,8 @@ final class MetaStoreAttributeLoader {
     try {
       LocalDateTime localDateTime = childValue == null ? null : LocalDateTime.parse( childValue, dateFormat );
       Object dateValue = localDateTime;
-      if ( Date.class.equals( field.getType() ) && localDateTime != null ) {
-        dateValue = Date.from( localDateTime.atZone( ZoneId.systemDefault() ).toInstant() );
+      if ( java.util.Date.class.equals( field.getType() ) && localDateTime != null ) {
+        dateValue = java.util.Date.from( localDateTime.atZone( ZoneId.systemDefault() ).toInstant() );
       }
       setAttribute( parentObject, parentClass, field, field.getType(), dateValue );
     } catch ( Exception e ) {
@@ -364,7 +363,7 @@ final class MetaStoreAttributeLoader {
   }
 
   private Map<String, String> getObjectFactoryContext( IMetaStoreAttribute parentElement ) {
-    Map<String, String> context = new HashMap<String, String>();
+    Map<String, String> context = new HashMap<>();
     if ( parentElement != null ) {
       IMetaStoreAttribute contextChild = parentElement.getChild( OBJECT_FACTORY_CONTEXT );
       if ( contextChild != null ) {

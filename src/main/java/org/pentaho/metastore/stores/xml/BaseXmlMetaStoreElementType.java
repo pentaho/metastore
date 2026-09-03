@@ -18,6 +18,7 @@ package org.pentaho.metastore.stores.xml;
 import org.pentaho.metastore.api.BaseElementType;
 import org.pentaho.metastore.api.exceptions.MetaStoreException;
 import java.io.InputStream;
+import java.nio.file.InvalidPathException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import org.w3c.dom.Document;
@@ -67,8 +68,15 @@ public abstract class BaseXmlMetaStoreElementType extends BaseElementType {
 
   }
 
+  // filename is used only for the error message and normalized display; the caller already opened the stream.
   protected void loadFromStream( String filename, InputStream input ) throws MetaStoreException {
-    loadFromPath( Paths.get( filename ).normalize(), input );
+    Path path;
+    try {
+      path = Paths.get( filename ).normalize();
+    } catch ( InvalidPathException e ) {
+      throw new MetaStoreException( "Invalid file path '" + filename + "'", e );
+    }
+    loadFromPath( path, input );
   }
 
   void loadFromPath( Path filename, InputStream input ) throws MetaStoreException {

@@ -123,6 +123,8 @@ public class XmlUtil {
     return resolvePath( rootFolder, namespace, elementTypeId, elementId + ".xml" );
   }
 
+  // Single choke point: every namespace/elementTypeId/elementId segment from getNamespaceFolder,
+  // getElementTypeFolder, getElementTypeFile, and getElementFile passes through this containment check.
   private static Path resolvePath( Path rootFolder, String... pathSegments ) {
     Path normalizedRoot = rootFolder.normalize();
     Path resolvedPath = normalizedRoot;

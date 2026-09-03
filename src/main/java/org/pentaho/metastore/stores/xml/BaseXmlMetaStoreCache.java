@@ -12,6 +12,7 @@
 
 package org.pentaho.metastore.stores.xml;
 
+import java.nio.file.InvalidPathException;
 import java.nio.file.Paths;
 import java.util.Collections;
 import java.util.HashMap;
@@ -136,8 +137,16 @@ public abstract class BaseXmlMetaStoreCache implements XmlMetaStoreCache {
 
   protected abstract <K, V> Map<K, V> createStorage();
 
+  // This is a cache-key normalizer only; it does not open, read, or write any file.
   private String normalizePath( String path ) {
-    return path == null ? null : Paths.get( path ).normalize().toString();
+    if ( path == null ) {
+      return null;
+    }
+    try {
+      return Paths.get( path ).normalize().toString();
+    } catch ( InvalidPathException e ) {
+      return path;
+    }
   }
 
   protected abstract ElementType createElementType( String elementId );
