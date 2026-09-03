@@ -23,6 +23,7 @@ import org.pentaho.metastore.api.IMetaStoreElement;
 import org.pentaho.metastore.api.IMetaStoreElementType;
 import org.pentaho.metastore.api.exceptions.MetaStoreException;
 import org.pentaho.metastore.persist.IMetaStoreObjectFactory;
+import org.pentaho.metastore.persist.MetaStoreAttribute;
 import org.pentaho.metastore.persist.MetaStoreElementType;
 import org.pentaho.metastore.persist.MetaStoreFactory;
 import org.pentaho.metastore.stores.memory.MemoryMetaStore;
@@ -48,6 +49,7 @@ import org.pentaho.metastore.util.MetaStoreUtil;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Date;
+import java.time.LocalDateTime;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -65,7 +67,7 @@ public class MetaStoreFactoryTest extends TestCase {
   public static final int INT = 3;
   public static final long LONG = 4;
   public static final boolean BOOL = true;
-  public static final Date DATE = new Date();
+  public static final LocalDateTime DATE = LocalDateTime.of( 2024, 1, 2, 3, 4, 5, 678000000 );
   public static final int NR_ATTR = 10;
   public static final int NR_NAME = 5;
   public static final int NR_FILENAME = 5;
@@ -82,7 +84,9 @@ public class MetaStoreFactoryTest extends TestCase {
     String targetFieldName = "Target Field Name";
     String parameterName = "Parameter Name";
 
-    IMetaStore metaStore = new MemoryMetaStore();
+    MemoryMetaStore memoryMetaStore = new MemoryMetaStore();
+    memoryMetaStore.setName( "memory" );
+    IMetaStore metaStore = memoryMetaStore;
 
     MetaStoreFactory<MyMigrationElement> factory =
       new MetaStoreFactory<MyMigrationElement>( MyMigrationElement.class, metaStore, namespace );
@@ -127,13 +131,15 @@ public class MetaStoreFactoryTest extends TestCase {
     assertEquals( loadedElement.getParameterName(), parameterName );
 
     // Test the variation of the step name id
+    String existingElementId = element.getId();
     element = metaStore.newElement();
+    element.setId( existingElementId );
     element.setName( elementName );
     element.setElementType( elementType );
 
     element.addChild( metaStore.newAttribute( "stepname", stepName ) );
 
-    metaStore.createElement( namespace, elementType, element );
+    metaStore.updateElement( namespace, elementType, existingElementId, element );
 
     loadedElement = factory.loadElement( elementName );
 
@@ -190,24 +196,30 @@ public class MetaStoreFactoryTest extends TestCase {
     // Verify list element details...
     //
     IMetaStoreElement element = metaStore.getElementByName( "custom", factory.getElementType(), NAME );
-    assertNotNull( element );
+    assertLoadedMyElement( me, verify );
+    assertStoredMyElement( metaStore, element, factory );
+    assertSubAttributes( verify );
+    assertReferencedMyOtherElement( myOtherElement, verify );
+    assertStringList( stringList, verify );
+    assertFactoryContents( factory );
+  }
 
-    // Verify the general idea
-    //
-    assertNotNull( verify );
-    assertEquals( ATTR, verify.getMyAttribute() );
-    assertEquals( ANOTHER, verify.getAnotherAttribute() );
-    assertEquals( PASSWORD, verify.getPasswordAttribute() );
-    assertEquals( INT, verify.getIntAttribute() );
-    assertEquals( LONG, verify.getLongAttribute() );
-    assertEquals( BOOL, verify.isBoolAttribute() );
-    assertEquals( DATE, verify.getDateAttribute() );
-    assertEquals( me.getSubAttributes().size(), verify.getSubAttributes().size() );
-    assertEquals( me.getNameElement(), verify.getNameElement() );
-    assertEquals( me.getFilenameElement(), verify.getFilenameElement() );
+  private void assertLoadedMyElement( MyElement expected, MyElement actual ) {
+    assertNotNull( actual );
+    assertEquals( expected.getMyAttribute(), actual.getMyAttribute() );
+    assertEquals( expected.getAnotherAttribute(), actual.getAnotherAttribute() );
+    assertEquals( expected.getPasswordAttribute(), actual.getPasswordAttribute() );
+    assertEquals( expected.getIntAttribute(), actual.getIntAttribute() );
+    assertEquals( expected.getLongAttribute(), actual.getLongAttribute() );
+    assertEquals( expected.isBoolAttribute(), actual.isBoolAttribute() );
+    assertEquals( expected.getDateAttribute(), actual.getDateAttribute() );
+    assertEquals( expected.getSubAttributes().size(), actual.getSubAttributes().size() );
+    assertEquals( expected.getNameElement(), actual.getNameElement() );
+    assertEquals( expected.getFilenameElement(), actual.getFilenameElement() );
+  }
 
-    // verify the details...
-    //
+  private void assertStoredMyElement( IMetaStore metaStore, IMetaStoreElement element,
+                                      MetaStoreFactory<MyElement> factory ) throws MetaStoreException {
     assertTrue( metaStore.namespaceExists( "custom" ) );
     IMetaStoreElementType elementType = factory.getElementType();
     assertNotNull( elementType );
@@ -225,39 +237,40 @@ public class MetaStoreFactoryTest extends TestCase {
     child = element.getChild( "anotherAttribute" );
     assertNotNull( child );
     assertEquals( ANOTHER, MetaStoreUtil.getAttributeString( child ) );
+  }
 
-    // Verify the child attributes as well...
-    // This also verifies that the attributes are in the right order.
-    // The list can't be re-ordered after loading.
-    //
+  private void assertSubAttributes( MyElement element ) {
     for ( int i = 0; i < NR_ATTR; i++ ) {
-      MyElementAttr attr = verify.getSubAttributes().get( i );
-      assertEquals( "key" + i, attr.getKey() );
-      assertEquals( "value" + i, attr.getValue() );
-      assertEquals( "desc" + i, attr.getDescription() );
+      MyElementAttr attribute = element.getSubAttributes().get( i );
+      assertEquals( "key" + i, attribute.getKey() );
+      assertEquals( "value" + i, attribute.getValue() );
+      assertEquals( "desc" + i, attribute.getDescription() );
     }
+  }
 
-    // Verify the referenced MyOtherElement
-    //
-    MyOtherElement verifyOtherElement = verify.getMyOtherElement();
-    assertNotNull( verifyOtherElement );
-    assertEquals( myOtherElement.getName(), verifyOtherElement.getName() );
-    assertEquals( myOtherElement.getSomeAttribute(), verifyOtherElement.getSomeAttribute() );
+  private void assertReferencedMyOtherElement( MyOtherElement expected, MyElement actual ) {
+    MyOtherElement actualOtherElement = actual.getMyOtherElement();
+    assertNotNull( actualOtherElement );
+    assertEquals( expected.getName(), actualOtherElement.getName() );
+    assertEquals( expected.getSomeAttribute(), actualOtherElement.getSomeAttribute() );
+  }
 
-    // verify that the String list is loaded...
-    List<String> verifyList = verify.getStringList();
-    assertEquals( stringList.size(), verifyList.size() );
-    for ( int i = 0; i < stringList.size(); i++ ) {
-      assertEquals( stringList.get( i ), verifyList.get( i ) );
+  private void assertStringList( List<String> expected, MyElement actual ) {
+    List<String> actualList = actual.getStringList();
+    assertEquals( expected.size(), actualList.size() );
+    for ( int i = 0; i < expected.size(); i++ ) {
+      assertEquals( expected.get( i ), actualList.get( i ) );
     }
+  }
 
+  private void assertFactoryContents( MetaStoreFactory<MyElement> factory ) throws MetaStoreException {
     List<String> names = factory.getElementNames();
     assertEquals( 1, names.size() );
     assertEquals( NAME, names.get( 0 ) );
 
-    List<MyElement> list = factory.getElements();
-    assertEquals( 1, list.size() );
-    assertEquals( NAME, list.get( 0 ).getName() );
+    List<MyElement> elements = factory.getElements();
+    assertEquals( 1, elements.size() );
+    assertEquals( NAME, elements.get( 0 ).getName() );
 
     factory.deleteElement( NAME );
     assertEquals( 0, factory.getElementNames().size() );
@@ -288,14 +301,14 @@ public class MetaStoreFactoryTest extends TestCase {
     A _a = factoryA.loadElement( "a" );
     assertNotNull( _a );
     assertEquals( 4, _a.getBees().size() );
-    assertEquals( "1", a.getBees().get( 0 ).getName() );
-    assertEquals( true, a.getBees().get( 0 ).isShared() );
-    assertEquals( "2", a.getBees().get( 1 ).getName() );
-    assertEquals( true, a.getBees().get( 1 ).isShared() );
-    assertEquals( "3", a.getBees().get( 2 ).getName() );
-    assertEquals( false, a.getBees().get( 2 ).isShared() );
-    assertEquals( "4", a.getBees().get( 3 ).getName() );
-    assertEquals( true, a.getBees().get( 3 ).isShared() );
+    assertEquals( "1", _a.getBees().get( 0 ).getName() );
+    assertEquals( true, _a.getBees().get( 0 ).isShared() );
+    assertEquals( "2", _a.getBees().get( 1 ).getName() );
+    assertEquals( true, _a.getBees().get( 1 ).isShared() );
+    assertEquals( "3", _a.getBees().get( 2 ).getName() );
+    assertEquals( false, _a.getBees().get( 2 ).isShared() );
+    assertEquals( "4", _a.getBees().get( 3 ).getName() );
+    assertEquals( true, _a.getBees().get( 3 ).isShared() );
 
     assertNotNull( _a.getB() );
     assertEquals( "b", _a.getB().getName() );
@@ -326,14 +339,14 @@ public class MetaStoreFactoryTest extends TestCase {
     X _x = factoryX.loadElement( "x" );
     assertNotNull( _x );
     assertEquals( 4, _x.getYs().size() );
-    assertEquals( "1", x.getYs().get( 0 ).getName() );
-    assertEquals( "desc1", x.getYs().get( 0 ).getDescription() );
-    assertEquals( "2", x.getYs().get( 1 ).getName() );
-    assertEquals( "desc2", x.getYs().get( 1 ).getDescription() );
-    assertEquals( "3", x.getYs().get( 2 ).getName() );
-    assertEquals( "desc3", x.getYs().get( 2 ).getDescription() );
-    assertEquals( "4", x.getYs().get( 3 ).getName() );
-    assertEquals( "desc4", x.getYs().get( 3 ).getDescription() );
+    assertEquals( "1", _x.getYs().get( 0 ).getName() );
+    assertEquals( "desc1", _x.getYs().get( 0 ).getDescription() );
+    assertEquals( "2", _x.getYs().get( 1 ).getName() );
+    assertEquals( "desc2", _x.getYs().get( 1 ).getDescription() );
+    assertEquals( "3", _x.getYs().get( 2 ).getName() );
+    assertEquals( "desc3", _x.getYs().get( 2 ).getDescription() );
+    assertEquals( "4", _x.getYs().get( 3 ).getName() );
+    assertEquals( "desc4", _x.getYs().get( 3 ).getDescription() );
 
     assertNotNull( _x.getY() );
     assertEquals( "y", _x.getY().getName() );
@@ -346,7 +359,6 @@ public class MetaStoreFactoryTest extends TestCase {
    * 
    * @throws Exception
    */
-  @SuppressWarnings( "unchecked" )
   @Test
   public void testCube() throws Exception {
     IMetaStore metaStore = new MemoryMetaStore();
@@ -370,7 +382,7 @@ public class MetaStoreFactoryTest extends TestCase {
       @Override
       public Object answer( InvocationOnMock invocation ) throws Throwable {
         String className = (String) invocation.getArguments()[0];
-        return Class.forName( className ).newInstance();
+        return Class.forName( className ).getDeclaredConstructor().newInstance();
       }
     } );
 
@@ -381,56 +393,10 @@ public class MetaStoreFactoryTest extends TestCase {
     Cube verify = factoryCube.loadElement( cube.getName() );
 
     assertEquals( cube.getName(), verify.getName() );
-    assertEquals( cube.getDimensions().size(), verify.getDimensions().size() );
-    for ( int i = 0; i < cube.getDimensions().size(); i++ ) {
-      Dimension dimension = cube.getDimensions().get( i );
-      Dimension verifyDimension = verify.getDimensions().get( i );
-      assertEquals( dimension.getName(), verifyDimension.getName() );
-      assertEquals( dimension.getDimensionType(), verifyDimension.getDimensionType() );
-      assertEquals( dimension.getAttributes().size(), verifyDimension.getAttributes().size() );
-      for ( int x = 0; x < dimension.getAttributes().size(); x++ ) {
-        DimensionAttribute attr = dimension.getAttributes().get( i );
-        DimensionAttribute attrVerify = verifyDimension.getAttributes().get( i );
-        assertEquals( attr.getName(), attrVerify.getName() );
-        assertEquals( attr.getDescription(), attrVerify.getDescription() );
-        assertEquals( attr.getSomeOtherStuff(), attrVerify.getSomeOtherStuff() );
-      }
-    }
-
-    assertEquals( cube.getKpis().size(), verify.getKpis().size() );
-    for ( int i = 0; i < cube.getKpis().size(); i++ ) {
-      Kpi kpi = cube.getKpis().get( i );
-      Kpi verifyKpi = verify.getKpis().get( i );
-      assertEquals( kpi.getName(), verifyKpi.getName() );
-      assertEquals( kpi.getDescription(), verifyKpi.getDescription() );
-      assertEquals( kpi.getOtherDetails(), verifyKpi.getOtherDetails() );
-    }
-
-    assertNotNull( verify.getJunkDimension() );
-    Dimension junk = cube.getJunkDimension();
-    Dimension junkVerify = verify.getJunkDimension();
-    assertEquals( junk.getName(), junkVerify.getName() );
-    assertEquals( junk.getAttributes().size(), junkVerify.getAttributes().size() );
-    for ( int i = 0; i < junk.getAttributes().size(); i++ ) {
-      DimensionAttribute attr = junk.getAttributes().get( i );
-      DimensionAttribute attrVerify = junkVerify.getAttributes().get( i );
-      assertEquals( attr.getName(), attrVerify.getName() );
-      assertEquals( attr.getDescription(), attrVerify.getDescription() );
-      assertEquals( attr.getSomeOtherStuff(), attrVerify.getSomeOtherStuff() );
-    }
-
-    assertNotNull( verify.getNonSharedDimension() );
-    Dimension nonShared = cube.getNonSharedDimension();
-    Dimension nonSharedVerify = verify.getNonSharedDimension();
-    assertEquals( nonShared.getName(), nonSharedVerify.getName() );
-    assertEquals( nonShared.getAttributes().size(), nonSharedVerify.getAttributes().size() );
-    for ( int i = 0; i < junk.getAttributes().size(); i++ ) {
-      DimensionAttribute attr = nonShared.getAttributes().get( i );
-      DimensionAttribute attrVerify = nonSharedVerify.getAttributes().get( i );
-      assertEquals( attr.getName(), attrVerify.getName() );
-      assertEquals( attr.getDescription(), attrVerify.getDescription() );
-      assertEquals( attr.getSomeOtherStuff(), attrVerify.getSomeOtherStuff() );
-    }
+    assertCubeDimensions( cube, verify );
+    assertCubeKpis( cube, verify );
+    assertDimension( cube.getJunkDimension(), verify.getJunkDimension() );
+    assertDimension( cube.getNonSharedDimension(), verify.getNonSharedDimension() );
 
     // Make sure that nonShared and product are not shared.
     // We can load them with the dimension factory and they should not come back.
@@ -438,17 +404,54 @@ public class MetaStoreFactoryTest extends TestCase {
     assertNull( factoryDimension.loadElement( "analyticalDim" ) );
     assertNull( factoryDimension.loadElement( "product" ) );
 
-    assertNotNull( verify.getMainKpi() );
-    assertEquals( cube.getMainKpi().getName(), verify.getMainKpi().getName() );
-    assertEquals( cube.getMainKpi().getDescription(), verify.getMainKpi().getDescription() );
-    assertEquals( cube.getMainKpi().getOtherDetails(), verify.getMainKpi().getOtherDetails() );
+    assertKpi( cube.getMainKpi(), verify.getMainKpi() );
+    assertObjectFactoryInteractions( objectFactory, contextCount.get() );
+  }
 
-    for ( int i = 0; i < contextCount.get(); i++ ) {
+  private void assertCubeDimensions( Cube expected, Cube actual ) {
+    assertEquals( expected.getDimensions().size(), actual.getDimensions().size() );
+    for ( int i = 0; i < expected.getDimensions().size(); i++ ) {
+      assertDimension( expected.getDimensions().get( i ), actual.getDimensions().get( i ) );
+    }
+  }
+
+  private void assertDimension( Dimension expected, Dimension actual ) {
+    assertNotNull( actual );
+    assertEquals( expected.getName(), actual.getName() );
+    assertEquals( expected.getDimensionType(), actual.getDimensionType() );
+    assertEquals( expected.getAttributes().size(), actual.getAttributes().size() );
+    for ( int i = 0; i < expected.getAttributes().size(); i++ ) {
+      assertDimensionAttribute( expected.getAttributes().get( i ), actual.getAttributes().get( i ) );
+    }
+  }
+
+  private void assertDimensionAttribute( DimensionAttribute expected, DimensionAttribute actual ) {
+    assertEquals( expected.getName(), actual.getName() );
+    assertEquals( expected.getDescription(), actual.getDescription() );
+    assertEquals( expected.getSomeOtherStuff(), actual.getSomeOtherStuff() );
+  }
+
+  private void assertCubeKpis( Cube expected, Cube actual ) {
+    assertEquals( expected.getKpis().size(), actual.getKpis().size() );
+    for ( int i = 0; i < expected.getKpis().size(); i++ ) {
+      assertKpi( expected.getKpis().get( i ), actual.getKpis().get( i ) );
+    }
+  }
+
+  private void assertKpi( Kpi expected, Kpi actual ) {
+    assertNotNull( actual );
+    assertEquals( expected.getName(), actual.getName() );
+    assertEquals( expected.getDescription(), actual.getDescription() );
+    assertEquals( expected.getOtherDetails(), actual.getOtherDetails() );
+  }
+
+  private void assertObjectFactoryInteractions( IMetaStoreObjectFactory objectFactory, int contextCount )
+    throws MetaStoreException {
+    for ( int i = 0; i < contextCount; i++ ) {
       Map<String, String> context = new HashMap<String, String>();
       context.put( "context-num", String.valueOf( i ) );
       verify( objectFactory ).instantiateClass( anyString(), eq( context ) );
     }
-
   }
 
   private Cube generateCube() {
@@ -531,6 +534,168 @@ public class MetaStoreFactoryTest extends TestCase {
     assertEquals( Arrays.asList( NAME ), factory.getElementNames() );
   }
 
+  @Test
+  public void testLoadElementWithInvalidIntegerAttribute() throws Exception {
+    IMetaStore metaStore = new MemoryMetaStore();
+    MetaStoreFactory<MyElement> factory = new MetaStoreFactory<>( MyElement.class, metaStore, "custom" );
+    MyElement element = new MyElement( NAME, ATTR, ANOTHER, PASSWORD, INT, LONG, BOOL, DATE );
+
+    factory.saveElement( element );
+    getStoredElement( metaStore, factory, NAME ).getChild( "intAttribute" ).setValue( "invalid" );
+
+    try {
+      factory.loadElement( NAME );
+      fail( "Expected invalid integer error" );
+    } catch ( NumberFormatException exception ) {
+      assertTrue( exception.getMessage().contains( "invalid" ) );
+    }
+  }
+
+  @Test
+  public void testLoadElementWithInvalidLongAttribute() throws Exception {
+    IMetaStore metaStore = new MemoryMetaStore();
+    MetaStoreFactory<MyElement> factory = new MetaStoreFactory<>( MyElement.class, metaStore, "custom" );
+    MyElement element = new MyElement( NAME, ATTR, ANOTHER, PASSWORD, INT, LONG, BOOL, DATE );
+
+    factory.saveElement( element );
+    getStoredElement( metaStore, factory, NAME ).getChild( "longAttribute" ).setValue( "invalid" );
+
+    try {
+      factory.loadElement( NAME );
+      fail( "Expected invalid long error" );
+    } catch ( NumberFormatException exception ) {
+      assertTrue( exception.getMessage().contains( "invalid" ) );
+    }
+  }
+
+  @Test
+  public void testLoadElementWithInvalidEnumAttribute() throws Exception {
+    IMetaStore metaStore = new MemoryMetaStore();
+    MetaStoreFactory<Dimension> factory = new MetaStoreFactory<>( Dimension.class, metaStore, "custom" );
+    Dimension dimension = new Dimension();
+    dimension.setName( NAME );
+    dimension.setDimensionType( DimensionType.SCD );
+
+    factory.saveElement( dimension );
+    getStoredElement( metaStore, factory, NAME ).getChild( "dimension_type" ).setValue( "invalid" );
+
+    try {
+      factory.loadElement( NAME );
+      fail( "Expected invalid enum error" );
+    } catch ( IllegalArgumentException exception ) {
+      assertTrue( exception.getMessage().contains( "invalid" ) );
+    }
+  }
+
+  @Test
+  public void testLoadElementWithInvalidDateAttribute() throws Exception {
+    IMetaStore metaStore = new MemoryMetaStore();
+    MetaStoreFactory<MyElement> factory = new MetaStoreFactory<>( MyElement.class, metaStore, "custom" );
+    MyElement element = new MyElement( NAME, ATTR, ANOTHER, PASSWORD, INT, LONG, BOOL, DATE );
+
+    factory.saveElement( element );
+    getStoredElement( metaStore, factory, NAME ).getChild( "dateAttribute" ).setValue( "invalid" );
+
+    try {
+      factory.loadElement( NAME );
+      fail( "Expected invalid date error" );
+    } catch ( MetaStoreException exception ) {
+      assertTrue( exception.getMessage().contains( "Unexpected date parsing problem" ) );
+    }
+  }
+
+  @Test
+  public void testLegacyDateAttributeRoundTrip() throws Exception {
+    IMetaStore metaStore = new MemoryMetaStore();
+    MetaStoreFactory<LegacyDateElement> factory =
+      new MetaStoreFactory<>( LegacyDateElement.class, metaStore, "custom" );
+    Date date = new Date( 1704164645678L );
+    LegacyDateElement element = new LegacyDateElement();
+    element.setName( NAME );
+    element.setDate( date );
+
+    factory.saveElement( element );
+
+    LegacyDateElement loaded = factory.loadElement( NAME );
+    assertEquals( date, loaded.getDate() );
+  }
+
+  @Test
+  public void testLoadElementWithoutNameReferenceList() throws Exception {
+    IMetaStore metaStore = new MemoryMetaStore();
+    MetaStoreFactory<MyElement> factory = new MetaStoreFactory<>( MyElement.class, metaStore, "custom" );
+    MyElement element = new MyElement();
+    element.setName( NAME );
+    element.setNameElement( new MyNameElement( "name", "description", "color" ) );
+
+    factory.saveElement( element );
+
+    try {
+      factory.loadElement( NAME );
+      fail( "Expected missing name reference list error" );
+    } catch ( MetaStoreException exception ) {
+      assertTrue( exception.getCause().getMessage().contains( "Unable to find reference list" ) );
+    }
+  }
+
+  @Test
+  public void testLoadElementWithoutFilenameReferenceList() throws Exception {
+    IMetaStore metaStore = new MemoryMetaStore();
+    MetaStoreFactory<MyElement> factory = new MetaStoreFactory<>( MyElement.class, metaStore, "custom" );
+    MyElement element = new MyElement();
+    element.setName( NAME );
+    element.setFilenameElement( new MyFilenameElement( "filename", "size", "gender" ) );
+
+    factory.saveElement( element );
+
+    try {
+      factory.loadElement( NAME );
+      fail( "Expected missing filename reference list error" );
+    } catch ( MetaStoreException exception ) {
+      assertTrue( exception.getCause().getMessage().contains( "Unable to find reference list" ) );
+    }
+  }
+
+  @Test
+  public void testLoadElementWithoutFactoryReference() throws Exception {
+    IMetaStore metaStore = new MemoryMetaStore();
+    MetaStoreFactory<MyOtherElement> otherFactory = new MetaStoreFactory<>( MyOtherElement.class, metaStore, "custom" );
+    MetaStoreFactory<MyElement> sourceFactory = new MetaStoreFactory<>( MyElement.class, metaStore, "custom" );
+    MyElement element = new MyElement();
+    element.setName( NAME );
+    element.setMyOtherElement( new MyOtherElement( "other", ATTR ) );
+    sourceFactory.addNameFactory( MyElement.FACTORY_OTHER_ELEMENT, otherFactory );
+
+    sourceFactory.saveElement( element );
+
+    MetaStoreFactory<MyElement> targetFactory = new MetaStoreFactory<>( MyElement.class, metaStore, "custom" );
+    try {
+      targetFactory.loadElement( NAME );
+      fail( "Expected missing factory reference error" );
+    } catch ( MetaStoreException exception ) {
+      assertTrue( exception.getCause().getMessage().contains( "Unable to find factory" ) );
+    }
+  }
+
+  @Test
+  public void testLoadElementWithoutSetter() throws Exception {
+    IMetaStore metaStore = new MemoryMetaStore();
+    MetaStoreFactory<MissingSetterElement> factory =
+      new MetaStoreFactory<>( MissingSetterElement.class, metaStore, "custom" );
+    MissingSetterElement element = new MissingSetterElement();
+    element.setName( NAME );
+    element.value = ATTR;
+
+    factory.saveElement( element );
+
+    try {
+      factory.loadElement( NAME );
+      fail( "Expected missing setter error" );
+    } catch ( MetaStoreException exception ) {
+      assertTrue( exception.getMessage().contains( "Unable to find setter" ) );
+    }
+  }
+
   private List<Kpi> generateKpis() {
     List<Kpi> list = new ArrayList<Kpi>();
     for ( int i = 0; i < 5; i++ ) {
@@ -538,6 +703,7 @@ public class MetaStoreFactoryTest extends TestCase {
       kpi.setName( "kpi-" + ( i + 1 ) );
       kpi.setDescription( "desc-" + ( i + 1 ) );
       kpi.setOtherDetails( "othd-" + ( i + 1 ) );
+      list.add( kpi );
     }
     return list;
   }
@@ -580,5 +746,57 @@ public class MetaStoreFactoryTest extends TestCase {
     assertNotNull( element.getChildElement() );
     assertEquals( ATTR, elementAfterSave.getChildElement().getProperty1() );
     assertEquals( ANOTHER, elementAfterSave.getChildElement().getProperty2() );
+  }
+
+  private IMetaStoreElement getStoredElement( IMetaStore metaStore, MetaStoreFactory<?> factory, String name )
+    throws MetaStoreException {
+    return metaStore.getElementByName( factory.getNamespace(), factory.getElementType(), name );
+  }
+
+  @MetaStoreElementType( name = "Missing setter", description = "Test element without a setter" )
+  public static class MissingSetterElement {
+    private String name;
+
+    @MetaStoreAttribute
+    private String value;
+
+    public String getName() {
+      return name;
+    }
+
+    public void setName( String name ) {
+      this.name = name;
+    }
+
+    public String getValue() {
+      return value;
+    }
+  }
+
+  @MetaStoreElementType( name = "Legacy date", description = "Test element with a legacy Date attribute" )
+  public static class LegacyDateElement {
+    private String name;
+
+    @MetaStoreAttribute
+    private Date date;
+
+    public LegacyDateElement() {
+    }
+
+    public String getName() {
+      return name;
+    }
+
+    public void setName( String name ) {
+      this.name = name;
+    }
+
+    public Date getDate() {
+      return date;
+    }
+
+    public void setDate( Date date ) {
+      this.date = date;
+    }
   }
 }
