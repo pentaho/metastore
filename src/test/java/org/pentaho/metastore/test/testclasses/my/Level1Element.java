@@ -19,14 +19,10 @@ import org.pentaho.metastore.persist.MetaStoreElementType;
 import java.util.ArrayList;
 import java.util.List;
 
-/**
- * @author Rowell Belen
- */
-
 @MetaStoreElementType(
     name = "Level1Element",
     description = "My Level 1 Element" )
-public class Level1Element extends ArrayList {
+public class Level1Element extends ArrayList<Object> {
 
   @MetaStoreAttribute
   private String name;
