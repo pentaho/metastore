@@ -14,6 +14,8 @@
 
 package org.pentaho.metastore.stores.xml;
 
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Iterator;
@@ -27,8 +29,12 @@ import org.w3c.dom.Element;
 import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
 
+/**
+ * Stores a metastore attribute in XML form.
+ */
 public class XmlMetaStoreAttribute implements IMetaStoreAttribute {
 
+  /** The XML tag for an attribute. */
   public static final String XML_TAG = "attribute";
 
   protected String id;
@@ -38,12 +44,21 @@ public class XmlMetaStoreAttribute implements IMetaStoreAttribute {
 
   protected String filename;
 
+  /**
+   * Creates an empty XML attribute.
+   */
   public XmlMetaStoreAttribute() {
     children = new HashMap<String, IMetaStoreAttribute>();
     this.id = null;
     this.value = null;
   }
 
+  /**
+   * Creates an XML attribute with an ID and value.
+   *
+   * @param id the attribute ID
+   * @param value the attribute value
+   */
   public XmlMetaStoreAttribute( String id, Object value ) {
     this();
     this.id = id;
@@ -51,9 +66,9 @@ public class XmlMetaStoreAttribute implements IMetaStoreAttribute {
   }
 
   /**
-   * Duplicate the element data into this structure.
-   * 
-   * @param element
+  * Copies an attribute and its children.
+  *
+  * @param element the attribute to copy
    */
   public XmlMetaStoreAttribute( IMetaStoreAttribute element ) {
     this();
@@ -66,33 +81,59 @@ public class XmlMetaStoreAttribute implements IMetaStoreAttribute {
 
   protected void loadAttribute( Node attributeNode ) {
     NodeList elementNodes = attributeNode.getChildNodes();
-    for ( int e = 0; e < elementNodes.getLength(); e++ ) {
-      Node elementNode = elementNodes.item( e );
-      if ( "id".equals( elementNode.getNodeName() ) ) {
-        id = XmlUtil.getNodeValue( elementNode );
-      } else if ( "value".equals( elementNode.getNodeName() ) ) {
-        value = XmlUtil.getNodeValue( elementNode );
-      } else if ( "type".equals( elementNode.getNodeName() ) ) {
-        String type = XmlUtil.getNodeValue( elementNode );
-        if ( "Integer".equals( type ) ) {
-          value = Integer.valueOf( (String) value );
-        } else if ( "Double".equals( type ) ) {
-          value = Double.valueOf( (String) value );
-        } else if ( "Long".equals( type ) ) {
-          value = Long.valueOf( (String) value );
-        } /*
-           * else { value = value; }
-           */
-      } else if ( "children".equals( elementNode.getNodeName() ) ) {
-        NodeList childNodes = elementNode.getChildNodes();
-        for ( int c = 0; c < childNodes.getLength(); c++ ) {
-          Node childNode = childNodes.item( c );
-          if ( childNode.getNodeName().equals( "child" ) ) {
-            XmlMetaStoreAttribute childElement = new XmlMetaStoreAttribute();
-            childElement.loadAttribute( childNode );
-            addChild( childElement );
-          }
-        }
+    for ( int index = 0; index < elementNodes.getLength(); index++ ) {
+      Node elementNode = elementNodes.item( index );
+      String nodeName = elementNode.getNodeName();
+      if ( nodeName == null ) {
+        continue;
+      }
+      switch ( nodeName ) {
+        case "id":
+          id = XmlUtil.getNodeValue( elementNode );
+          break;
+        case "value":
+          value = XmlUtil.getNodeValue( elementNode );
+          break;
+        case "type":
+          loadTypedValue( elementNode );
+          break;
+        case "children":
+          loadChildren( elementNode );
+          break;
+        default:
+          break;
+      }
+    }
+  }
+
+  private void loadTypedValue( Node typeNode ) {
+    String type = XmlUtil.getNodeValue( typeNode );
+    if ( type == null ) {
+      return;
+    }
+    switch ( type ) {
+      case "Integer":
+        value = Integer.valueOf( (String) value );
+        break;
+      case "Double":
+        value = Double.valueOf( (String) value );
+        break;
+      case "Long":
+        value = Long.valueOf( (String) value );
+        break;
+      default:
+        break;
+    }
+  }
+
+  private void loadChildren( Node childrenNode ) {
+    NodeList childNodes = childrenNode.getChildNodes();
+    for ( int childIndex = 0; childIndex < childNodes.getLength(); childIndex++ ) {
+      Node childNode = childNodes.item( childIndex );
+      if ( "child".equals( childNode.getNodeName() ) ) {
+        XmlMetaStoreAttribute childElement = new XmlMetaStoreAttribute();
+        childElement.loadAttribute( childNode );
+        addChild( childElement );
       }
     }
   }
@@ -157,6 +198,11 @@ public class XmlMetaStoreAttribute implements IMetaStoreAttribute {
     }
   }
 
+  /**
+   * Adds a child attribute.
+   *
+   * @param element the child attribute
+   */
   public void addChild( IMetaStoreAttribute element ) {
     children.put( element.getId(), element );
   }
@@ -184,6 +230,10 @@ public class XmlMetaStoreAttribute implements IMetaStoreAttribute {
    */
   public void setFilename( String filename ) {
     this.filename = filename;
+  }
+
+  protected Path getFilenamePath() {
+    return filename == null ? null : Paths.get( filename ).normalize();
   }
 
   protected void appendAttribute( IMetaStoreAttribute attribute, Document doc, Element parentElement )

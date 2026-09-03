@@ -12,6 +12,7 @@
 
 package org.pentaho.metastore.stores.xml;
 
+import java.nio.file.Paths;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Iterator;
@@ -20,6 +21,9 @@ import java.util.Map.Entry;
 
 import org.pentaho.metastore.api.IMetaStoreElementType;
 
+/**
+ * Provides common cache behavior for XML metastores.
+ */
 public abstract class BaseXmlMetaStoreCache implements XmlMetaStoreCache {
 
   private final Map<String, Long> processedFiles = new HashMap<String, Long>();
@@ -28,16 +32,11 @@ public abstract class BaseXmlMetaStoreCache implements XmlMetaStoreCache {
 
   @Override
   public synchronized void registerElementTypeIdForName( String namespace, String elementTypeName, String elementId ) {
-    Map<String, ElementType> elementTypeNameToId = elementTypesMap.get( namespace );
-    if ( elementTypeNameToId == null ) {
-      elementTypeNameToId = createStorage();
-      elementTypesMap.put( namespace, elementTypeNameToId );
-    }
-    ElementType elementType = elementTypeNameToId.get( elementTypeName );
-    if ( elementType == null ) {
-      elementType = createElementType( elementId );
-      elementTypeNameToId.put( elementTypeName, elementType );
-    } else if ( !elementType.getId().equals( elementId ) ) {
+    Map<String, ElementType> elementTypeNameToId =
+        elementTypesMap.computeIfAbsent( namespace, key -> createStorage() );
+    ElementType elementType =
+        elementTypeNameToId.computeIfAbsent( elementTypeName, key -> createElementType( elementId ) );
+    if ( !elementType.getId().equals( elementId ) ) {
       elementType.unregisterElements();
       elementType.setId( elementId );
     }
@@ -111,7 +110,7 @@ public abstract class BaseXmlMetaStoreCache implements XmlMetaStoreCache {
 
   @Override
   public synchronized void registerProcessedFile( String fullPath, long lastUpdate ) {
-    processedFiles.put( fullPath, lastUpdate );
+    processedFiles.put( normalizePath( fullPath ), lastUpdate );
   }
 
   @Override
@@ -121,7 +120,7 @@ public abstract class BaseXmlMetaStoreCache implements XmlMetaStoreCache {
 
   @Override
   public synchronized void unregisterProcessedFile( String fullPath ) {
-    processedFiles.remove( fullPath );
+    processedFiles.remove( normalizePath( fullPath ) );
   }
 
   public synchronized void clear() {
@@ -137,27 +136,47 @@ public abstract class BaseXmlMetaStoreCache implements XmlMetaStoreCache {
 
   protected abstract <K, V> Map<K, V> createStorage();
 
+  private String normalizePath( String path ) {
+    return path == null ? null : Paths.get( path ).normalize().toString();
+  }
+
   protected abstract ElementType createElementType( String elementId );
 
   protected abstract static class ElementType {
 
     private String id;
 
-    public ElementType( String id ) {
+    protected ElementType( String id ) {
       this.id = id;
 
     }
 
+    /**
+     * Gets the element type ID.
+     *
+     * @return the element type ID
+     */
     public String getId() {
       return id;
     }
 
+    /**
+     * Sets the element type ID.
+     *
+     * @param id the element type ID
+     */
     public void setId( String id ) {
       this.id = id;
     }
 
     protected abstract Map<String, String> getElementNameToIdMap();
 
+    /**
+     * Registers an element ID by name.
+     *
+     * @param elementName the element name
+     * @param elementId the element ID
+     */
     public void registerElementIdForName( String elementName, String elementId ) {
       if ( elementId == null ) {
         return;
@@ -166,11 +185,22 @@ public abstract class BaseXmlMetaStoreCache implements XmlMetaStoreCache {
       elementNameToIdMap.put( elementName, elementId );
     }
 
+    /**
+     * Gets an element ID by name.
+     *
+     * @param elementName the element name
+     * @return the element ID, or {@code null} when no mapping exists
+     */
     public String getElementIdByName( String elementName ) {
       Map<String, String> elementNameToIdMap = getElementNameToIdMap();
       return elementNameToIdMap.get( elementName );
     }
 
+    /**
+     * Removes an element ID mapping.
+     *
+     * @param elementId the element ID
+     */
     public void unregisterElementId( String elementId ) {
       Map<String, String> elementNameToIdMap = getElementNameToIdMap();
       Iterator<Entry<String, String>> iterator = elementNameToIdMap.entrySet().iterator();
@@ -183,6 +213,9 @@ public abstract class BaseXmlMetaStoreCache implements XmlMetaStoreCache {
       }
     }
 
+    /**
+     * Removes all element ID mappings.
+     */
     public void unregisterElements() {
       Map<String, String> elementNameToIdMap = getElementNameToIdMap();
       elementNameToIdMap.clear();

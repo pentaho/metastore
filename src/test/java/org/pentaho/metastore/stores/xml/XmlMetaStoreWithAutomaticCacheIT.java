@@ -23,4 +23,9 @@ public class XmlMetaStoreWithAutomaticCacheIT extends XmlMetaStoreIT {
     return new XmlMetaStore( new AutomaticXmlMetaStoreCache() );
   }
 
+  @Override
+  protected XmlMetaStore createMetaStore( String rootFolder ) throws MetaStoreException {
+    return new XmlMetaStore( rootFolder, new AutomaticXmlMetaStoreCache() );
+  }
+
 }
