@@ -780,9 +780,6 @@ public class MetaStoreFactoryTest extends TestCase {
     @MetaStoreAttribute
     private Date date;
 
-    public LegacyDateElement() {
-    }
-
     public String getName() {
       return name;
     }

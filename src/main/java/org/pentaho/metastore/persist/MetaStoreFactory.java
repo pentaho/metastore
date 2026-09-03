@@ -24,7 +24,6 @@ import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.Collections;
-import java.util.Date;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -331,7 +330,7 @@ public class MetaStoreFactory<T> {
     }
 
     List<IMetaStoreElement> elements = metaStore.getElements( namespace, elementType, lock,
-      new ArrayList<MetaStoreException>() );
+      new ArrayList<>() );
     for ( IMetaStoreElement element : elements ) {
       names.add( element.getName() );
     }
@@ -372,7 +371,7 @@ public class MetaStoreFactory<T> {
     if ( long.class.equals( fieldClass ) ) {
       return AttributeType.LONG;
     }
-    if ( Date.class.equals( fieldClass ) || LocalDateTime.class.equals( fieldClass ) ) {
+    if ( java.util.Date.class.equals( fieldClass ) || LocalDateTime.class.equals( fieldClass ) ) {
       return AttributeType.DATE;
     }
     if ( boolean.class.equals( fieldClass ) ) {

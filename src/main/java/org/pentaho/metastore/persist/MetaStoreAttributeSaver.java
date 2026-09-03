@@ -24,7 +24,6 @@ import java.time.LocalDateTime;
 import java.time.ZoneId;
 import java.time.format.DateTimeFormatter;
 import java.util.EnumMap;
-import java.util.Date;
 import java.util.List;
 import java.util.Map;
 
@@ -147,8 +146,8 @@ final class MetaStoreAttributeSaver {
     Object dateValue = getAttributeValue( parentClass, parentObject, field.getName(),
       MetaStoreFactory.getGetterMethodName( field.getName(), false ) );
     String value = null;
-    if ( dateValue instanceof Date ) {
-      value = dateFormat.format( LocalDateTime.ofInstant( ( (Date) dateValue ).toInstant(), ZoneId.systemDefault() ) );
+    if ( dateValue instanceof java.util.Date date ) {
+      value = dateFormat.format( LocalDateTime.ofInstant( date.toInstant(), ZoneId.systemDefault() ) );
     } else if ( dateValue != null ) {
       value = dateFormat.format( (LocalDateTime) dateValue );
     }

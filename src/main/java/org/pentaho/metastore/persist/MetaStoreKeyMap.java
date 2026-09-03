@@ -23,7 +23,7 @@ import java.util.Map;
 public class MetaStoreKeyMap {
 
   /** Maps current attribute keys to legacy keys. */
-  private static final Map<String, String[]> keyMap = new HashMap<String, String[]>();
+  private static final Map<String, String[]> keyMap = new HashMap<>();
 
   private MetaStoreKeyMap() {
   }

@@ -20,6 +20,7 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.atomic.AtomicReference;
 
 import org.pentaho.metastore.api.BaseMetaStore;
 import org.pentaho.metastore.api.IMetaStoreAttribute;
@@ -43,7 +44,7 @@ public abstract class BaseXmlMetaStore<T> extends BaseMetaStore {
   private final XmlMetaStoreCache metaStoreCache;
   // root path. This is never interpreted by this class directly, but is used to
   // generate paths for subclasses to use.
-  private volatile Path rootFolder;
+  private final AtomicReference<Path> rootFolder;
 
   /**
    *
@@ -51,7 +52,7 @@ public abstract class BaseXmlMetaStore<T> extends BaseMetaStore {
    *          the folder that should contain the metastore. note that XmlUtil.META_FOLDER_NAME will be added to this
    *          path.
    */
-  protected BaseXmlMetaStore( String rootFolder ) throws MetaStoreException {
+  protected BaseXmlMetaStore( String rootFolder ) {
     this( rootFolder, defaultCache() );
   }
 
@@ -62,9 +63,9 @@ public abstract class BaseXmlMetaStore<T> extends BaseMetaStore {
    *          path.
    * @param metaStoreCacheImpl
    */
-  protected BaseXmlMetaStore( String rootFolder, XmlMetaStoreCache metaStoreCacheImpl ) throws MetaStoreException {
+  protected BaseXmlMetaStore( String rootFolder, XmlMetaStoreCache metaStoreCacheImpl ) {
     metaStoreCache = metaStoreCacheImpl;
-    this.rootFolder = Paths.get( rootFolder ).resolve( XmlUtil.META_FOLDER_NAME ).normalize();
+    this.rootFolder = new AtomicReference<>( Paths.get( rootFolder ).resolve( XmlUtil.META_FOLDER_NAME ).normalize() );
   }
 
   protected static XmlMetaStoreCache defaultCache() {
@@ -75,7 +76,7 @@ public abstract class BaseXmlMetaStore<T> extends BaseMetaStore {
    * @return the rootFolder in use
    */
   public String getRootFolder() {
-    return rootFolder.toString();
+    return rootFolder.get().toString();
   }
 
   /**
@@ -86,18 +87,18 @@ public abstract class BaseXmlMetaStore<T> extends BaseMetaStore {
    * @param rootFolder
    */
   public void setRootFolder( String rootFolder ) {
-    this.rootFolder = Paths.get( rootFolder ).normalize();
+    this.rootFolder.set( Paths.get( rootFolder ).normalize() );
   }
 
   protected Path getRootFolderPath() {
-    return rootFolder;
+    return rootFolder.get();
   }
 
   @Override
   public synchronized List<String> getNamespaces() throws MetaStoreException {
     lockStore();
     try {
-      return listFolders( rootFolder.toString() );
+      return listFolders( rootFolder.get().toString() );
     } finally {
       unlockStore();
     }
@@ -107,7 +108,7 @@ public abstract class BaseXmlMetaStore<T> extends BaseMetaStore {
   public synchronized boolean namespaceExists( String namespace ) throws MetaStoreException {
     lockStore();
     try {
-      Path path = XmlUtil.getNamespaceFolderPath( rootFolder, namespace );
+      Path path = XmlUtil.getNamespaceFolderPath( rootFolder.get(), namespace );
       return pathExists( path.toString() );
     } finally {
       unlockStore();
@@ -118,7 +119,7 @@ public abstract class BaseXmlMetaStore<T> extends BaseMetaStore {
   public synchronized void createNamespace( String namespace ) throws MetaStoreException {
     lockStore();
     try {
-      Path path = XmlUtil.getNamespaceFolderPath( rootFolder, namespace );
+      Path path = XmlUtil.getNamespaceFolderPath( rootFolder.get(), namespace );
       if ( pathExists( path.toString() ) ) {
         throw new MetaStoreNamespaceExistsException( "The namespace with name '" + namespace + "' already exists." );
       }
@@ -134,7 +135,7 @@ public abstract class BaseXmlMetaStore<T> extends BaseMetaStore {
   public synchronized void deleteNamespace( String namespace ) throws MetaStoreException {
     lockStore();
     try {
-      Path path = XmlUtil.getNamespaceFolderPath( rootFolder, namespace );
+      Path path = XmlUtil.getNamespaceFolderPath( rootFolder.get(), namespace );
       if ( !pathExists( path.toString() ) ) {
         return;
       }
@@ -170,7 +171,7 @@ public abstract class BaseXmlMetaStore<T> extends BaseMetaStore {
     }
     try {
         List<String> elementTypeFolders =
-          listFolders( XmlUtil.getNamespaceFolderPath( rootFolder, namespace ).toString() );
+          listFolders( XmlUtil.getNamespaceFolderPath( rootFolder.get(), namespace ).toString() );
       List<IMetaStoreElementType> elementTypes = new ArrayList<>( elementTypeFolders.size() );
       for ( String elementTypeFolder : elementTypeFolders ) {
         IMetaStoreElementType elementType = getElementType( namespace, elementTypeFolder, false );
@@ -190,7 +191,7 @@ public abstract class BaseXmlMetaStore<T> extends BaseMetaStore {
   public synchronized List<String> getElementTypeIds( String namespace ) throws MetaStoreException {
     lockStore();
     try {
-      return listFolders( XmlUtil.getNamespaceFolderPath( rootFolder, namespace ).toString() );
+      return listFolders( XmlUtil.getNamespaceFolderPath( rootFolder.get(), namespace ).toString() );
     } finally {
       unlockStore();
     }
@@ -202,7 +203,7 @@ public abstract class BaseXmlMetaStore<T> extends BaseMetaStore {
       lockStore();
     }
     try {
-      Path elementTypeFile = XmlUtil.getElementTypeFilePath( rootFolder, namespace, elementTypeId );
+      Path elementTypeFile = XmlUtil.getElementTypeFilePath( rootFolder.get(), namespace, elementTypeId );
       if ( pathExists( elementTypeFile.toString() ) ) {
         BaseXmlMetaStoreElementType elementType = newElementTypeFromFile( namespace, elementTypeFile.toString() );
         elementType.setMetaStoreName( getName() );
@@ -270,8 +271,8 @@ public abstract class BaseXmlMetaStore<T> extends BaseMetaStore {
       }
 
         Path elementTypeFolder =
-          XmlUtil.getElementTypeFolderPath( rootFolder, namespace, elementType.getName() );
-        Path elementTypeFilename = XmlUtil.getElementTypeFilePath( rootFolder, namespace, elementType.getName() );
+          XmlUtil.getElementTypeFolderPath( rootFolder.get(), namespace, elementType.getName() );
+        Path elementTypeFilename = XmlUtil.getElementTypeFilePath( rootFolder.get(), namespace, elementType.getName() );
         if ( pathExists( elementTypeFolder.toString() ) && pathExists( elementTypeFilename.toString() ) ) {
         throw new MetaStoreElementTypeExistsException( getElementTypes( namespace, false ),
             "The specified element type already exists with the same ID" );
@@ -304,13 +305,13 @@ public abstract class BaseXmlMetaStore<T> extends BaseMetaStore {
     lockStore();
     try {
         Path elementTypeFolder =
-          XmlUtil.getElementTypeFolderPath( rootFolder, namespace, elementType.getName() );
+          XmlUtil.getElementTypeFolderPath( rootFolder.get(), namespace, elementType.getName() );
         if ( !pathExists( elementTypeFolder.toString() ) ) {
         throw new MetaStoreException(
             "The specified element type with ID '" + elementType.getId() + "' doesn't exists so we can't update it." );
       }
 
-      Path elementTypeFilename = XmlUtil.getElementTypeFilePath( rootFolder, namespace, elementType.getName() );
+      Path elementTypeFilename = XmlUtil.getElementTypeFilePath( rootFolder.get(), namespace, elementType.getName() );
 
       // Save the element type information to the XML meta store
       //
@@ -331,7 +332,7 @@ public abstract class BaseXmlMetaStore<T> extends BaseMetaStore {
     throws MetaStoreException {
     lockStore();
     try {
-      Path elementTypeFilename = XmlUtil.getElementTypeFilePath( rootFolder, namespace, elementType.getName() );
+      Path elementTypeFilename = XmlUtil.getElementTypeFilePath( rootFolder.get(), namespace, elementType.getName() );
       if ( !pathExists( elementTypeFilename.toString() ) ) {
         return;
       }
@@ -356,7 +357,7 @@ public abstract class BaseXmlMetaStore<T> extends BaseMetaStore {
       // Remove the folder too, should be empty by now.
       //
         Path elementTypeFolder =
-          XmlUtil.getElementTypeFolderPath( rootFolder, namespace, elementType.getName() );
+          XmlUtil.getElementTypeFolderPath( rootFolder.get(), namespace, elementType.getName() );
         if ( !deletePath( elementTypeFolder.toString() ) ) {
         throw new MetaStoreException( "Unable to delete element type XML folder '" + elementTypeFolder + "'" );
       }
@@ -394,7 +395,7 @@ public abstract class BaseXmlMetaStore<T> extends BaseMetaStore {
     }
     try {
         Path elementTypeFolder =
-          XmlUtil.getElementTypeFolderPath( rootFolder, namespace, elementType.getName() );
+          XmlUtil.getElementTypeFolderPath( rootFolder.get(), namespace, elementType.getName() );
       Map<String, Long> processedFiles =
           includeProcessedFiles ? Collections.emptyMap() : metaStoreCache.getProcessedFiles();
       List<T> elementTypeFiles = listFiles( elementTypeFolder.toString(), processedFiles );
@@ -434,7 +435,7 @@ public abstract class BaseXmlMetaStore<T> extends BaseMetaStore {
     lockStore();
     try {
         Path elementTypeFolder =
-          XmlUtil.getElementTypeFolderPath( rootFolder, namespace, elementType.getName() );
+            XmlUtil.getElementTypeFolderPath( rootFolder.get(), namespace, elementType.getName() );
         List<T> elementTypeFiles = listFiles( elementTypeFolder.toString(), Collections.emptyMap() );
       List<String> elementIds = new ArrayList<>( elementTypeFiles.size() );
       for ( T elementTypeFile : elementTypeFiles ) {
@@ -467,7 +468,7 @@ public abstract class BaseXmlMetaStore<T> extends BaseMetaStore {
     }
     try {
       Path elementFilename =
-          XmlUtil.getElementFilePath( rootFolder, namespace, elementType.getName(), elementId );
+          XmlUtil.getElementFilePath( rootFolder.get(), namespace, elementType.getName(), elementId );
       if ( !pathExists( elementFilename.toString() ) ) {
         return null;
       }
@@ -531,7 +532,7 @@ public abstract class BaseXmlMetaStore<T> extends BaseMetaStore {
       }
 
         Path elementFilename =
-          XmlUtil.getElementFilePath( rootFolder, namespace, elementType.getName(), element.getId() );
+          XmlUtil.getElementFilePath( rootFolder.get(), namespace, elementType.getName(), element.getId() );
         if ( pathExists( elementFilename.toString() ) ) {
         throw new MetaStoreElementExistException(
             getElements( namespace, elementType, false, true, new ArrayList<MetaStoreException>() ),
@@ -566,7 +567,7 @@ public abstract class BaseXmlMetaStore<T> extends BaseMetaStore {
     lockStore();
     try {
         Path elementFilename =
-          XmlUtil.getElementFilePath( rootFolder, namespace, elementType.getName(), elementId );
+          XmlUtil.getElementFilePath( rootFolder.get(), namespace, elementType.getName(), elementId );
         if ( !pathExists( elementFilename.toString() ) ) {
         throw new MetaStoreException( "The specified element to update doesn't exist with ID: '" + elementId + "'" );
       }
@@ -589,7 +590,7 @@ public abstract class BaseXmlMetaStore<T> extends BaseMetaStore {
     lockStore();
     try {
         Path elementFilename =
-          XmlUtil.getElementFilePath( rootFolder, namespace, elementType.getName(), elementId );
+          XmlUtil.getElementFilePath( rootFolder.get(), namespace, elementType.getName(), elementId );
         if ( !pathExists( elementFilename.toString() ) ) {
         return;
       }
