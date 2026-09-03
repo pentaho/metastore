@@ -18,9 +18,6 @@ import org.pentaho.metastore.api.IMetaStoreElementType;
 
 /**
  * Set of methods that are called in various parts of the meta store data type life-cycle.
- * 
- * @author matt
- * 
  */
 public interface MetaStoreElementTypeListener {
 

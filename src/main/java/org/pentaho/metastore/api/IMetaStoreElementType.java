@@ -18,9 +18,6 @@ import org.pentaho.metastore.api.exceptions.MetaStoreException;
 
 /**
  * This interface is used to describe objects of this type that are stored in the metastore.
- * 
- * @author matt
- * 
  */
 public interface IMetaStoreElementType {
 
