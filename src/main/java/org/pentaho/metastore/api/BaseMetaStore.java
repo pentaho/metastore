@@ -34,7 +34,7 @@ public abstract class BaseMetaStore implements IMetaStore {
   /**
    * Instantiates a new base meta store.
    */
-  public BaseMetaStore() {
+  protected BaseMetaStore() {
     passwordEncoder = new Base64TwoWayPasswordEncoder();
   }
 
@@ -76,10 +76,20 @@ public abstract class BaseMetaStore implements IMetaStore {
     this.description = description;
   }
 
+  /**
+   * Gets the password encoder for this metastore.
+   *
+   * @return the password encoder
+   */
   public ITwoWayPasswordEncoder getTwoWayPasswordEncoder() {
     return passwordEncoder;
   }
 
+  /**
+   * Sets the password encoder for this metastore.
+   *
+   * @param passwordEncoder the password encoder
+   */
   public void setTwoWayPasswordEncoder( ITwoWayPasswordEncoder passwordEncoder ) {
     this.passwordEncoder = passwordEncoder;
   }
