@@ -16,19 +16,28 @@ import java.util.Map;
 
 import org.pentaho.metastore.api.exceptions.MetaStoreException;
 
+/**
+ * Creates nested metastore objects and provides their contextual data.
+ */
 public interface IMetaStoreObjectFactory {
 
   /**
-   * @param className the class to instantiate
-   * @param context the context to use for the instatiation
-   * @return the instantiated class 
-   * 
-   * */
+   * Creates an object of the specified class with the supplied context.
+   *
+   * @param className the class name
+   * @param context the context for object creation
+   * @return the created object
+   * @throws MetaStoreException if the factory cannot create the object
+   */
   public Object instantiateClass( String className, Map<String, String> context ) throws MetaStoreException;
 
-  /** Extract plugin contextual information from the specified plugin object 
-   * @param pluginObject the object to analyze
-   * */
+  /**
+   * Gets contextual data for a nested object.
+   *
+   * @param pluginObject the object that provides the context
+   * @return the object context
+   * @throws MetaStoreException if the factory cannot get the context
+   */
   public Map<String, String> getContext( Object pluginObject ) throws MetaStoreException;
 
 }

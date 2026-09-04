@@ -26,6 +26,7 @@ public class Kpi {
   private String otherDetails;
 
   public Kpi() {
+    // MetaStoreFactory creates elements with a no-argument constructor.
   }
 
   /**

@@ -21,7 +21,7 @@ import java.util.Map;
  * It uses strong references thus client should clear it manually.
  *
  */
-public class PersistentXmlMetaStoreCache extends BaseXmlMetaStoreCache implements XmlMetaStoreCache {
+public class PersistentXmlMetaStoreCache extends BaseXmlMetaStoreCache {
 
   @Override
   protected <K, V> Map<K, V> createStorage() {
@@ -37,6 +37,12 @@ public class PersistentXmlMetaStoreCache extends BaseXmlMetaStoreCache implement
 
     private final Map<String, String> elementNameToIdMap;
     
+    /**
+     * Creates an element type cache.
+     *
+     * @param id the element type ID
+     * @param elementNameToIdMap the element name to ID map
+     */
     public ElementType( String id, Map<String, String> elementNameToIdMap ) {
       super( id );
       this.elementNameToIdMap = elementNameToIdMap;

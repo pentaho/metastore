@@ -18,28 +18,43 @@ import org.pentaho.metastore.api.exceptions.MetaStoreException;
 import org.pentaho.metastore.api.IMetaStoreElement;
 import org.pentaho.metastore.api.IMetaStoreElementType;
 import org.pentaho.metastore.api.security.MetaStoreElementOwnerType;
+import org.pentaho.metastore.stores.memory.MemoryMetaStore;
 
 import java.io.File;
 import java.io.IOException;
+import java.nio.file.DirectoryStream;
 import java.nio.file.Files;
+import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 
+/**
+ * Stores metastore data in XML files.
+ */
 public class XmlMetaStore extends BaseXmlMetaStore<File> {
 
-  private File rootFile;
-
+  /**
+   * Creates an XML metastore in a temporary folder.
+   *
+   * @throws MetaStoreException if the temporary metastore folder cannot be created
+   */
   public XmlMetaStore() throws MetaStoreException {
     this( defaultCache() );
   }
 
+  /**
+   * Creates an XML metastore in a temporary folder with a cache.
+   *
+   * @param metaStoreCacheImpl the cache implementation
+   * @throws MetaStoreException if the temporary metastore folder cannot be created
+   */
   public XmlMetaStore( XmlMetaStoreCache metaStoreCacheImpl ) throws MetaStoreException {
-    this( System.getProperty( "java.io.tmpdir" ) + File.separator + UUID.randomUUID(), metaStoreCacheImpl );
+    this( Paths.get( System.getProperty( "java.io.tmpdir" ) ).resolve( UUID.randomUUID().toString() ).toString(),
+        metaStoreCacheImpl );
   }
 
   /**
@@ -62,11 +77,13 @@ public class XmlMetaStore extends BaseXmlMetaStore<File> {
   public XmlMetaStore( String rootFolder, XmlMetaStoreCache metaStoreCacheImpl ) throws MetaStoreException {
     super( rootFolder, metaStoreCacheImpl );
 
-    rootFile = new File( getRootFolder() );
-    if ( !rootFile.exists() ) {
-      if ( !rootFile.mkdirs() ) {
-        throw new MetaStoreException( "Unable to create XML meta store root folder: " + getRootFolder() );
+    Path rootPath = getRootFolderPath();
+    try {
+      if ( !Files.exists( rootPath ) ) {
+        Files.createDirectories( rootPath );
       }
+    } catch ( IOException e ) {
+      throw new MetaStoreException( "Unable to create XML meta store root folder: " + getRootFolder(), e );
     }
 
     // Give the MetaStore a default name
@@ -74,6 +91,12 @@ public class XmlMetaStore extends BaseXmlMetaStore<File> {
     setName( getRootFolder() );
   }
 
+  /**
+   * Compares stores by name without case sensitivity.
+   *
+   * @param obj the object to compare
+   * @return {@code true} when both stores have the same name
+   */
   @Override
   public boolean equals( Object obj ) {
     if ( this == obj ) {
@@ -82,63 +105,114 @@ public class XmlMetaStore extends BaseXmlMetaStore<File> {
     if ( !( obj instanceof XmlMetaStore ) ) {
       return false;
     }
-    return ( (XmlMetaStore) obj ).name.equalsIgnoreCase( name );
+    String otherName = ( (XmlMetaStore) obj ).name;
+    return name == null ? otherName == null : name.equalsIgnoreCase( otherName );
+  }
+
+  /**
+   * Returns a hash based on the store name without case sensitivity.
+   *
+   * @return the store name hash
+   */
+  @Override
+  public int hashCode() {
+    if ( name == null ) {
+      return 0;
+    }
+
+    int hash = 0;
+    for ( int index = 0; index < name.length(); index++ ) {
+      char character = name.charAt( index );
+      hash = 31 * hash + Character.toUpperCase( Character.toLowerCase( character ) );
+    }
+    return hash;
   }
 
   @Override
   protected List<String> listFolders( String folder ) {
-    File folderFile = new File( folder );
-
-    File[] folders = folderFile.listFiles( file -> !file.isHidden() && file.isDirectory() );
-    if ( folders == null ) {
+    Path folderPath = Paths.get( folder );
+    List<String> folderNames = new ArrayList<>();
+    try ( DirectoryStream<Path> paths = Files.newDirectoryStream( folderPath ) ) {
+      for ( Path path : paths ) {
+        if ( isVisibleDirectory( path ) ) {
+          folderNames.add( path.getFileName().toString() );
+        }
+      }
+    } catch ( IOException e ) {
       return Collections.emptyList();
     }
-    List<String> folderNames = new ArrayList<>( folders.length );
-    for ( File curFolder : folders ) {
-      folderNames.add( curFolder.getName() );
-    }
-
     return folderNames;
+  }
+
+  private boolean isVisibleDirectory( Path path ) {
+    try {
+      return Files.isDirectory( path ) && !Files.isHidden( path );
+    } catch ( IOException e ) {
+      return false;
+    }
   }
 
   @Override
   protected boolean pathExists( String path ) {
-    File pathFile = new File( path );
-    return pathFile.exists();
+    return Files.exists( Paths.get( path ) );
   }
 
   @Override
   protected boolean createDirectory( String path ) throws MetaStoreException {
-    File pathFile = new File( path );
-    return pathFile.mkdir();
+    try {
+      Files.createDirectory( Paths.get( path ) );
+      return true;
+    } catch ( IOException e ) {
+      return false;
+    }
   }
 
   @Override
   protected boolean deletePath( String path ) throws MetaStoreException {
-    File pathFile = new File( path );
-    return pathFile.delete();
+    try {
+      return Files.deleteIfExists( Paths.get( path ) );
+    } catch ( IOException e ) {
+      return false;
+    }
   }
 
   @Override
   protected long lastModified( String path ) throws MetaStoreException {
-    File pathFile = new File( path );
-    return pathFile.lastModified();
+    try {
+      return Files.getLastModifiedTime( Paths.get( path ) ).toMillis();
+    } catch ( IOException e ) {
+      return 0L;
+    }
   }
 
   @Override
   protected List<File> listFiles( String folder, Map<String, Long> processedFiles ) {
-    File folderFile = new File( folder );
-    File[] files = folderFile.listFiles( file -> {
-      Long fileLastModified = processedFiles.get( file.getPath() );
-      if ( fileLastModified != null && fileLastModified.equals( file.lastModified() ) ) {
+    Path folderPath = Paths.get( folder );
+    List<File> files = new ArrayList<>();
+    try ( DirectoryStream<Path> paths = Files.newDirectoryStream( folderPath ) ) {
+      for ( Path path : paths ) {
+        if ( isUnprocessedFile( path, processedFiles ) ) {
+          files.add( path.toFile() );
+        }
+      }
+    } catch ( IOException e ) {
+      return files;
+    }
+    return files;
+  }
+
+  private boolean isUnprocessedFile( Path path, Map<String, Long> processedFiles ) {
+    try {
+      if ( Files.isHidden( path ) || !Files.isRegularFile( path )
+          || !path.getFileName().toString().endsWith( ".xml" ) ) {
         return false;
       }
-      return !file.isHidden() && file.isFile();
-    } );
-    if ( files == null ) {
-      files = new File[] {};
+      Long fileLastModified = processedFiles.get( path.toString() );
+      return fileLastModified == null
+          || !fileLastModified.equals( Files.getLastModifiedTime( path ).toMillis() );
+    } catch ( IOException e ) {
+      return false;
     }
-    return Arrays.asList( files );
   }
 
   @Override
@@ -146,6 +220,14 @@ public class XmlMetaStore extends BaseXmlMetaStore<File> {
     return file.getName();
   }
 
+  /**
+   * Loads an element type from an XML file.
+   *
+   * @param namespace the element type namespace
+   * @param filename the XML file path
+   * @return the loaded element type
+   * @throws MetaStoreException if the file cannot be loaded
+   */
   @Override
   public XmlMetaStoreElementType newElementTypeFromFile( String namespace, String filename ) throws MetaStoreException {
     return new XmlMetaStoreElementType( namespace, filename );
@@ -159,11 +241,9 @@ public class XmlMetaStore extends BaseXmlMetaStore<File> {
     return type;
   }
 
-  // this is from IMetaStore
   @Override
   public XmlMetaStoreElementType newElementType( String namespace ) {
-    XmlMetaStoreElementType type = new XmlMetaStoreElementType( namespace, null, null, null );
-    return type;
+    return new XmlMetaStoreElementType( namespace, null, null, null );
   }
 
   @Override
@@ -200,25 +280,27 @@ public class XmlMetaStore extends BaseXmlMetaStore<File> {
    */
   @Override
   protected void lockStore() throws MetaStoreException {
-    boolean waiting = true;
     long totalTime = 0L;
-    while ( waiting ) {
-      File lockFile = new File( rootFile, ".lock" );
+    while ( true ) {
+      Path lockFile = getRootFolderPath().resolve( ".lock" );
       try {
         // PDI-19756: make fewer calls to createNewFile() to prevent random Windows error
-        if ( !lockFile.exists() && lockFile.createNewFile() ) {
+        if ( Files.notExists( lockFile ) ) {
+          Files.createFile( lockFile );
           return;
         }
       } catch ( IOException e ) {
         // PDI-19756: Due to known issue with createNewFile()
         // we are trying to understand if the exception is due to lack of permissions or just a random fail
-        if ( e.getMessage().contains( "Access is denied" ) && Files.isWritable( Paths.get( rootFile.getPath() ) ) ) {
+        if ( e.getMessage() != null && e.getMessage().contains( "Access is denied" )
+            && Files.isWritable( lockFile.getParent() ) ) {
           continue;
         }
       }
       try {
         Thread.sleep( 100 );
       } catch ( InterruptedException e ) {
+        Thread.currentThread().interrupt();
         throw new RuntimeException( e );
       }
       totalTime += 100;
@@ -232,7 +314,10 @@ public class XmlMetaStore extends BaseXmlMetaStore<File> {
 
   @Override
   protected void unlockStore() {
-    File lockFile = new File( rootFile, ".lock" );
-    lockFile.delete();
+    try {
+      Files.deleteIfExists( getRootFolderPath().resolve( ".lock" ) );
+    } catch ( IOException ignored ) {
+      // Preserve legacy behavior: ignore lock cleanup failures.
+    }
   }
 }

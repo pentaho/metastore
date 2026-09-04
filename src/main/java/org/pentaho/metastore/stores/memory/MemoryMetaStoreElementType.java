@@ -29,6 +29,9 @@ import java.util.concurrent.locks.ReentrantReadWriteLock;
 import java.util.concurrent.locks.ReentrantReadWriteLock.ReadLock;
 import java.util.concurrent.locks.ReentrantReadWriteLock.WriteLock;
 
+/**
+ * Stores an element type and its elements in memory.
+ */
 public class MemoryMetaStoreElementType extends BaseElementType {
 
   private final Map<String, MemoryMetaStoreElement> elementMap = new HashMap<String, MemoryMetaStoreElement>();
@@ -42,6 +45,11 @@ public class MemoryMetaStoreElementType extends BaseElementType {
     writeLock = lock.writeLock();
   }
 
+  /**
+   * Creates an empty memory element type.
+   *
+   * @param namespace the namespace for the element type
+   */
   public MemoryMetaStoreElementType( String namespace ) {
     super( namespace );
   }
@@ -62,6 +70,11 @@ public class MemoryMetaStoreElementType extends BaseElementType {
     // Nothing to save.
   }
 
+  /**
+   * Gets a copy of the element map.
+   *
+   * @return a map of element IDs to elements
+   */
   public Map<String, MemoryMetaStoreElement> getElementMap() {
     return MetaStoreUtil.executeLockedOperationQuietly( readLock, new Callable<Map<String, MemoryMetaStoreElement>>() {
 
@@ -72,6 +85,11 @@ public class MemoryMetaStoreElementType extends BaseElementType {
     } );
   }
 
+  /**
+   * Gets all element IDs.
+   *
+   * @return the element IDs
+   */
   public List<String> getElementIds() {
     return MetaStoreUtil.executeLockedOperationQuietly( readLock, new Callable<List<String>>() {
 
@@ -86,6 +104,12 @@ public class MemoryMetaStoreElementType extends BaseElementType {
     } );
   }
 
+  /**
+   * Gets an element by ID.
+   *
+   * @param elementId the element ID
+   * @return the element, or {@code null} when it does not exist
+   */
   public MemoryMetaStoreElement getElement( final String elementId ) {
     return MetaStoreUtil.executeLockedOperationQuietly( readLock, new Callable<MemoryMetaStoreElement>() {
 
@@ -100,6 +124,11 @@ public class MemoryMetaStoreElementType extends BaseElementType {
     return readLock;
   }
 
+  /**
+   * Checks whether this type contains no elements.
+   *
+   * @return {@code true} when no elements exist
+   */
   public boolean isElementMapEmpty() {
     return MetaStoreUtil.executeLockedOperationQuietly( readLock, new Callable<Boolean>() {
 
@@ -110,6 +139,11 @@ public class MemoryMetaStoreElementType extends BaseElementType {
     } );
   }
 
+  /**
+   * Gets all elements.
+   *
+   * @return the elements
+   */
   public List<IMetaStoreElement> getElements() {
     return MetaStoreUtil.executeLockedOperationQuietly( readLock, new Callable<List<IMetaStoreElement>>() {
 
@@ -120,6 +154,12 @@ public class MemoryMetaStoreElementType extends BaseElementType {
     } );
   }
 
+  /**
+   * Gets an element by name without case sensitivity.
+   *
+   * @param elementName the element name
+   * @return the element, or {@code null} when it does not exist
+   */
   public IMetaStoreElement getElementByName( final String elementName ) {
     return MetaStoreUtil.executeLockedOperationQuietly( readLock, new Callable<IMetaStoreElement>() {
 
@@ -135,6 +175,11 @@ public class MemoryMetaStoreElementType extends BaseElementType {
     } );
   }
 
+  /**
+   * Creates an element.
+   *
+   * @param element the element to create
+   */
   public void createElement( final IMetaStoreElement element ) {
     // For the memory store, the ID is the same as the name if empty
     if ( element.getId() == null ) {
@@ -150,6 +195,12 @@ public class MemoryMetaStoreElementType extends BaseElementType {
     } );
   }
 
+  /**
+   * Updates an element by ID.
+   *
+   * @param elementId the ID of the element to update
+   * @param element the replacement element
+   */
   public void updateElement( final String elementId, final IMetaStoreElement element ) {
     // For the memory store, the ID is the same as the name if empty
     if ( element.getId() == null ) {
@@ -165,6 +216,11 @@ public class MemoryMetaStoreElementType extends BaseElementType {
     } );
   }
 
+  /**
+   * Removes an element by ID.
+   *
+   * @param elementId the element ID
+   */
   public void deleteElement( final String elementId ) {
     MetaStoreUtil.executeLockedOperationQuietly( writeLock, new Callable<Void>() {
 

@@ -19,10 +19,7 @@ import java.util.List;
 import org.pentaho.metastore.api.IMetaStoreElement;
 
 /**
- * This exception is thrown in case a data type is created in a metadata store when it already exists.
- * 
- * @author matt
- * 
+ * Signals that an element already exists in a metastore.
  */
 
 public class MetaStoreElementExistException extends MetaStoreException {
@@ -31,21 +28,45 @@ public class MetaStoreElementExistException extends MetaStoreException {
 
   private List<IMetaStoreElement> entities;
 
+  /**
+   * Creates an exception with existing elements.
+   *
+   * @param entities the existing elements
+   */
   public MetaStoreElementExistException( List<IMetaStoreElement> entities ) {
     super();
     this.entities = entities;
   }
 
+  /**
+   * Creates an exception with existing elements and a message.
+   *
+   * @param entities the existing elements
+   * @param message the exception message
+   */
   public MetaStoreElementExistException( List<IMetaStoreElement> entities, String message ) {
     super( message );
     this.entities = entities;
   }
 
+  /**
+   * Creates an exception with existing elements and a cause.
+   *
+   * @param entities the existing elements
+   * @param cause the cause
+   */
   public MetaStoreElementExistException( List<IMetaStoreElement> entities, Throwable cause ) {
     super( cause );
     this.entities = entities;
   }
 
+  /**
+   * Creates an exception with existing elements, a message, and a cause.
+   *
+   * @param entities the existing elements
+   * @param message the exception message
+   * @param cause the cause
+   */
   public MetaStoreElementExistException( List<IMetaStoreElement> entities, String message, Throwable cause ) {
     super( message, cause );
     this.entities = entities;

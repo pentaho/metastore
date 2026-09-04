@@ -14,7 +14,7 @@
 package org.pentaho.metastore.api;
 
 /**
- * @author nhudak
+ * Provides common fields and behavior for metastore element types.
  */
 public abstract class BaseElementType implements IMetaStoreElementType {
   private String namespace;
@@ -23,10 +23,15 @@ public abstract class BaseElementType implements IMetaStoreElementType {
   private String description;
   private String metaStoreName;
 
-  public BaseElementType( String namespace ) {
+  protected BaseElementType( String namespace ) {
     this.namespace = namespace;
   }
 
+  /**
+   * Copies the stored properties from another element type.
+   *
+   * @param elementType the element type to copy
+   */
   public void copyFrom( IMetaStoreElementType elementType ) {
     this.id = elementType.getId();
     this.name = elementType.getName();
@@ -90,10 +95,20 @@ public abstract class BaseElementType implements IMetaStoreElementType {
     this.description = description;
   }
 
+  /**
+   * Gets the name of the metastore that owns this element type.
+   *
+   * @return the owning metastore name
+   */
   public String getMetaStoreName() {
     return metaStoreName;
   }
 
+  /**
+   * Sets the name of the metastore that owns this element type.
+   *
+   * @param metaStoreName the owning metastore name
+   */
   public void setMetaStoreName( String metaStoreName ) {
     this.metaStoreName = metaStoreName;
   }

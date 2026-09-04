@@ -21,9 +21,6 @@ import org.pentaho.metastore.api.security.MetaStoreOwnerPermissions;
 
 /**
  * This interface describes the element as an attribute (with children) with security on top of it.
- * 
- * @author matt
- * 
  */
 public interface IMetaStoreElement extends IMetaStoreAttribute {
 

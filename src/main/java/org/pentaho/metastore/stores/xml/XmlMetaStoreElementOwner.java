@@ -22,11 +22,20 @@ import org.w3c.dom.Element;
 import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
 
+/**
+ * Stores an element owner in XML form.
+ */
 public class XmlMetaStoreElementOwner implements IMetaStoreElementOwner {
 
   private String name;
   private MetaStoreElementOwnerType type;
 
+  /**
+   * Creates an XML element owner.
+   *
+   * @param name the owner name
+   * @param type the owner type
+   */
   public XmlMetaStoreElementOwner( String name, MetaStoreElementOwnerType type ) {
     super();
     this.name = name;
@@ -67,11 +76,22 @@ public class XmlMetaStoreElementOwner implements IMetaStoreElementOwner {
      */
   }
 
+  /**
+   * Copies an element owner into XML form.
+   *
+   * @param owner the owner to copy
+   */
   public XmlMetaStoreElementOwner( IMetaStoreElementOwner owner ) {
     this.name = owner.getName();
     this.type = owner.getOwnerType();
   }
 
+  /**
+   * Appends this owner to an XML element.
+   *
+   * @param doc the XML document that creates child nodes
+   * @param ownerElement the XML element that receives the owner data
+   */
   public void append( Document doc, Element ownerElement ) {
     Element nameElement = doc.createElement( "name" );
     nameElement.appendChild( doc.createTextNode( name == null ? "" : name ) );

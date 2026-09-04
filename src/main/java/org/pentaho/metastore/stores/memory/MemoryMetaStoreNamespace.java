@@ -31,6 +31,9 @@ import org.pentaho.metastore.api.exceptions.MetaStoreElementTypeExistsException;
 import org.pentaho.metastore.api.exceptions.MetaStoreException;
 import org.pentaho.metastore.util.MetaStoreUtil;
 
+/**
+ * Stores the element types for one memory metastore namespace.
+ */
 public class MemoryMetaStoreNamespace {
 
   private final ReadLock readLock;
@@ -39,6 +42,11 @@ public class MemoryMetaStoreNamespace {
   private final String namespace;
   private final Map<String, MemoryMetaStoreElementType> typeMap;
 
+  /**
+   * Creates an empty namespace.
+   *
+   * @param namespace the namespace name
+   */
   public MemoryMetaStoreNamespace( String namespace ) {
     this.namespace = namespace;
     this.typeMap = new HashMap<String, MemoryMetaStoreElementType>();
@@ -49,10 +57,20 @@ public class MemoryMetaStoreNamespace {
 
   }
 
+  /**
+   * Gets the namespace name.
+   *
+   * @return the namespace name
+   */
   public String getNamespace() {
     return namespace;
   }
 
+  /**
+   * Gets a copy of the element type map.
+   *
+   * @return a map of element type IDs to element types
+   */
   public Map<String, MemoryMetaStoreElementType> getTypeMap() {
     return MetaStoreUtil.executeLockedOperationQuietly( readLock,
         new Callable<Map<String, MemoryMetaStoreElementType>>() {
@@ -73,6 +91,12 @@ public class MemoryMetaStoreNamespace {
     return null;
   }
 
+  /**
+   * Gets an element type by name without case sensitivity.
+   *
+   * @param elementTypeName the element type name
+   * @return the element type, or {@code null} when it does not exist
+   */
   public MemoryMetaStoreElementType getElementTypeByName( final String elementTypeName ) {
     return MetaStoreUtil.executeLockedOperationQuietly( readLock, new Callable<MemoryMetaStoreElementType>() {
 
@@ -83,6 +107,11 @@ public class MemoryMetaStoreNamespace {
     } );
   }
 
+  /**
+   * Gets all element type IDs.
+   *
+   * @return the element type IDs
+   */
   public List<String> getElementTypeIds() {
     return MetaStoreUtil.executeLockedOperationQuietly( readLock, new Callable<List<String>>() {
 
@@ -97,6 +126,13 @@ public class MemoryMetaStoreNamespace {
     } );
   }
 
+  /**
+   * Creates an element type in this namespace.
+   *
+   * @param metaStoreName the owning metastore name
+   * @param elementType the element type to create
+   * @throws MetaStoreElementTypeExistsException if the element type ID already exists
+   */
   public void createElementType( final String metaStoreName, final IMetaStoreElementType elementType )
     throws MetaStoreElementTypeExistsException {
     // For the memory store, the ID is the same as the name if empty
@@ -130,6 +166,13 @@ public class MemoryMetaStoreNamespace {
     }
   }
 
+  /**
+   * Updates an element type in this namespace.
+   *
+   * @param metaStoreName the owning metastore name
+   * @param elementType the replacement element type
+   * @throws MetaStoreElementTypeExistsException if the element type ID does not exist
+   */
   public void updateElementType( final String metaStoreName, final IMetaStoreElementType elementType )
     throws MetaStoreElementTypeExistsException {
     try {
@@ -159,6 +202,13 @@ public class MemoryMetaStoreNamespace {
     }
   }
 
+  /**
+   * Removes an empty element type from this namespace.
+   *
+   * @param elementType the element type to remove
+   * @throws MetaStoreElementTypeExistsException if the element type does not exist
+   * @throws MetaStoreDependenciesExistsException if the element type contains elements
+   */
   public void deleteElementType( final IMetaStoreElementType elementType ) throws MetaStoreElementTypeExistsException,
     MetaStoreDependenciesExistsException {
     try {
@@ -204,6 +254,12 @@ public class MemoryMetaStoreNamespace {
 
   }
 
+  /**
+   * Gets an element type by ID.
+   *
+   * @param elementTypeId the element type ID
+   * @return the element type, or {@code null} when it does not exist
+   */
   public IMetaStoreElementType getElementTypeById( final String elementTypeId ) {
     return MetaStoreUtil.executeLockedOperationQuietly( readLock, new Callable<IMetaStoreElementType>() {
 
@@ -218,6 +274,12 @@ public class MemoryMetaStoreNamespace {
     return readLock;
   }
 
+  /**
+   * Gets all elements for an element type name.
+   *
+   * @param elementTypeName the element type name
+   * @return the elements, or an empty list when the type does not exist
+   */
   public List<IMetaStoreElement> getElementsByElementTypeName( final String elementTypeName ) {
     return MetaStoreUtil.executeLockedOperationQuietly( readLock, new Callable<List<IMetaStoreElement>>() {
 
@@ -232,6 +294,12 @@ public class MemoryMetaStoreNamespace {
     } );
   }
 
+  /**
+   * Gets all element IDs for an element type name.
+   *
+   * @param elementTypeName the element type name
+   * @return the element IDs, or an empty list when the type does not exist
+   */
   public List<String> getElementIdsByElementTypeName( final String elementTypeName ) {
     return MetaStoreUtil.executeLockedOperationQuietly( readLock, new Callable<List<String>>() {
 
@@ -246,6 +314,13 @@ public class MemoryMetaStoreNamespace {
     } );
   }
 
+  /**
+   * Gets an element by type name and element ID.
+   *
+   * @param elementTypeName the element type name
+   * @param elementId the element ID
+   * @return the element, or {@code null} when it does not exist
+   */
   public IMetaStoreElement getElementByTypeNameId( final String elementTypeName, final String elementId ) {
     return MetaStoreUtil.executeLockedOperationQuietly( readLock, new Callable<IMetaStoreElement>() {
 
@@ -260,6 +335,11 @@ public class MemoryMetaStoreNamespace {
     } );
   }
 
+  /**
+   * Gets all element types in this namespace.
+   *
+   * @return the element types
+   */
   public List<IMetaStoreElementType> getElementTypes() {
     return MetaStoreUtil.executeLockedOperationQuietly( readLock, new Callable<List<IMetaStoreElementType>>() {
 
@@ -270,6 +350,13 @@ public class MemoryMetaStoreNamespace {
     } );
   }
 
+  /**
+   * Gets an element by type name and element name.
+   *
+   * @param elementTypeName the element type name
+   * @param elementName the element name
+   * @return the element, or {@code null} when it does not exist
+   */
   public IMetaStoreElement getElementByNameTypeName( final String elementTypeName, final String elementName ) {
     return MetaStoreUtil.executeLockedOperationQuietly( readLock, new Callable<IMetaStoreElement>() {
 
@@ -284,6 +371,13 @@ public class MemoryMetaStoreNamespace {
     } );
   }
 
+  /**
+   * Creates an element in an element type.
+   *
+   * @param elementType the element type
+   * @param element the element to create
+   * @throws MetaStoreException if the element type does not exist or the element cannot be created
+   */
   public void createElement( final IMetaStoreElementType elementType, final IMetaStoreElement element )
     throws MetaStoreException {
     MetaStoreUtil.executeLockedOperation( readLock, new Callable<Void>() {
@@ -301,6 +395,14 @@ public class MemoryMetaStoreNamespace {
     } );
   }
 
+  /**
+   * Updates an element by ID.
+   *
+   * @param elementType the element type
+   * @param elementId the element ID
+   * @param element the replacement element
+   * @throws MetaStoreException if the element type does not exist or the element cannot be updated
+   */
   public void updateElement( final IMetaStoreElementType elementType, final String elementId,
       final IMetaStoreElement element ) throws MetaStoreException {
     MetaStoreUtil.executeLockedOperation( readLock, new Callable<Void>() {
@@ -318,6 +420,13 @@ public class MemoryMetaStoreNamespace {
     } );
   }
 
+  /**
+   * Removes an element by ID.
+   *
+   * @param elementType the element type
+   * @param elementId the element ID
+   * @throws MetaStoreException if the element type does not exist or the element cannot be removed
+   */
   public void deleteElement( final IMetaStoreElementType elementType, final String elementId )
     throws MetaStoreException {
     MetaStoreUtil.executeLockedOperation( readLock, new Callable<Void>() {

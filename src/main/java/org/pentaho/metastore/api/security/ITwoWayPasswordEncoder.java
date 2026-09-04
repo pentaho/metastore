@@ -14,6 +14,9 @@
 
 package org.pentaho.metastore.api.security;
 
+/**
+ * Encodes passwords and checks encoded password values.
+ */
 public interface ITwoWayPasswordEncoder {
   /**
    * Encode the raw password.

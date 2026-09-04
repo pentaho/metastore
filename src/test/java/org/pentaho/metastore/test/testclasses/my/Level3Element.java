@@ -16,9 +16,6 @@ package org.pentaho.metastore.test.testclasses.my;
 import org.pentaho.metastore.persist.MetaStoreAttribute;
 import org.pentaho.metastore.persist.MetaStoreElementType;
 
-/**
- * @author Rowell Belen
- */
 @MetaStoreElementType(
     name = "Level3Element",
     description = "My Level 3 Element" )

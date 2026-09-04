@@ -21,7 +21,7 @@ import java.util.Map;
  * This implementation of XmlMetaStoreCache stores the cache using soft references. But client is still able to clear it
  * manually.
  */
-public class AutomaticXmlMetaStoreCache extends BaseXmlMetaStoreCache implements XmlMetaStoreCache {
+public class AutomaticXmlMetaStoreCache extends BaseXmlMetaStoreCache {
 
   @Override
   protected <K, V> Map<K, V> createStorage() {
@@ -37,6 +37,12 @@ public class AutomaticXmlMetaStoreCache extends BaseXmlMetaStoreCache implements
 
     private final Map<String, String> elementNameToIdMap;
 
+    /**
+     * Creates an element type cache.
+     *
+     * @param id the element type ID
+     * @param elementNameToIdMap the element name to ID map
+     */
     public ElementType( String id, Map<String, String> elementNameToIdMap ) {
       super( id );
       this.elementNameToIdMap = elementNameToIdMap;

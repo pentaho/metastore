@@ -18,6 +18,9 @@ package org.pentaho.metastore.stores.xml;
 import org.pentaho.metastore.api.BaseElementType;
 import org.pentaho.metastore.api.exceptions.MetaStoreException;
 import java.io.InputStream;
+import java.nio.file.InvalidPathException;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 import org.w3c.dom.Node;
@@ -33,11 +36,13 @@ import javax.xml.transform.dom.DOMSource;
 import javax.xml.transform.stream.StreamResult;
 import java.io.StringWriter;
 
+/**
+ * Provides XML persistence for metastore element types.
+ */
 public abstract class BaseXmlMetaStoreElementType extends BaseElementType {
 
+  /** The XML tag for an element type. */
   public static final String XML_TAG = "data-type";
-
-  private String filename;
 
   /**
    * @param namespace
@@ -63,7 +68,18 @@ public abstract class BaseXmlMetaStoreElementType extends BaseElementType {
 
   }
 
+  // filename is used only for the error message and normalized display; the caller already opened the stream.
   protected void loadFromStream( String filename, InputStream input ) throws MetaStoreException {
+    Path path;
+    try {
+      path = Paths.get( filename ).normalize();
+    } catch ( InvalidPathException e ) {
+      throw new MetaStoreException( "Invalid file path '" + filename + "'", e );
+    }
+    loadFromPath( path, input );
+  }
+
+  void loadFromPath( Path filename, InputStream input ) throws MetaStoreException {
     try {
       DocumentBuilderFactory documentBuilderFactory = XmlUtil.createSafeDocumentBuilderFactory();
       DocumentBuilder documentBuilder = documentBuilderFactory.newDocumentBuilder();
@@ -89,6 +105,12 @@ public abstract class BaseXmlMetaStoreElementType extends BaseElementType {
     }
   }
 
+  /**
+   * Gets the XML representation of this element type.
+   *
+   * @return the XML representation
+   * @throws MetaStoreException if the XML cannot be created
+   */
   public String getXml() throws MetaStoreException {
     try {
       StringWriter stringWriter = new StringWriter();
@@ -101,6 +123,12 @@ public abstract class BaseXmlMetaStoreElementType extends BaseElementType {
     }
   }
 
+  /**
+   * Saves this element type to a transformation stream result.
+   *
+   * @param streamResult the output stream result
+   * @throws MetaStoreException if the XML cannot be written
+   */
   public void saveToStreamResult( StreamResult streamResult ) throws MetaStoreException {
     try {
       DocumentBuilderFactory factory = XmlUtil.createSafeDocumentBuilderFactory();

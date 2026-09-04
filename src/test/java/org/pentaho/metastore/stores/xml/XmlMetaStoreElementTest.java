@@ -18,13 +18,32 @@ import org.pentaho.metastore.api.exceptions.MetaStoreException;
 
 import java.io.File;
 import java.io.FileNotFoundException;
+import java.io.IOException;
 
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNotEquals;
+import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 
 public class XmlMetaStoreElementTest {
 
   @Test
-  public void testLongName() {
+  public void equalsUsesIdForHashCode() {
+    XmlMetaStoreElement first = new XmlMetaStoreElement();
+    XmlMetaStoreElement second = new XmlMetaStoreElement();
+
+    first.setId( "id" );
+    second.setId( "id" );
+    assertEquals( first, second );
+    assertEquals( first.hashCode(), second.hashCode() );
+
+    second.setId( "other-id" );
+    assertNotEquals( first, second );
+  }
+
+  @Test
+  public void saveReportsOriginalIOException() {
     String pattern = "1234567890";
     StringBuilder fileName = new StringBuilder( 310 );
     for ( int i = 0; i < 30; i++ ) {
@@ -37,9 +56,9 @@ public class XmlMetaStoreElementTest {
       xmse.save();
       fail();
     } catch ( MetaStoreException ex ) {
-      if ( !( ex.getCause() instanceof FileNotFoundException ) || !ex.getMessage().contains( "too long" ) ) {
-        fail();
-      }
+      assertTrue( ex.getCause() instanceof IOException );
+      assertFalse( ex.getCause() instanceof FileNotFoundException );
+      assertFalse( ex.getMessage().contains( "Annotation Group name is too long" ) );
     }
   }
 

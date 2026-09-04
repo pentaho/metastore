@@ -30,6 +30,7 @@
     <url>scm:git:git@github.com:pentaho/${project.artifactId}.git</url>
   </scm>
   <properties>
+    <jacoco-maven-plugin.version>0.8.12</jacoco-maven-plugin.version>
     <mockito-core.version>5.10.0</mockito-core.version>
     <junit.version>4.13.2</junit.version>
   </properties>
@@ -73,6 +74,10 @@
             </goals>
           </execution>
         </executions>
+      </plugin>
+      <plugin>
+        <artifactId>maven-javadoc-plugin</artifactId>
+        <version>3.12.0</version>
       </plugin>
     </plugins>
   </build>

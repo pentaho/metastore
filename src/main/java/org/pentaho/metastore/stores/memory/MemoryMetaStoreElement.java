@@ -23,6 +23,9 @@ import org.pentaho.metastore.api.security.IMetaStoreElementOwner;
 import org.pentaho.metastore.api.security.MetaStoreOwnerPermissions;
 import org.pentaho.metastore.stores.xml.XmlMetaStoreElementOwner;
 
+/**
+ * Stores a metastore element in memory.
+ */
 public class MemoryMetaStoreElement extends MemoryMetaStoreAttribute implements IMetaStoreElement {
 
   protected String name;
@@ -32,10 +35,20 @@ public class MemoryMetaStoreElement extends MemoryMetaStoreAttribute implements 
   protected IMetaStoreElementOwner owner;
   protected List<MetaStoreOwnerPermissions> ownerPermissionsList;
 
+  /**
+   * Creates an empty memory element.
+   */
   public MemoryMetaStoreElement() {
     this( null, null, null );
   }
 
+  /**
+   * Creates a memory element with its type, ID, and value.
+   *
+   * @param elementType the element type
+   * @param id the element ID
+   * @param value the element value
+   */
   public MemoryMetaStoreElement( IMetaStoreElementType elementType, String id, Object value ) {
     super( id, value );
     this.elementType = elementType;
@@ -43,6 +56,11 @@ public class MemoryMetaStoreElement extends MemoryMetaStoreAttribute implements 
     this.ownerPermissionsList = new ArrayList<MetaStoreOwnerPermissions>();
   }
 
+  /**
+   * Copies an element into memory.
+   *
+   * @param element the element to copy
+   */
   public MemoryMetaStoreElement( IMetaStoreElement element ) {
     super( element );
     this.name = element.getName();

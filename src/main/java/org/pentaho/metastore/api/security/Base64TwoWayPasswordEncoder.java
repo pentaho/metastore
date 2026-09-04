@@ -18,10 +18,19 @@ import java.io.UnsupportedEncodingException;
 
 import org.apache.commons.codec.binary.Base64;
 
+/**
+ * Encodes passwords with Base64.
+ */
 public class Base64TwoWayPasswordEncoder implements ITwoWayPasswordEncoder {
 
   private String ENCODING = "UTF-8";
 
+  /**
+   * Encodes a raw password with Base64.
+   *
+   * @param rawPassword the raw password
+   * @return the encoded password, or {@code null} for a null input
+   */
   @Override
   public String encode( CharSequence rawPassword ) {
     try {
@@ -37,6 +46,12 @@ public class Base64TwoWayPasswordEncoder implements ITwoWayPasswordEncoder {
     }
   }
 
+  /**
+   * Decodes a Base64 password.
+   *
+   * @param encodedPassword the encoded password
+   * @return the decoded password, or {@code null} for a null input
+   */
   @Override
   public String decode( CharSequence encodedPassword ) {
     try {
@@ -52,6 +67,13 @@ public class Base64TwoWayPasswordEncoder implements ITwoWayPasswordEncoder {
     }
   }
 
+  /**
+   * Checks whether a raw password matches an encoded password.
+   *
+   * @param rawPassword the raw password
+   * @param encodedPassword the encoded password
+   * @return {@code true} when the values match
+   */
   @Override
   public boolean matches( CharSequence rawPassword, String encodedPassword ) {
     if ( rawPassword == null || rawPassword.length() == 0 ) {
