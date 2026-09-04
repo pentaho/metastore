@@ -18,6 +18,7 @@ import org.pentaho.metastore.api.exceptions.MetaStoreException;
 import org.pentaho.metastore.api.IMetaStoreElement;
 import org.pentaho.metastore.api.IMetaStoreElementType;
 import org.pentaho.metastore.api.security.MetaStoreElementOwnerType;
+import org.pentaho.metastore.stores.memory.MemoryMetaStore;
 
 import java.io.File;
 import java.io.IOException;
@@ -104,7 +105,8 @@ public class XmlMetaStore extends BaseXmlMetaStore<File> {
     if ( !( obj instanceof XmlMetaStore ) ) {
       return false;
     }
-    return ( (XmlMetaStore) obj ).name.equalsIgnoreCase( name );
+    String otherName = ( (XmlMetaStore) obj ).name;
+    return name == null ? otherName == null : name.equalsIgnoreCase( otherName );
   }
 
   /**

@@ -15,6 +15,7 @@
 package org.pentaho.metastore.stores.xml;
 
 import org.pentaho.metastore.api.exceptions.MetaStoreException;
+import org.pentaho.metastore.stores.memory.MemoryMetaStore;
 import org.pentaho.metastore.api.IMetaStoreElement;
 import org.pentaho.metastore.api.IMetaStoreElementType;
 
@@ -92,7 +93,8 @@ public class XmlMetaStoreElement extends BaseXmlMetaStoreElement {
     if ( !( obj instanceof XmlMetaStoreElement ) ) {
       return false;
     }
-    return ( (XmlMetaStoreElement) obj ).id.equals( id );
+    String otherId = ( (XmlMetaStoreElement) obj ).id;
+    return id == null ? otherId == null : id.equals( otherId );
   }
 
   /**

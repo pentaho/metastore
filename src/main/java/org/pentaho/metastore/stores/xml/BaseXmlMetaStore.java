@@ -544,9 +544,6 @@ public abstract class BaseXmlMetaStore<T> extends BaseMetaStore {
 
       metaStoreCache.registerElementIdForName( namespace, elementType, xmlElement.getName(), element.getId() );
       metaStoreCache.registerProcessedFile( elementFilename.toString(), lastModified( elementFilename.toString() ) );
-      // In the case of the XML store, the name is the same as the ID
-      //
-      element.setId( xmlElement.getName() );
     } finally {
       unlockStore();
     }

@@ -95,7 +95,8 @@ public class MemoryMetaStore extends BaseMetaStore {
     if ( !( obj instanceof MemoryMetaStore ) ) {
       return false;
     }
-    return ( (MemoryMetaStore) obj ).name.equalsIgnoreCase( name );
+    String otherName = ( (MemoryMetaStore) obj ).name;
+    return name == null ? otherName == null : name.equalsIgnoreCase( otherName );
   }
 
   /**
