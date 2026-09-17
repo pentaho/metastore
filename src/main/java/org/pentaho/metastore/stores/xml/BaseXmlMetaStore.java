@@ -416,8 +416,7 @@ public abstract class BaseXmlMetaStore<T> extends BaseMetaStore implements IMeta
     lockStore();
     try {
       String elementTypeFolder = XmlUtil.getElementTypeFolder( rootFolder, namespace, elementType.getName() );
-      Map<String, Long> processedFiles = metaStoreCache.getProcessedFiles();
-      List<T> elementTypeFiles = listFiles( elementTypeFolder, processedFiles );
+      List<T> elementTypeFiles = listFiles( elementTypeFolder, Collections.emptyMap() );
       List<String> elementIds = new ArrayList<>( elementTypeFiles.size() );
       for ( T elementTypeFile : elementTypeFiles ) {
         String elementId = getFilename( elementTypeFile );
