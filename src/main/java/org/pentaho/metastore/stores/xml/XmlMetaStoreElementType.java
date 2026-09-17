@@ -16,24 +16,30 @@ package org.pentaho.metastore.stores.xml;
 
 import org.pentaho.metastore.api.exceptions.MetaStoreException;
 
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.FileOutputStream;
-import java.io.InputStream;
 import java.io.IOException;
+import java.io.InputStream;
+import java.io.OutputStream;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 
 import javax.xml.transform.stream.StreamResult;
 
+/**
+ * Stores a metastore element type in an XML file.
+ */
 public class XmlMetaStoreElementType extends BaseXmlMetaStoreElementType {
 
   // full path
   private String filename;
 
   /**
-   * @param namespace
-   * @param id
-   * @param name
-   * @param description
+   * Creates an XML element type.
+   *
+   * @param namespace the element type namespace
+   * @param id the element type ID
+   * @param name the element type name
+   * @param description the element type description
    */
   public XmlMetaStoreElementType( String namespace, String id, String name, String description ) {
     super( namespace, id, name, description );
@@ -50,34 +56,28 @@ public class XmlMetaStoreElementType extends BaseXmlMetaStoreElementType {
   public XmlMetaStoreElementType( String namespace, String filename ) throws MetaStoreException {
     super( namespace );
 
-    File file = new File( filename );
-    this.setId( file.getParentFile().getName() );
-    try ( InputStream input = new FileInputStream( filename ) ) {
-      loadFromStream( filename, input );
+    Path filePath = Paths.get( filename ).normalize();
+    this.setId( filePath.getParent().getFileName().toString() );
+    try ( InputStream input = Files.newInputStream( filePath ) ) {
+      loadFromPath( filePath, input );
     } catch ( IOException ex ) {
       throw new MetaStoreException( ex );
     }
     setFilename( filename );
   }
 
+  /**
+   * Saves this element type to its configured XML file.
+   *
+   * @throws MetaStoreException if the element type cannot be saved
+   */
   @Override
   public void save() throws MetaStoreException {
-    FileOutputStream fos = null;
-    try {
-      fos = new FileOutputStream( filename );
-      StreamResult result = new StreamResult( fos );
+    try ( OutputStream output = Files.newOutputStream( getFilenamePath() ) ) {
+      StreamResult result = new StreamResult( output );
       saveToStreamResult( result );
     } catch ( Exception e ) {
       throw new MetaStoreException( "Unable to save XML meta store data type with file '" + filename + "'", e );
-    } finally {
-      if ( fos != null ) {
-        try {
-          fos.close();
-        } catch ( Exception e ) {
-          throw new MetaStoreException(
-              "Unable to save XML meta store data type with file '" + filename + "' (close failed)", e );
-        }
-      }
     }
   }
 
@@ -94,6 +94,10 @@ public class XmlMetaStoreElementType extends BaseXmlMetaStoreElementType {
    */
   public void setFilename( String filename ) {
     this.filename = filename;
+  }
+
+  private Path getFilenamePath() {
+    return filename == null ? null : Paths.get( filename ).normalize();
   }
 
 }

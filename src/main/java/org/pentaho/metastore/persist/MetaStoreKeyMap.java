@@ -22,7 +22,11 @@ import java.util.Map;
  */
 public class MetaStoreKeyMap {
 
-  public static Map<String, String[]> keyMap = new HashMap<String, String[]>();
+  /** Maps current attribute keys to legacy keys. */
+  private static final Map<String, String[]> keyMap = new HashMap<>();
+
+  private MetaStoreKeyMap() {
+  }
 
   static {
     keyMap.put( "host_name", new String[]{ "hostname" } );
@@ -34,6 +38,12 @@ public class MetaStoreKeyMap {
     keyMap.put( "target_field_name", new String[]{ "targetFieldName" } );
   }
 
+  /**
+   * Gets the legacy keys for an attribute key.
+   *
+   * @param key the current attribute key
+   * @return the legacy keys, or an empty array when no mapping exists
+   */
   public static String[] get( String key ) {
     String[] keys = keyMap.get( key );
 

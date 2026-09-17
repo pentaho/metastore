@@ -25,7 +25,6 @@ import java.util.concurrent.locks.ReentrantReadWriteLock.ReadLock;
 import java.util.concurrent.locks.ReentrantReadWriteLock.WriteLock;
 
 import org.pentaho.metastore.api.BaseMetaStore;
-import org.pentaho.metastore.api.IMetaStore;
 import org.pentaho.metastore.api.IMetaStoreAttribute;
 import org.pentaho.metastore.api.IMetaStoreElement;
 import org.pentaho.metastore.api.IMetaStoreElementType;
@@ -38,13 +37,19 @@ import org.pentaho.metastore.api.security.IMetaStoreElementOwner;
 import org.pentaho.metastore.api.security.MetaStoreElementOwnerType;
 import org.pentaho.metastore.util.MetaStoreUtil;
 
-public class MemoryMetaStore extends BaseMetaStore implements IMetaStore {
+/**
+ * Stores metastore data in memory.
+ */
+public class MemoryMetaStore extends BaseMetaStore {
 
   private final Map<String, MemoryMetaStoreNamespace> namespacesMap;
 
   private final ReadLock readLock;
   private final WriteLock writeLock;
 
+  /**
+   * Creates an empty memory metastore.
+   */
   public MemoryMetaStore() {
     namespacesMap = new HashMap<String, MemoryMetaStoreNamespace>();
 
@@ -76,6 +81,12 @@ public class MemoryMetaStore extends BaseMetaStore implements IMetaStore {
 
   }
 
+  /**
+   * Compares stores by name without case sensitivity.
+   *
+   * @param obj the object to compare
+   * @return {@code true} when both stores have the same name
+   */
   @Override
   public boolean equals( Object obj ) {
     if ( this == obj ) {
@@ -84,7 +95,27 @@ public class MemoryMetaStore extends BaseMetaStore implements IMetaStore {
     if ( !( obj instanceof MemoryMetaStore ) ) {
       return false;
     }
-    return ( (MemoryMetaStore) obj ).name.equalsIgnoreCase( name );
+    String otherName = ( (MemoryMetaStore) obj ).name;
+    return name == null ? otherName == null : name.equalsIgnoreCase( otherName );
+  }
+
+  /**
+   * Returns a hash based on the store name without case sensitivity.
+   *
+   * @return the store name hash
+   */
+  @Override
+  public int hashCode() {
+    if ( name == null ) {
+      return 0;
+    }
+
+    int hash = 0;
+    for ( int index = 0; index < name.length(); index++ ) {
+      char character = name.charAt( index );
+      hash = 31 * hash + Character.toUpperCase( Character.toLowerCase( character ) );
+    }
+    return hash;
   }
 
   @Override
@@ -400,6 +431,14 @@ public class MemoryMetaStore extends BaseMetaStore implements IMetaStore {
     return new MemoryMetaStoreElement( elementType, id, value );
   }
 
+  /**
+   * Creates a new memory attribute.
+   *
+   * @param id the attribute ID
+   * @param value the attribute value
+   * @return the new attribute
+   * @throws MetaStoreException if the attribute cannot be created
+   */
   public IMetaStoreAttribute newAttribute( String id, Object value ) throws MetaStoreException {
     return new MemoryMetaStoreAttribute( id, value );
   }

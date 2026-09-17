@@ -31,16 +31,21 @@ import org.pentaho.metastore.api.IMetaStoreElementType;
 import org.pentaho.metastore.api.exceptions.MetaStoreException;
 import org.pentaho.metastore.api.security.IMetaStoreElementOwner;
 import org.pentaho.metastore.api.security.MetaStoreOwnerPermissions;
-import java.io.File;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
 
+/**
+ * Provides XML persistence for metastore elements.
+ */
 public abstract class BaseXmlMetaStoreElement extends XmlMetaStoreAttribute implements IMetaStoreElement {
 
+  /** The XML tag for an element. */
   public static final String XML_TAG = "element";
 
   protected String name;
@@ -50,12 +55,12 @@ public abstract class BaseXmlMetaStoreElement extends XmlMetaStoreAttribute impl
   protected XmlMetaStoreElementOwner owner;
   protected List<MetaStoreOwnerPermissions> ownerPermissionsList;
 
-  public BaseXmlMetaStoreElement() {
+  protected BaseXmlMetaStoreElement() {
     super();
     this.ownerPermissionsList = new ArrayList<MetaStoreOwnerPermissions>();
   }
 
-  public BaseXmlMetaStoreElement( IMetaStoreElementType elementType, String id, Object value ) {
+  protected BaseXmlMetaStoreElement( IMetaStoreElementType elementType, String id, Object value ) {
     super( id, value );
     this.elementType = elementType;
     this.ownerPermissionsList = new ArrayList<MetaStoreOwnerPermissions>();
@@ -84,9 +89,14 @@ public abstract class BaseXmlMetaStoreElement extends XmlMetaStoreAttribute impl
     }
   }
 
+  /**
+   * Sets the element ID from an XML file name.
+   *
+   * @param filename the XML file name
+   */
   public void setIdWithFilename( String filename ) {
-    File file = new File( filename );
-    id = file.getName();
+    Path filePath = Paths.get( filename ).normalize();
+    id = filePath.getFileName().toString();
     id = id.substring( 0, id.length() - 4 );
   }
 
@@ -175,26 +185,29 @@ public abstract class BaseXmlMetaStoreElement extends XmlMetaStoreAttribute impl
     for ( int c = 0; c < childNodes.getLength(); c++ ) {
       Node childNode = childNodes.item( c );
       if ( "security".equals( childNode.getNodeName() ) ) {
-        NodeList securityNodes = childNode.getChildNodes();
-        for ( int s = 0; s < securityNodes.getLength(); s++ ) {
-          Node securityNode = securityNodes.item( s );
+        loadSecurityNode( childNode );
+      }
+    }
+  }
 
-          if ( "owner".equals( securityNode.getNodeName() ) ) {
-            // Load security details...
-            //
-            owner = new XmlMetaStoreElementOwner( securityNode );
-          }
-          if ( "owner-permissions-list".equals( securityNode.getNodeName() ) ) {
-            NodeList opNodes = securityNode.getChildNodes();
-            for ( int op = 0; op < opNodes.getLength(); op++ ) {
-              Node opNode = opNodes.item( op );
-              if ( "owner-permissions".equals( opNode.getNodeName() ) ) {
-                MetaStoreOwnerPermissions ownerPermissions = new MetaStoreOwnerPermissions( opNode );
-                ownerPermissionsList.add( ownerPermissions );
-              }
-            }
-          }
-        }
+  private void loadSecurityNode( Node securityNode ) throws MetaStoreException {
+    NodeList securityNodes = securityNode.getChildNodes();
+    for ( int s = 0; s < securityNodes.getLength(); s++ ) {
+      Node childNode = securityNodes.item( s );
+      if ( "owner".equals( childNode.getNodeName() ) ) {
+        owner = new XmlMetaStoreElementOwner( childNode );
+      } else if ( "owner-permissions-list".equals( childNode.getNodeName() ) ) {
+        loadOwnerPermissions( childNode );
+      }
+    }
+  }
+
+  private void loadOwnerPermissions( Node ownerPermissionsListNode ) throws MetaStoreException {
+    NodeList permissionNodes = ownerPermissionsListNode.getChildNodes();
+    for ( int p = 0; p < permissionNodes.getLength(); p++ ) {
+      Node permissionNode = permissionNodes.item( p );
+      if ( "owner-permissions".equals( permissionNode.getNodeName() ) ) {
+        ownerPermissionsList.add( new MetaStoreOwnerPermissions( permissionNode ) );
       }
     }
   }
@@ -222,6 +235,11 @@ public abstract class BaseXmlMetaStoreElement extends XmlMetaStoreAttribute impl
     return owner;
   }
 
+  /**
+   * Sets the owner using the XML owner representation.
+   *
+   * @param owner the element owner
+   */
   @Override
   public void setOwner( IMetaStoreElementOwner owner ) {
     // Copy the data first, could come from other storage worlds
@@ -255,9 +273,9 @@ public abstract class BaseXmlMetaStoreElement extends XmlMetaStoreAttribute impl
   }
 
   /**
-   * This method is only called on object instances that have been constructed from another element, via
-   * BaseXmlMetaStore.newElement( IMetaStoreElement )
+   * Saves this element to its configured XML file.
    *
+   * @throws MetaStoreException if the element cannot be saved
    */
   public abstract void save() throws MetaStoreException;
 

@@ -27,6 +27,9 @@ import java.util.concurrent.locks.ReentrantReadWriteLock.WriteLock;
 import org.pentaho.metastore.api.IMetaStoreAttribute;
 import org.pentaho.metastore.util.MetaStoreUtil;
 
+/**
+ * Stores a metastore attribute and its children in memory.
+ */
 public class MemoryMetaStoreAttribute implements IMetaStoreAttribute {
 
   private final ReadLock readLock;
@@ -37,10 +40,19 @@ public class MemoryMetaStoreAttribute implements IMetaStoreAttribute {
   protected String id;
   protected Object value;
 
+  /**
+   * Creates an empty attribute.
+   */
   public MemoryMetaStoreAttribute() {
     this( null, null );
   }
 
+  /**
+   * Creates an attribute with an ID and value.
+   *
+   * @param id the attribute ID
+   * @param value the attribute value
+   */
   public MemoryMetaStoreAttribute( String id, Object value ) {
     this.id = id;
     this.value = value;
@@ -51,6 +63,11 @@ public class MemoryMetaStoreAttribute implements IMetaStoreAttribute {
     writeLock = lock.writeLock();
   }
 
+  /**
+   * Copies an attribute and its children.
+   *
+   * @param attribute the attribute to copy
+   */
   public MemoryMetaStoreAttribute( IMetaStoreAttribute attribute ) {
     this( attribute.getId(), attribute.getValue() );
 
@@ -103,7 +120,7 @@ public class MemoryMetaStoreAttribute implements IMetaStoreAttribute {
   }
 
   /**
-   * @param children
+  * @param childrenList
    *          the children to set
    */
   public void setChildren( final List<IMetaStoreAttribute> childrenList ) {
@@ -153,7 +170,7 @@ public class MemoryMetaStoreAttribute implements IMetaStoreAttribute {
   }
 
   /**
-   * Remove all child attributes
+   * Removes all child attributes.
    */
   public void clearChildren() {
     MetaStoreUtil.executeLockedOperationQuietly( writeLock, new Callable<Void>() {
@@ -166,6 +183,12 @@ public class MemoryMetaStoreAttribute implements IMetaStoreAttribute {
     } );
   }
 
+  /**
+   * Gets a child attribute by ID.
+   *
+   * @param id the child attribute ID
+   * @return the child attribute, or {@code null} when it does not exist
+   */
   public IMetaStoreAttribute getChild( final String id ) {
     return MetaStoreUtil.executeLockedOperationQuietly( readLock, new Callable<IMetaStoreAttribute>() {
 

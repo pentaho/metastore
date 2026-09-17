@@ -15,6 +15,7 @@
 package org.pentaho.metastore.test;
 
 import org.pentaho.metastore.api.IMetaStore;
+import org.pentaho.metastore.api.IMetaStoreElement;
 import org.pentaho.metastore.api.IMetaStoreElementType;
 import org.pentaho.metastore.api.exceptions.MetaStoreException;
 import org.pentaho.metastore.stores.xml.XmlMetaStore;
@@ -42,6 +43,10 @@ public class XmlMetaStoreIT extends MetaStoreTestBase {
     return new XmlMetaStore();
   }
 
+  protected XmlMetaStore createMetaStore( String rootFolder ) throws MetaStoreException {
+    return new XmlMetaStore( rootFolder );
+  }
+
   @Override
   protected void tearDown() throws Exception {
     super.tearDown();
@@ -50,6 +55,36 @@ public class XmlMetaStoreIT extends MetaStoreTestBase {
 
   public void test() throws Exception {
     super.testFunctionality( metaStore );
+  }
+
+  public void testElementIdsIncludesProcessedFiles() throws Exception {
+    Path rootPath = Files.createTempDirectory( "XmlMetaStoreIT" );
+    try {
+      XmlMetaStore store = createMetaStore( rootPath.toString() );
+      store.createNamespace( namespace );
+
+      IMetaStoreElementType elementType = store.newElementType( namespace );
+      elementType.setName( SHARED_DIMENSION_NAME );
+      store.createElementType( namespace, elementType );
+
+      IMetaStoreElement element = store.newElement();
+      element.setName( CUSTOMER_DIMENSION_NAME );
+      store.createElement( namespace, elementType, element );
+
+      assertEquals( 1, store.getElementIds( namespace, elementType ).size() );
+    } finally {
+      FileUtil.cleanFolder( rootPath.toFile(), true );
+    }
+  }
+
+  public void testRootFolderNormalizesTrailingSeparator() throws Exception {
+    Path rootPath = Files.createTempDirectory( "XmlMetaStoreIT" );
+    try {
+      XmlMetaStore store = createMetaStore( rootPath.toString() + File.separator );
+      assertEquals( rootPath.resolve( "metastore" ).toString(), store.getRootFolder() );
+    } finally {
+      FileUtil.cleanFolder( rootPath.toFile(), true );
+    }
   }
 
   public void testParallelDifferentStores() throws Exception {
@@ -65,6 +100,7 @@ public class XmlMetaStoreIT extends MetaStoreTestBase {
       List<Thread> threads = new ArrayList<Thread>();
       for ( final IMetaStore store : stores ) {
         Thread thread = new Thread() {
+          @Override
           public void run() {
             try {
               testFunctionality( store );
@@ -99,14 +135,14 @@ public class XmlMetaStoreIT extends MetaStoreTestBase {
     Path rootPath = Files.createTempDirectory( "XmlMetaStoreIT" );
     Path metastorePath = rootPath.resolve( "metastore" ).resolve( "pentaho" ).resolve( "NamedCluster" );
     Files.createDirectories( metastorePath );
-    XmlMetaStore metaStore = new XmlMetaStore( rootPath.toString() );
-    assertTrue( metaStore.getElementTypes( "pentaho" ).isEmpty() );
+    XmlMetaStore xmlMetaStore = new XmlMetaStore( rootPath.toString() );
+    assertTrue( xmlMetaStore.getElementTypes( "pentaho" ).isEmpty() );
 
     IMetaStoreElementType elementType =
       new XmlMetaStoreElementType( "pentaho", "NamedCluster", "NamedCluster", "A Named Cluster" );
-    metaStore.createElementType( "pentaho", elementType );  //throws an exception before change
+    xmlMetaStore.createElementType( "pentaho", elementType );  //throws an exception before change
 
-    assertEquals( 1, metaStore.getElementTypes( "pentaho" ).size() );
+    assertEquals( 1, xmlMetaStore.getElementTypes( "pentaho" ).size() );
   }
 
   public void testParallelOneStore() throws Exception {

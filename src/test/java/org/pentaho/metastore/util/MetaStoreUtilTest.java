@@ -37,7 +37,7 @@ public class MetaStoreUtilTest {
   private String namespace = "test_namespace";
 
   @Before
-  public void setUp() throws Exception {
+  public void setUp() {
     metaStoreUtil = new MetaStoreUtil();
     mockMetaStore = mock( IMetaStore.class );
     mockIMetaStoreAttribute = mock( IMetaStoreAttribute.class );
@@ -46,21 +46,21 @@ public class MetaStoreUtilTest {
   @Test
   public void testVerifyNamespaceCreated() throws Exception {
     when( mockMetaStore.namespaceExists( namespace ) ).thenReturn( false );
-    metaStoreUtil.verifyNamespaceCreated( mockMetaStore, namespace );
+    MetaStoreUtil.verifyNamespaceCreated( mockMetaStore, namespace );
     verify( mockMetaStore ).createNamespace( namespace );
   }
 
   @Test
-  public void testGetChildString() throws Exception {
+  public void testGetChildString() {
     IMetaStoreAttribute mockIMetaStoreAttributeChild = mock( IMetaStoreAttribute.class );
     when( mockIMetaStoreAttribute.getChild( "id" ) ).thenReturn( mockIMetaStoreAttributeChild );
     when( mockIMetaStoreAttributeChild.getValue() ).thenReturn( "attrString" );
     String childString = MetaStoreUtil.getChildString( mockIMetaStoreAttribute, "id" );
-    assertEquals( childString, "attrString" );
+    assertEquals( "attrString", childString );
   }
 
   @Test
-  public void testGetAttributeBoolean() throws Exception {
+  public void testGetAttributeBoolean() {
     boolean attrBool = MetaStoreUtil.getAttributeBoolean( mockIMetaStoreAttribute, "id" );
     assertFalse( attrBool );
   }
@@ -77,7 +77,7 @@ public class MetaStoreUtilTest {
     when( elem1.getName() ).thenReturn( "test" );
 
     String[] names = metaStoreUtil.getElementNames( namespace, mockMetaStore, metaStoreElementType );
-    assertEquals( names.length, 1 );
+    assertEquals( 1, names.length );
   }
 
   @Test
@@ -165,7 +165,7 @@ public class MetaStoreUtilTest {
     when( to.getElementTypeByName( anyString(), anyString() ) ).thenReturn( existingType );
     when( existingType.getId() ).thenReturn( "existingID" );
 
-    MetaStoreUtil.copy( from, to, false );
+    MetaStoreUtil.copy( from, to );
 
     verify( to ).createNamespace( "pentaho" );
     verify( to ).createNamespace( "hitachi" );
@@ -177,9 +177,9 @@ public class MetaStoreUtilTest {
     verify( to, never() ).updateElementType( "pentaho", type1 );
     verify( to, never() ).updateElementType( "pentaho", type2 );
 
-    verify( to, never() ).createElement( eq( "pentaho" ), any( IMetaStoreElementType.class ), eq( elem1 ) );
-    verify( to, never() ).createElement( eq( "pentaho" ), any( IMetaStoreElementType.class ), eq( elem2 ) );
-    verify( to, never() ).createElement( eq( "pentaho" ), any( IMetaStoreElementType.class ), eq( elem3 ) );
+    verify( to, times( 2 ) ).createElement( "pentaho", existingType, elem1 );
+    verify( to, times( 2 ) ).createElement( "pentaho", existingType, elem2 );
+    verify( to, times( 2 ) ).createElement( "pentaho", existingType, elem3 );
 
     verify( to, never() )
       .updateElement( eq( "pentaho" ), any( IMetaStoreElementType.class ), anyString(), eq( elem1 ) );
@@ -191,6 +191,46 @@ public class MetaStoreUtilTest {
     verify( to, never() ).createElementType( eq( "hitachi" ), any( IMetaStoreElementType.class ) );
     verify( to, never() ).createElement( eq( "hitachi" ), any( IMetaStoreElementType.class ), any( IMetaStoreElement.class ) );
 
+  }
+
+  @Test
+  public void testCopy_existingElement_overwriteFalse_keepsSourceAndTarget() throws Exception {
+    IMetaStore from = new MemoryMetaStore();
+    IMetaStore to = new MemoryMetaStore();
+
+    from.createNamespace( "pentaho" );
+    to.createNamespace( "pentaho" );
+
+    IMetaStoreElementType sourceType = from.newElementType( "pentaho" );
+    sourceType.setId( "source-type" );
+    sourceType.setName( "type" );
+    from.createElementType( "pentaho", sourceType );
+
+    IMetaStoreElement sourceElement = from.newElement();
+    sourceElement.setId( "source-element" );
+    sourceElement.setName( "element" );
+    sourceElement.setValue( "source" );
+    from.createElement( "pentaho", sourceType, sourceElement );
+
+    IMetaStoreElementType targetType = to.newElementType( "pentaho" );
+    targetType.setId( "target-type" );
+    targetType.setName( "type" );
+    to.createElementType( "pentaho", targetType );
+
+    IMetaStoreElement targetElement = to.newElement();
+    targetElement.setId( "target-element" );
+    targetElement.setName( "element" );
+    targetElement.setValue( "target" );
+    to.createElement( "pentaho", targetType, targetElement );
+
+    MetaStoreUtil.copy( from, to );
+
+    IMetaStoreElement sourceElementAfterCopy = from.getElementByName( "pentaho", sourceType, "element" );
+    IMetaStoreElement targetElementAfterCopy = to.getElementByName( "pentaho", targetType, "element" );
+    assertEquals( "source-element", sourceElementAfterCopy.getId() );
+    assertEquals( "source", sourceElementAfterCopy.getValue() );
+    assertEquals( "target-element", targetElementAfterCopy.getId() );
+    assertEquals( "target", targetElementAfterCopy.getValue() );
   }
 
   @Test
@@ -225,7 +265,7 @@ public class MetaStoreUtilTest {
     when( to.getElementTypeByName( anyString(), anyString() ) ).thenReturn( existingType );
     when( existingType.getId() ).thenReturn( "existingID" );
 
-    MetaStoreUtil.copy( from, to, true );
+    MetaStoreUtil.copyWithOverwrite( from, to );
 
     verify( to ).createNamespace( "pentaho" );
     verify( to ).createNamespace( "hitachi" );
@@ -285,7 +325,7 @@ public class MetaStoreUtilTest {
 
     when( to.getElementByName( eq( "pentaho" ), any( IMetaStoreElementType.class ), eq( "elementName" ) ) ).thenReturn( elem1 );
 
-    MetaStoreUtil.copy( from, to, true );
+    MetaStoreUtil.copyWithOverwrite( from, to );
 
     verify( to ).createNamespace( "pentaho" );
     verify( to, never() ).createElementType( "pentaho", type1 );

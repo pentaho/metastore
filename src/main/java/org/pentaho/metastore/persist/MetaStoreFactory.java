@@ -10,46 +10,38 @@
  * Change Date: 2030-06-15
  ******************************************************************************/
 
-
-
 package org.pentaho.metastore.persist;
 
 import org.pentaho.metastore.api.IMetaStore;
-import org.pentaho.metastore.api.IMetaStoreAttribute;
 import org.pentaho.metastore.api.IMetaStoreElement;
 import org.pentaho.metastore.api.IMetaStoreElementType;
 import org.pentaho.metastore.api.exceptions.MetaStoreException;
-import org.pentaho.metastore.util.MetaStoreUtil;
 
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
-import java.text.SimpleDateFormat;
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.Collections;
-import java.util.Date;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
-import java.util.Arrays;
-
-import org.pentaho.metastore.api.IMetaStore;
-import org.pentaho.metastore.api.IMetaStoreAttribute;
-import org.pentaho.metastore.api.IMetaStoreElement;
-import org.pentaho.metastore.api.IMetaStoreElementType;
-import org.pentaho.metastore.api.exceptions.MetaStoreException;
-import org.pentaho.metastore.util.MetaStoreUtil;
 import java.util.Set;
 
+/**
+ * Creates and loads metastore elements of a specified type.
+ *
+ * @param <T> the element type
+ */
 public class MetaStoreFactory<T> {
 
-  private enum AttributeType {
+  enum AttributeType {
     STRING, INTEGER, LONG, DATE, BOOLEAN, LIST, NAME_REFERENCE, FILENAME_REFERENCE, FACTORY_NAME_REFERENCE, ENUM, POJO;
   }
 
-  private static final String OBJECT_FACTORY_CONTEXT = "_ObjectFactoryContext_";
-  private static final String POJO_CHILD = "_POJO_";
+  private final DateTimeFormatter dateFormat = DateTimeFormatter.ofPattern( "yyyy-MM-dd HH:mm:ss.SSS" );
 
   protected IMetaStore metaStore;
   protected final Class<T> clazz;
@@ -61,8 +53,13 @@ public class MetaStoreFactory<T> {
 
   protected IMetaStoreObjectFactory objectFactory;
 
-  private volatile SimpleDateFormat DATE_FORMAT = new SimpleDateFormat( "yyyy-MM-dd HH:mm:ss.SSS" );
-
+  /**
+   * Creates a factory for the specified element class.
+   *
+   * @param clazz the element class
+   * @param metaStore the metastore that stores the elements
+   * @param namespace the metastore namespace
+   */
   public MetaStoreFactory( Class<T> clazz, IMetaStore metaStore, String namespace ) {
     this.metaStore = metaStore;
     this.clazz = clazz;
@@ -72,23 +69,46 @@ public class MetaStoreFactory<T> {
     nameFactoryMap = new HashMap<String, MetaStoreFactory<?>>();
   }
 
+  /**
+   * Adds a list that resolves name references.
+   *
+   * @param nameListKey the key that identifies the list
+   * @param nameList the list of named objects
+   */
   public void addNameList( String nameListKey, List<?> nameList ) {
     nameListMap.put( nameListKey, nameList );
   }
 
+  /**
+   * Adds a factory that stores and loads factory name references.
+   *
+   * @param nameFactoryKey the key that identifies the factory
+   * @param factory the factory for referenced objects
+   */
   public void addNameFactory( String nameFactoryKey, MetaStoreFactory<?> factory ) {
     nameFactoryMap.put( nameFactoryKey, factory );
   }
 
+  /**
+   * Adds a list that resolves filename references.
+   *
+   * @param filenameListKey the key that identifies the list
+   * @param filenameList the list of file objects
+   */
   public void addFilenameList( String filenameListKey, List<?> filenameList ) {
     filenameListMap.put( filenameListKey, filenameList );
   }
 
-  /** Load an element from the metastore, straight into the appropriate class 
+  /**
+   * Loads an element by name.
+   *
+   * @param name the element name
+   * @return the loaded element, or {@code null} when the type or element does not exist
+   * @throws MetaStoreException if the name is empty or the metastore cannot load the element
    */
   public T loadElement( String name ) throws MetaStoreException {
 
-    if ( name == null || name.length() == 0 ) {
+    if ( name == null || name.isEmpty() ) {
       throw new MetaStoreException( "You need to specify the name of an element to load" );
     }
 
@@ -106,11 +126,17 @@ public class MetaStoreFactory<T> {
     return loadElement( element );
   }
 
-  /** Load an element from the metastore, straight into the appropriate class
+  /**
+   * Loads an element by name with the specified lock setting.
+   *
+   * @param name the element name
+   * @param lock whether metastore reads use locking
+   * @return the loaded element, or {@code null} when the type or element does not exist
+   * @throws MetaStoreException if the name is empty or the metastore cannot load the element
    */
   public T loadElement( String name, boolean lock ) throws MetaStoreException {
 
-    if ( name == null || name.length() == 0 ) {
+    if ( name == null || name.isEmpty() ) {
       throw new MetaStoreException( "You need to specify the name of an element to load" );
     }
 
@@ -128,13 +154,13 @@ public class MetaStoreFactory<T> {
     return loadElement( element );
   }
 
-  /** Load an element from the metastore, straight into the appropriate class 
+  /** Load an element from the metastore, straight into the appropriate class
    */
   private T loadElement( IMetaStoreElement element ) throws MetaStoreException {
     T object;
 
     try {
-      object = clazz.newInstance();
+      object = clazz.getDeclaredConstructor().newInstance();
     } catch ( Exception e ) {
       throw new MetaStoreException( "Class " + clazz.getName() + " could not be instantiated. Make sure the empty constructor is present", e );
     }
@@ -143,384 +169,22 @@ public class MetaStoreFactory<T> {
     //
     setAttributeValue( clazz, object, "name", "setName", String.class, element.getName() );
 
-    loadAttributes( object, element, clazz );
+    createAttributeLoader().load( object, element, clazz );
     return object;
   }
 
-  @SuppressWarnings( { "rawtypes", "unchecked" } )
-  private void loadAttributes( Object parentObject, IMetaStoreAttribute parentElement, Class<?> parentClass ) throws MetaStoreException {
-
-    // Which are the attributes to load?
-    //
-    Field[] fields = getFields( parentClass );
-    for ( Field field : fields ) {
-      MetaStoreAttribute attributeAnnotation = field.getAnnotation( MetaStoreAttribute.class );
-      if ( attributeAnnotation != null ) {
-        String key = attributeAnnotation.key();
-        if ( key == null || key.length() == 0 ) {
-          key = field.getName();
-        }
-
-        AttributeType type = determineAttributeType( field, attributeAnnotation );
-        IMetaStoreAttribute child = parentElement.getChild( key );
-        if ( child == null ) {
-          for ( String mappedKey : MetaStoreKeyMap.get( key ) ) {
-            child = parentElement.getChild( mappedKey );
-            if ( child != null ) {
-              break;
-            }
-          }
-        }
-        if ( child != null && ( child.getValue() != null || !child.getChildren().isEmpty() ) ) {
-          String setterName = getSetterMethodName( field.getName() );
-          String childValue = MetaStoreUtil.getAttributeString( child );
-          if ( attributeAnnotation.password() ) {
-            childValue = metaStore.getTwoWayPasswordEncoder().decode( childValue );
-          }
-          switch ( type ) {
-            case STRING:
-              setAttributeValue( parentClass, parentObject, field.getName(), setterName, String.class, childValue );
-              break;
-            case INTEGER:
-              setAttributeValue( parentClass, parentObject, field.getName(), setterName, int.class, Integer.valueOf( childValue ) );
-              break;
-            case LONG:
-              setAttributeValue( parentClass, parentObject, field.getName(), setterName, long.class, Long.valueOf( childValue ) );
-              break;
-            case BOOLEAN:
-              setAttributeValue( parentClass, parentObject, field.getName(), setterName, boolean.class, "Y".equalsIgnoreCase( childValue ) );
-              break;
-            case ENUM:
-              Enum<?> enumValue = null;
-              final Class<? extends Enum> enumClass = (Class<? extends Enum>) field.getType();
-              if ( childValue != null && childValue.length() > 0 ) {
-                enumValue = Enum.valueOf( enumClass, childValue );
-              }
-              setAttributeValue( parentClass, parentObject, field.getName(), setterName, field.getType(), enumValue );
-              break;
-            case DATE:
-              try {
-                synchronized ( DATE_FORMAT ) {
-                  Date date = childValue == null ? null : DATE_FORMAT.parse( childValue );
-                  setAttributeValue( parentClass, parentObject, field.getName(), setterName, Date.class, date );
-                }
-              } catch ( Exception e ) {
-                throw new MetaStoreException( "Unexpected date parsing problem with value: '" + childValue + "'", e );
-              }
-              break;
-            case LIST:
-              loadAttributesList( parentClass, parentObject, field, child );
-              break;
-            case NAME_REFERENCE:
-              loadNameReference( parentClass, parentObject, field, child, attributeAnnotation );
-              break;
-            case FACTORY_NAME_REFERENCE:
-              Object object = loadFactoryNameReference( parentClass, parentObject, field, child, attributeAnnotation );
-              setAttributeValue( parentClass, parentObject, field.getName(), getSetterMethodName( field.getName() ), field.getType(), object );
-              break;
-            case FILENAME_REFERENCE:
-              loadFilenameReference( parentClass, parentObject, field, child, attributeAnnotation );
-              break;
-            case POJO:
-              Object pojo = loadPojo( parentClass, parentObject, field, child, attributeAnnotation );
-              setAttributeValue( parentClass, parentObject, field.getName(), setterName, field.getType(), pojo );
-              break;
-            default:
-              throw new MetaStoreException( "Only String values are supported at this time" );
-          }
-        }
-      }
-    }
-  }
-
-  private Object loadPojo( Class<?> parentClass, Object parentObject, Field field, IMetaStoreAttribute child, MetaStoreAttribute attributeAnnotation ) throws MetaStoreException {
-
-    // There are 2 possible attributes in the child attribute: the object factory and/or the pojo top level attributes
-    // If there is no pojo attribute it means the value of the object was null when save so we can stop if that's the case.
-    //
-    String pojoChildClassName;
-    IMetaStoreAttribute pojoChild = child.getChild( POJO_CHILD );
-    if ( pojoChild == null ) {
-      // Support legacy code (backwards compatibility)
-      pojoChildClassName = MetaStoreUtil.getAttributeString( child );
-      pojoChild = child;
-    } else {
-      pojoChildClassName = pojoChild.getValue().toString();
-    }
-
-    if ( pojoChildClassName == null ) {
-      // Nothing to load, move along
-      return null;
-    }
-
-    try {
-      Class<?> pojoClass;
-      Object pojoObject;
-      if ( objectFactory == null ) {
-        pojoClass = clazz.getClassLoader().loadClass( pojoChildClassName );
-        pojoObject = pojoClass.newInstance();
-      } else {
-        Map<String, String> objectFactoryContext = getObjectFactoryContext( child );
-        pojoObject = objectFactory.instantiateClass( pojoChildClassName, objectFactoryContext );
-        pojoClass = pojoObject.getClass();
-      }
-      loadAttributes( pojoObject, pojoChild, pojoClass );
-
-      return pojoObject;
-    } catch ( Exception e ) {
-      throw new MetaStoreException( "Unable to load POJO class " + pojoChildClassName + " in parent class: " + parentClass, e );
-    }
+  private MetaStoreAttributeLoader createAttributeLoader() {
+    return new MetaStoreAttributeLoader( metaStore, clazz.getClassLoader(), nameListMap, nameFactoryMap,
+      filenameListMap, objectFactory, dateFormat );
   }
 
   /**
-   * There's an attribute in the parentElement called OBJECT_FACTORY_CONTEXT which contains a set of key/value pair attributes which we'll simply read and pass back.
+   * Saves an element in the metastore.
    *
-   * @param parentElement the parent element to read the object factory context from
-   * @return
-   */
-  private Map<String, String> getObjectFactoryContext( IMetaStoreAttribute parentElement ) {
-    Map<String, String> context = new HashMap<String, String>();
-
-    if ( parentElement != null ) {
-      IMetaStoreAttribute contextChild = parentElement.getChild( OBJECT_FACTORY_CONTEXT );
-      if ( contextChild != null ) {
-        for ( IMetaStoreAttribute child : contextChild.getChildren() ) {
-          if ( child.getId() != null && child.getValue() != null ) {
-            context.put( child.getId(), child.getValue().toString() );
-          }
-        }
-      }
-    }
-
-    return context;
-  }
-
-  /**
-   * Save contextual information about an object from an object factory
-   * @param parentElement
-   * @param context
-   * @throws MetaStoreException
-   */
-  private void saveObjectFactoryContext( IMetaStoreAttribute parentElement, Map<String, String> context ) throws MetaStoreException {
-    if ( context == null || context.isEmpty() ) {
-      return;
-    }
-
-    IMetaStoreAttribute contextAttribute = metaStore.newAttribute( OBJECT_FACTORY_CONTEXT, null );
-    parentElement.addChild( contextAttribute );
-
-    for ( String key : context.keySet() ) {
-      IMetaStoreAttribute attribute = metaStore.newAttribute( key, context.get( key ) );
-      contextAttribute.addChild( attribute );
-    }
-  }
-
-  private void loadAttributesList( Class<?> parentClass, Object parentObject, Field field, IMetaStoreAttribute parentElement ) throws MetaStoreException {
-    try {
-
-      if ( parentElement.getValue() == null ) {
-        // nothing more to do, no elements saved
-        return;
-      }
-
-      MetaStoreAttribute metaStoreAttribute = field.getAnnotation( MetaStoreAttribute.class );
-
-      // What is the list object to populate?
-      //
-      String listGetter = getGetterMethodName( field.getName(), false );
-      Method listGetMethod = parentClass.getMethod( listGetter );
-      @SuppressWarnings( "unchecked" )
-      List<Object> list = (List<Object>) listGetMethod.invoke( parentObject );
-
-      String childClassName = parentElement.getValue().toString();
-
-      List<IMetaStoreAttribute> children = parentElement.getChildren();
-      for ( int i = 0; i < children.size(); i++ ) {
-        IMetaStoreAttribute child = parentElement.getChild( Integer.toString( i ) );
-        if ( child == null ) {
-          continue; // skip, go to the next child
-        }
-        // Instantiate the class and load the attributes
-        //
-
-        if ( metaStoreAttribute != null && metaStoreAttribute.factoryNameReference() ) {
-          // Name reference to another factory OR locally embedded POJO
-          //
-          Object object = loadFactoryNameReference( parentClass, parentObject, field, child, metaStoreAttribute );
-          if ( object != null ) {
-            list.add( object );
-          }
-        } else if ( childClassName.equals( String.class.getName() ) ) {
-          // String lists are a special case
-          //
-          String value = (String) child.getValue();
-          if ( value != null ) {
-            list.add( value );
-          }
-        } else {
-          Class<?> childClass;
-          Object childObject;
-          if ( objectFactory == null ) {
-            childClass = clazz.getClassLoader().loadClass( childClassName );
-            childObject = childClass.newInstance();
-          } else {
-            Map<String, String> context = getObjectFactoryContext( child );
-            childObject = objectFactory.instantiateClass( childClassName, context );
-            childClass = childObject.getClass();
-          }
-
-          loadAttributes( childObject, child, childClass );
-          list.add( childObject );
-        }
-      }
-    } catch ( Exception e ) {
-      e.printStackTrace();
-      throw new MetaStoreException( "Unable to load list attribute for field '" + field.getName() + "'", e );
-    }
-
-  }
-
-  private void loadNameReference( Class<?> parentClass, Object parentObject, Field field, IMetaStoreAttribute parentElement, MetaStoreAttribute attributeAnnotation ) throws MetaStoreException {
-    try {
-
-      if ( parentElement.getValue() == null ) {
-        // nothing more to do, no elements saved
-        return;
-      }
-
-      // What is the name stored?
-      //
-      String name = parentElement.getValue().toString();
-      if ( name.length() == 0 ) {
-        // No name, no game
-        return;
-      }
-      // What is the reference list to look up in?
-      //
-      List<?> list = nameListMap.get( attributeAnnotation.nameListKey() );
-      if ( list == null ) {
-        // No reference list, developer didn't provide a list!
-        //
-        throw new MetaStoreException( "Unable to find reference list for named objects with key '" + attributeAnnotation.nameListKey() + "', name reference '" + name + "' can not be looked up" );
-      }
-
-      for ( Object object : list ) {
-        String verifyName = (String) object.getClass().getMethod( "getName" ).invoke( object );
-        if ( verifyName.equals( name ) ) {
-          // This is the object we want to set on the parent object...
-          // Ex: setDatabaseMeta(), setNameElement()
-          //
-          String setter = getSetterMethodName( field.getName() );
-          Method setterMethod = parentObject.getClass().getMethod( setter, object.getClass() );
-          setterMethod.invoke( parentObject, object );
-          break;
-        }
-      }
-    } catch ( Exception e ) {
-      throw new MetaStoreException( "Error lookup up reference for field '" + field.getName() + "'", e );
-    }
-  }
-
-  private Object loadFactoryNameReference( Class<?> parentClass, Object parentObject, Field field, IMetaStoreAttribute parentElement, MetaStoreAttribute attributeAnnotation ) throws MetaStoreException {
-    try {
-
-      if ( parentElement.getValue() == null ) {
-        // nothing more to do, no elements saved
-        return null;
-      }
-
-      // What is the name stored?
-      //
-      String name = parentElement.getValue().toString();
-
-      // See if the object is optionally shared
-      //
-      IMetaStoreAttribute pojoChild = parentElement.getChild( POJO_CHILD );
-      if ( pojoChild != null ) {
-        // Simply load POJO and set the name on the object...
-        //
-        Object pojo = loadPojo( parentClass, parentObject, field, parentElement, attributeAnnotation );
-
-        // The name is not saved automatically but we have it...
-        //
-        if ( pojo != null ) {
-          setAttributeValue( pojo.getClass(), pojo, "name", "setName", String.class, name );
-        }
-        return pojo;
-      }
-
-      // Simple named reference to a shared element
-      //
-      if ( name == null || name.length() == 0 ) {
-        // No name, no reference to be retrieved.
-        return null;
-      }
-
-      // What is the reference list to look up in?
-      //
-      MetaStoreFactory<?> factory = nameFactoryMap.get( attributeAnnotation.factoryNameKey() );
-      if ( factory == null ) {
-        // No reference list, developer didn't provide a list!
-        //
-        throw new MetaStoreException( "Unable to find factory to load attribute for factory key '" + attributeAnnotation.factoryNameKey() + "', name reference '" + name + "' can not be looked up" );
-      }
-
-      Object object = factory.loadElement( name );
-
-      return object;
-    } catch ( Exception e ) {
-      throw new MetaStoreException( "Error lookup up reference for field '" + field.getName() + "'", e );
-    }
-  }
-
-  private void loadFilenameReference( Class<?> parentClass, Object parentObject, Field field, IMetaStoreAttribute parentElement, MetaStoreAttribute attributeAnnotation ) throws MetaStoreException {
-    try {
-
-      if ( parentElement.getValue() == null ) {
-        // nothing more to do, no elements saved
-        return;
-      }
-
-      // What is the filename stored?
-      //
-      String filename = parentElement.getValue().toString();
-      if ( filename.length() == 0 ) {
-        // No name, no game
-        return;
-      }
-      // What is the reference list to look up in?
-      //
-      List<?> list = filenameListMap.get( attributeAnnotation.filenameListKey() );
-      if ( list == null ) {
-        // No reference list, developer didn't provide a list!
-        //
-        throw new MetaStoreException( "Unable to find reference list for named objects with key '" + attributeAnnotation.filenameListKey() + "', name reference '" + filename + "' can not be looked up" );
-      }
-
-      for ( Object object : list ) {
-        Method getNameMethod = object.getClass().getMethod( "getFilename" );
-        String verifyName = (String) getNameMethod.invoke( object );
-        if ( verifyName.equals( filename ) ) {
-          // This is the object we want to set on the parent object...
-          // Ex: setDatabaseMeta(), setNameElement()
-          //
-          String setter = getSetterMethodName( field.getName() );
-          Method setterMethod = parentObject.getClass().getMethod( setter, object.getClass() );
-          setterMethod.invoke( parentObject, object );
-          break;
-        }
-      }
-    } catch ( Exception e ) {
-      throw new MetaStoreException( "Error lookup up reference for field '" + field.getName() + "'", e );
-    }
-  }
-
-  /**
-   * Save the specified class into the metastore.
-   * Create the namespace and element type if needed...
+   * <p>The method creates the namespace and element type when they do not exist.</p>
    *
-   * @param t The element to store...
-   * @throws MetaStoreException
+   * @param t the element to store
+   * @throws MetaStoreException if the element has no name or the metastore cannot save it
    */
   public void saveElement( T t ) throws MetaStoreException {
 
@@ -547,7 +211,7 @@ public class MetaStoreFactory<T> {
     //
 
     String name = (String) getAttributeValue( clazz, t, "name", "getName" );
-    if ( name == null || name.trim().length() == 0 ) {
+    if ( name == null || name.trim().isEmpty() ) {
       throw new MetaStoreException( "Unable to find name of element class object '" + t.toString() + "'" );
     }
 
@@ -557,7 +221,7 @@ public class MetaStoreFactory<T> {
 
     // Store the attributes
     //
-    saveAttributes( element, clazz, t );
+    createAttributeSaver().save( t, element, clazz );
 
     // Now that we have the element populated, do a quick check to see if we need to update the element
     // or simply create a new element in the metastore.
@@ -570,276 +234,38 @@ public class MetaStoreFactory<T> {
     }
   }
 
-  private void saveAttributes( IMetaStoreAttribute parentElement, Class<?> parentClass, Object parentObject ) throws MetaStoreException {
-    try {
-      Field[] fields = getFields( parentClass );
-      for ( Field field : fields ) {
-        MetaStoreAttribute attributeAnnotation = field.getAnnotation( MetaStoreAttribute.class );
-        if ( attributeAnnotation != null ) {
-          String key = attributeAnnotation.key();
-          if ( key == null || key.length() == 0 ) {
-            key = field.getName();
-          }
-
-          AttributeType type = determineAttributeType( field, attributeAnnotation );
-
-          IMetaStoreAttribute child;
-          switch ( type ) {
-            case STRING:
-              String value = (String) getAttributeValue( parentClass, parentObject, field.getName(), getGetterMethodName( field.getName(), false ) );
-              if ( attributeAnnotation.password() ) {
-                value = metaStore.getTwoWayPasswordEncoder().encode( value );
-              }
-              child = metaStore.newAttribute( key, value );
-              parentElement.addChild( child );
-              break;
-            case INTEGER:
-              int intValue = (Integer) getAttributeValue( parentClass, parentObject, field.getName(), getGetterMethodName( field.getName(), false ) );
-              child = metaStore.newAttribute( key, Integer.toString( intValue ) );
-              parentElement.addChild( child );
-              break;
-            case LONG:
-              long longValue = (Long) getAttributeValue( parentClass, parentObject, field.getName(), getGetterMethodName( field.getName(), false ) );
-              child = metaStore.newAttribute( key, Long.toString( longValue ) );
-              parentElement.addChild( child );
-              break;
-            case BOOLEAN:
-              boolean boolValue = (Boolean) getAttributeValue( parentClass, parentObject, field.getName(), getGetterMethodName( field.getName(), true ) );
-              child = metaStore.newAttribute( key, boolValue ? "Y" : "N" );
-              parentElement.addChild( child );
-              break;
-            case ENUM:
-              Object enumValue = getAttributeValue( parentClass, parentObject, field.getName(), getGetterMethodName( field.getName(), false ) );
-              String name = null;
-              if ( enumValue != null ) {
-                name = (String) getAttributeValue( Enum.class, enumValue, field.getName(), "name" );
-              }
-              child = metaStore.newAttribute( key, name );
-              parentElement.addChild( child );
-              break;
-            case DATE:
-              Date dateValue = (Date) getAttributeValue( parentClass, parentObject, field.getName(), getGetterMethodName( field.getName(), false ) );
-              child = metaStore.newAttribute( key, dateValue == null ? null : DATE_FORMAT.format( dateValue ) );
-              parentElement.addChild( child );
-              break;
-            case LIST:
-              saveListAttribute( parentClass, parentElement, parentObject, field, key );
-              break;
-            case NAME_REFERENCE:
-              saveNameReference( parentClass, parentElement, parentObject, field, key );
-              break;
-            case FACTORY_NAME_REFERENCE:
-              saveFactoryNameReference( parentClass, parentElement, parentObject, field, key );
-              break;
-            case FILENAME_REFERENCE:
-              saveFilenameReference( parentClass, parentElement, parentObject, field, key );
-              break;
-            case POJO:
-              // Create a new empty child element in the parent as a placeholder...
-              //
-              IMetaStoreAttribute pojoChild = metaStore.newAttribute( key, null );
-              parentElement.addChild( pojoChild );
-
-              // Save the POJO and the context in this child element
-              //
-              savePojo( parentClass, pojoChild, parentObject, field );
-              break;
-            default:
-              throw new MetaStoreException( "Only String values are supported at this time" );
-          }
-
-          // TODO: support other field data types...
-
-        }
-      }
-    } catch ( Exception e ) {
-      throw new MetaStoreException( "Unable to save attributes of element id '" + parentElement.getId() + "', class " + parentClass.getName(), e );
-    }
-  }
-
-  @SuppressWarnings( "unchecked" )
-  private void saveListAttribute( Class<?> parentClass, IMetaStoreAttribute parentElement, Object parentObject, Field field, String key ) throws MetaStoreException {
-    List<Object> list = (List<Object>) getAttributeValue( parentClass, parentObject, field.getName(), getGetterMethodName( field.getName(), false ) );
-    IMetaStoreAttribute topChild = metaStore.newAttribute( key, null );
-    parentElement.addChild( topChild );
-    MetaStoreAttribute metaStoreAttribute = field.getAnnotation( MetaStoreAttribute.class );
-
-    if ( !list.isEmpty() ) {
-      // Save the class name used as well, otherwise we can't re-inflate afterwards...
-      //
-      Class<?> attributeClass = list.get( 0 ).getClass();
-      topChild.setValue( attributeClass.getName() );
-
-      // Add one child to the topChild for each object in the list...
-
-      for ( int i = 0; i < list.size(); i++ ) {
-        Object object = list.get( i );
-
-        IMetaStoreAttribute childAttribute = metaStore.newAttribute( Integer.toString( i ), null );
-        topChild.addChild( childAttribute );
-
-        if ( metaStoreAttribute != null && metaStoreAttribute.factoryNameReference() ) {
-          // Is this a list of factory name references?
-          //
-          saveFactoryNameReference( parentClass, childAttribute, parentObject, field, object );
-
-        } else if ( object instanceof String ) {
-          // STRING
-          //
-          childAttribute.setValue( object );
-        } else {
-          // POJO
-          //
-          // See if we need to store additional information about this class
-          //
-          if ( objectFactory != null ) {
-            Map<String, String> context = objectFactory.getContext( object );
-            saveObjectFactoryContext( childAttribute, context );
-          }
-          saveAttributes( childAttribute, attributeClass, object );
-        }
-      }
-    }
-  }
-
-  private void saveNameReference( Class<?> parentClass, IMetaStoreAttribute parentElement, Object parentObject, Field field, String key ) throws MetaStoreException {
-    // What is the object of which we need to store the name as a reference?
-    //
-    Object namedObject = getAttributeValue( parentClass, parentObject, field.getName(), getGetterMethodName( field.getName(), false ) );
-    String name = null;
-    if ( namedObject != null ) {
-      name = (String) getAttributeValue( namedObject.getClass(), namedObject, "name", "getName" );
-    }
-    IMetaStoreAttribute nameChild = metaStore.newAttribute( key, name );
-    parentElement.addChild( nameChild );
-  }
-
-  private void saveFactoryNameReference( Class<?> parentClass, IMetaStoreAttribute parentElement, Object parentObject, Field field, String key ) throws MetaStoreException {
-
-    // What is the object of which we need to store the name as a reference?
-    //
-    Object namedObject = getAttributeValue( parentClass, parentObject, field.getName(), getGetterMethodName( field.getName(), false ) );
-    if ( namedObject == null ) {
-      // Nothing to see here, move along.
-      return;
-    }
-
-    IMetaStoreAttribute refChild = metaStore.newAttribute( key, null );
-    parentElement.addChild( refChild );
-    saveFactoryNameReference( parentClass, refChild, parentObject, field, namedObject );
-
+  private MetaStoreAttributeSaver createAttributeSaver() {
+    return new MetaStoreAttributeSaver( metaStore, nameFactoryMap, objectFactory, dateFormat );
   }
 
   /**
-   * Save a name reference and save the referenced object in the specified target element
-   * @param parentClass
-   * @param targetElement
-   * @param parentObject
-   * @param field
-   * @param key
-   * @param namedObject
-   * @throws MetaStoreException
-   */
-  private void saveFactoryNameReference( Class<?> parentClass, IMetaStoreAttribute targetElement, Object parentObject, Field field, Object namedObject ) throws MetaStoreException {
-    Class<?> namedObjectClass = namedObject.getClass();
-
-    // What's the name of this named object?
-    //
-    String name = (String) getAttributeValue( namedObject.getClass(), namedObject, "name", "getName" );
-    targetElement.setValue( name );
-
-    // Do we need to store this named object locally or use a factory to store it centrally?
-    //
-    String indicatorName = field.getAnnotation( MetaStoreAttribute.class ).factorySharedIndicatorName();
-    if ( indicatorName != null && indicatorName.length() > 0 ) {
-      // True : shared
-      // False : local embedding of attributes
-      //
-      String isSharedMethod = getGetterMethodName( indicatorName, true );
-      Boolean shared = (Boolean) getAttributeValue( namedObjectClass, namedObject, indicatorName, isSharedMethod );
-      if ( shared == null ) {
-        throw new MetaStoreException( "Shared indicator attribute is not available through '" + namedObjectClass.getName() + "." + isSharedMethod + "()'" );
-      }
-      if ( !shared ) {
-        // Save the complete POJO, not just the name reference.
-        savePojo( parentClass, targetElement, parentObject, namedObject );
-        return;
-      }
-    }
-
-    String factoryNameKey = field.getAnnotation( MetaStoreAttribute.class ).factoryNameKey();
-    MetaStoreFactory<?> factory = nameFactoryMap.get( factoryNameKey );
-
-    try {
-      Method method = factory.getClass().getMethod( "saveElement", Object.class );
-      method.invoke( factory, namedObject );
-    } catch ( Exception e ) {
-      throw new MetaStoreException( "Unable to save attribute element of class " + namedObject.getClass() + " in metastore", e );
-    }
-  }
-
-  private void savePojo( Class<?> parentClass, IMetaStoreAttribute pojoElement, Object parentObject, Field field ) throws MetaStoreException {
-    Object pojo = getAttributeValue( parentClass, parentObject, field.getName(), getGetterMethodName( field.getName(), false ) );
-    savePojo( parentClass, pojoElement, parentObject, pojo );
-  }
-
-  private void savePojo( Class<?> parentClass, IMetaStoreAttribute pojoElement, Object parentObject, Object pojo ) throws MetaStoreException {
-
-    if ( pojo == null ) {
-      // Nothing to save here, move along.
-      return;
-    }
-
-    // See if we need to store additional factory information about this object
-    //
-    if ( objectFactory != null ) {
-      Map<String, String> context = objectFactory.getContext( pojo );
-      saveObjectFactoryContext( pojoElement, context );
-    }
-
-    // Add all the pojo attributes in a special child element...
-    //
-    IMetaStoreAttribute pojoChild = metaStore.newAttribute( POJO_CHILD, pojo.getClass().getName() );
-    pojoElement.addChild( pojoChild );
-    saveAttributes( pojoChild, pojo.getClass(), pojo );
-  }
-
-  private void saveFilenameReference( Class<?> parentClass, IMetaStoreAttribute parentElement, Object parentObject, Field field, String key ) throws MetaStoreException {
-    // What is the object of which we need to store the filename as a reference?
-    //
-    Object namedObject = getAttributeValue( parentClass, parentObject, field.getName(), getGetterMethodName( field.getName(), false ) );
-    String name = null;
-    if ( namedObject != null ) {
-      name = (String) getAttributeValue( namedObject.getClass(), namedObject, "filename", "getFilename" );
-    }
-    IMetaStoreAttribute nameChild = metaStore.newAttribute( key, name );
-    parentElement.addChild( nameChild );
-  }
-
-  /**
-   * @return A list of all the de-serialized objects of this class in the metastore
-   * @throws MetaStoreException
+   * Loads all elements of this factory's type.
+   *
+   * @return all stored elements
+   * @throws MetaStoreException if the metastore cannot load the elements
    */
   public List<T> getElements() throws MetaStoreException {
     return getElements( true, null );
   }
 
   /**
-   * @param lock the metastore for modification
-   * @return A list of all the de-serialized objects of this class in the metastore
-   * @throws MetaStoreException
+   * Loads all elements of this factory's type with the specified lock setting.
+   *
+   * @param lock whether metastore reads use locking
+   * @return all stored elements
+   * @throws MetaStoreException if the metastore cannot load the elements
    */
   public List<T> getElements( boolean lock ) throws MetaStoreException {
     return getElements( lock, null );
   }
 
   /**
-   * @param lock          the metastore for modification
-   * @param exceptionList If not null and an exception is thrown while getting an element. add the exception to
-   *                      this list and return all elements that did not error.  If null then bubble up the exception
-   *                      and abort the method.
-   * @return A list of all the de-serialized objects of this class in the metastore.
-   * @throws MetaStoreException
+   * Loads all elements of this factory's type and collects element errors when requested.
+   *
+   * @param lock whether metastore reads use locking
+   * @param exceptionList list that receives element load errors, or {@code null} to throw the first error
+   * @return all elements that load successfully
+   * @throws MetaStoreException if the metastore cannot load the elements
    */
   public List<T> getElements( boolean lock, List<MetaStoreException> exceptionList ) throws MetaStoreException {
     MetaStoreElementType elementTypeAnnotation = getElementTypeAnnotation();
@@ -847,6 +273,7 @@ public class MetaStoreFactory<T> {
     if ( elementType == null ) {
       return Collections.emptyList();
     }
+
     List<IMetaStoreElement> elements = metaStore.getElements( namespace, elementType, lock, exceptionList );
     List<T> list = new ArrayList<T>( elements.size() );
     for ( IMetaStoreElement metaStoreElement : elements ) {
@@ -856,16 +283,17 @@ public class MetaStoreFactory<T> {
   }
 
   /**
-   * Remove an element with a specific name from the metastore
-   * @param name The name of the element to delete
-   * @throws MetaStoreException In case either the element type or the element to delete doesn't exists
+   * Removes an element by name.
+   *
+   * @param name the element name
+   * @throws MetaStoreException if the element type or element does not exist
    */
   public void deleteElement( String name ) throws MetaStoreException {
     MetaStoreElementType elementTypeAnnotation = getElementTypeAnnotation();
-
     IMetaStoreElementType elementType = metaStore.getElementTypeByName( namespace, elementTypeAnnotation.name() );
     if ( elementType == null ) {
-      throw new MetaStoreException( "The element type '" + elementTypeAnnotation.name() + "' does not exist so the element with name '" + name + "' can not be deleted" );
+      throw new MetaStoreException( "The element type '" + elementTypeAnnotation.name()
+        + "' does not exist so the element with name '" + name + "' can not be deleted" );
     }
 
     IMetaStoreElement element = metaStore.getElementByName( namespace, elementType, name );
@@ -877,46 +305,50 @@ public class MetaStoreFactory<T> {
   }
 
   /**
-   * @return The list of element names
-   * @throws MetaStoreException
+   * Gets the names of all elements of this factory's type.
+   *
+   * @return all stored element names
+   * @throws MetaStoreException if the metastore cannot load the names
    */
   public List<String> getElementNames() throws MetaStoreException {
     return getElementNames( true );
   }
 
   /**
-   * @param Lock the metastore for modification
-   * @return The list of element names
-   * @throws MetaStoreException
+   * Gets the names of all elements of this factory's type with the specified lock setting.
+   *
+   * @param lock whether metastore reads use locking
+   * @return all stored element names
+   * @throws MetaStoreException if the metastore cannot load the names
    */
   public List<String> getElementNames( boolean lock ) throws MetaStoreException {
     List<String> names = new ArrayList<String>();
-
     MetaStoreElementType elementTypeAnnotation = getElementTypeAnnotation();
-
     IMetaStoreElementType elementType = metaStore.getElementTypeByName( namespace, elementTypeAnnotation.name(), lock );
     if ( elementType == null ) {
       return names;
     }
 
-    List<IMetaStoreElement> elements = metaStore.getElements( namespace, elementType, lock, new ArrayList<MetaStoreException>() );
+    List<IMetaStoreElement> elements = metaStore.getElements( namespace, elementType, lock,
+      new ArrayList<>() );
     for ( IMetaStoreElement element : elements ) {
       names.add( element.getName() );
     }
-
     return names;
   }
 
   /**
-   * @return The {@link IMetaStoreElementType} to reference in the {@link IMetaStore} API.
-   * @throws MetaStoreException
+   * Gets the metastore element type managed by this factory.
+   *
+   * @return the managed element type, or {@code null} when it does not exist
+   * @throws MetaStoreException if the element class lacks its type annotation
    */
   public IMetaStoreElementType getElementType() throws MetaStoreException {
     MetaStoreElementType elementTypeAnnotation = getElementTypeAnnotation();
     return metaStore.getElementTypeByName( namespace, elementTypeAnnotation.name() );
   }
 
-  private AttributeType determineAttributeType( Field field, MetaStoreAttribute annotation ) throws MetaStoreException {
+  static AttributeType determineAttributeType( Field field, MetaStoreAttribute annotation ) {
     Class<?> fieldClass = field.getType();
     if ( List.class.equals( fieldClass ) ) {
       return AttributeType.LIST;
@@ -939,7 +371,7 @@ public class MetaStoreFactory<T> {
     if ( long.class.equals( fieldClass ) ) {
       return AttributeType.LONG;
     }
-    if ( Date.class.equals( fieldClass ) ) {
+    if ( java.util.Date.class.equals( fieldClass ) || LocalDateTime.class.equals( fieldClass ) ) {
       return AttributeType.DATE;
     }
     if ( boolean.class.equals( fieldClass ) ) {
@@ -971,7 +403,7 @@ public class MetaStoreFactory<T> {
    * @param value       The value to set
    * @throws MetaStoreException
    */
-  private void setAttributeValue( Class<?> parentClass, Object object, String fieldName, String setterName, Class<?> valueClass, Object value ) throws MetaStoreException {
+  static void setAttributeValue( Class<?> parentClass, Object object, String fieldName, String setterName, Class<?> valueClass, Object value ) throws MetaStoreException {
     Method method = getDeclaredMethod( parentClass, setterName, valueClass );
     if ( method == null ) {
       throw new MetaStoreException( "Unable to find setter for attribute field : " + fieldName + ". Expected '" + setterName + "'" );
@@ -991,15 +423,14 @@ public class MetaStoreFactory<T> {
     }
 
     try {
-      Object value = method.invoke( object );
-      return value;
+      return method.invoke( object );
     } catch ( Exception e ) {
       throw new MetaStoreException( "Unable to get value using method '" + getterName + "' on class " + parentClass.getName(), e );
     }
 
   }
 
-  private Method getDeclaredMethod( Class<?> parentClass, String name, Class<?>... parameterTypes ) {
+  static Method getDeclaredMethod( Class<?> parentClass, String name, Class<?>... parameterTypes ) {
     if ( parentClass == Object.class ) {
       return null;
     }
@@ -1012,22 +443,9 @@ public class MetaStoreFactory<T> {
   }
 
   /**
-   * myAttribute ==>  setMyAttribute
-   */
-  private String getSetterMethodName( String name ) {
-
-    StringBuilder setter = new StringBuilder();
-    setter.append( "set" );
-    setter.append( name.substring( 0, 1 ).toUpperCase() );
-    setter.append( name.substring( 1 ) );
-
-    return setter.toString();
-  }
-
-  /**
    * myAttribute ==>  getMyAttribute
    */
-  private String getGetterMethodName( String name, boolean isBoolean ) {
+  static String getGetterMethodName( String name, boolean isBoolean ) {
 
     StringBuilder setter = new StringBuilder();
     setter.append( isBoolean ? "is" : "get" );
@@ -1037,61 +455,115 @@ public class MetaStoreFactory<T> {
     return setter.toString();
   }
 
+  /**
+   * Gets the metastore used by this factory.
+   *
+   * @return the metastore
+   */
   public IMetaStore getMetaStore() {
     return metaStore;
   }
 
+  /**
+   * Sets the metastore used by this factory.
+   *
+   * @param metaStore the metastore
+   */
   public void setMetaStore( IMetaStore metaStore ) {
     this.metaStore = metaStore;
   }
 
+  /**
+   * Gets the metastore namespace used by this factory.
+   *
+   * @return the namespace
+   */
   public String getNamespace() {
     return namespace;
   }
 
+  /**
+   * Sets the metastore namespace used by this factory.
+   *
+   * @param namespace the namespace
+   */
   public void setNamespace( String namespace ) {
     this.namespace = namespace;
   }
 
+  /**
+   * Gets the map of lists used to resolve name references.
+   *
+   * @return the name list map
+   */
   public Map<String, List<?>> getNamedListMap() {
     return nameListMap;
   }
 
+  /**
+   * Sets the map of lists used to resolve name references.
+   *
+   * @param namedListMap the name list map
+   */
   public void setNamedListMap( Map<String, List<?>> namedListMap ) {
     this.nameListMap = namedListMap;
   }
 
+  /**
+   * Gets the map of lists used to resolve name references.
+   *
+   * @return the name list map
+   */
   public Map<String, List<?>> getNameListMap() {
     return nameListMap;
   }
 
+  /**
+   * Sets the map of lists used to resolve name references.
+   *
+   * @param nameListMap the name list map
+   */
   public void setNameListMap( Map<String, List<?>> nameListMap ) {
     this.nameListMap = nameListMap;
   }
 
+  /**
+   * Gets the map of lists used to resolve filename references.
+   *
+   * @return the filename list map
+   */
   public Map<String, List<?>> getFilenameListMap() {
     return filenameListMap;
   }
 
+  /**
+   * Sets the map of lists used to resolve filename references.
+   *
+   * @param filenameListMap the filename list map
+   */
   public void setFilenameListMap( Map<String, List<?>> filenameListMap ) {
     this.filenameListMap = filenameListMap;
   }
 
   /**
-   * @return the objectFactory
+   * Gets the object factory used to create nested objects.
+   *
+   * @return the object factory, or {@code null} when none is configured
    */
   public IMetaStoreObjectFactory getObjectFactory() {
     return objectFactory;
   }
 
   /**
-   * @param objectFactory the objectFactory to set
+   * Sets the object factory used to create nested objects.
+   *
+   * @param objectFactory the object factory
    */
   public void setObjectFactory( IMetaStoreObjectFactory objectFactory ) {
     this.objectFactory = objectFactory;
   }
 
-  private Field[] getFields( Class<?> clazz ) {
+  static Field[] getFields( Class<?> clazz ) {
     Set<String> visitedFieldNames = new HashSet<>();
     List<Field> fields = new ArrayList<>();
     while ( clazz != Object.class ) {
