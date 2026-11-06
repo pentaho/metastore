@@ -274,12 +274,18 @@ public class XmlMetaStore extends BaseXmlMetaStore<File> {
 
   /**
    * Create a .lock file in the store root folder. If it already exists, wait until it becomes available.
-   * 
+   * <p>
+   * If the store is read-only (a .readonly file exists in the root folder), this returns immediately without
+   * creating or waiting on .lock. An existing .lock file is ignored.
+   *
    * @throws MetaStoreException
    *           in case we have to wait more than 10 seconds to acquire a lock
    */
   @Override
   protected void lockStore() throws MetaStoreException {
+    if ( isReadOnly() ) {
+      return;   // read-only: no .lock is created or waited on
+    }
     long totalTime = 0L;
     while ( true ) {
       Path lockFile = getRootFolderPath().resolve( ".lock" );
@@ -312,8 +318,15 @@ public class XmlMetaStore extends BaseXmlMetaStore<File> {
     }
   }
 
+  /**
+   * Remove the .lock file. If the store is read-only (a .readonly file exists in the root folder), this does
+   * nothing, since lockStore() took no lock. An existing .lock file is left untouched.
+   */
   @Override
   protected void unlockStore() {
+    if ( isReadOnly() ) {
+      return;   // read-only: no .lock is created or waited on
+    }
     try {
       Files.deleteIfExists( getRootFolderPath().resolve( ".lock" ) );
     } catch ( IOException ignored ) {
