@@ -201,6 +201,9 @@ public class XmlMetaStore extends BaseXmlMetaStore<File> {
   protected void lockStore() throws MetaStoreException {
     boolean waiting = true;
     long totalTime = 0L;
+    if ( isReadOnly() ) {
+      return;
+    }
     while ( waiting ) {
       File lockFile = new File( rootFile, ".lock" );
       try {
@@ -231,6 +234,9 @@ public class XmlMetaStore extends BaseXmlMetaStore<File> {
 
   @Override
   protected void unlockStore() {
+    if ( isReadOnly() ) {
+      return;
+    }
     File lockFile = new File( rootFile, ".lock" );
     lockFile.delete();
   }
