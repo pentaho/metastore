@@ -22,6 +22,9 @@ import java.util.List;
 import java.util.Map;
 import java.util.concurrent.atomic.AtomicReference;
 
+import java.util.logging.Level;
+import java.util.logging.Logger;
+
 import org.pentaho.metastore.api.BaseMetaStore;
 import org.pentaho.metastore.api.IMetaStoreAttribute;
 import org.pentaho.metastore.api.IMetaStoreElement;
@@ -41,10 +44,13 @@ import org.pentaho.metastore.api.exceptions.MetaStoreNamespaceExistsException;
  */
 public abstract class BaseXmlMetaStore<T> extends BaseMetaStore {
 
+  private static final Logger LOG = Logger.getLogger( BaseXmlMetaStore.class.getName() );
   private final XmlMetaStoreCache metaStoreCache;
   // root path. This is never interpreted by this class directly, but is used to
   // generate paths for subclasses to use.
   private final AtomicReference<Path> rootFolder;
+  public static final String READONLY_FILE_NAME = ".readonly";
+  private final AtomicReference<Boolean> readOnly = new AtomicReference<>();
 
   /**
    *
@@ -73,6 +79,44 @@ public abstract class BaseXmlMetaStore<T> extends BaseMetaStore {
   }
 
   /**
+   * True if a {@code .readonly} marker file exists at the root of this metastore.
+   * <p>
+   * The marker is checked once per store instance, on first use, and the result is kept for the life of the
+   * instance. Creating or removing the file has no effect on an existing instance; it applies to instances
+   * created afterwards (for example each new Kitchen run) or after a restart of a long-lived server. Because the
+   * mode cannot change mid-life, lockStore() and unlockStore() always agree on whether a lock was taken.
+   * <p>
+   * Read-only mode overrides {@code .lock}: locking is skipped entirely, an existing (even stale) {@code .lock}
+   * has no effect, and all write operations are rejected. Create the marker when no writers are active.
+   * Never throws: if the check fails, the store behaves as before (not read-only).
+   */
+  protected boolean isReadOnly() {
+    Boolean cached = readOnly.get();
+    if ( cached == null ) {
+      boolean found;
+      try {
+        found = pathExists( getRootFolderPath().resolve( READONLY_FILE_NAME ).toString() );
+      } catch ( MetaStoreException e ) {
+        found = false;
+      }
+      // Only the thread that wins the race sets the value, so the message is logged once per instance
+      if ( readOnly.compareAndSet( null, found ) && found ) {
+        LOG.log( Level.INFO, "Metastore {0} is read-only ({1} file found): locking is disabled and write "
+            + "operations will be rejected.", new Object[] { getRootFolder(), READONLY_FILE_NAME } );
+      }
+      cached = readOnly.get();
+    }
+    return cached;
+  }
+
+  protected void assertWritable() throws MetaStoreException {
+    if ( isReadOnly() ) {
+      throw new MetaStoreException( "This metastore is read-only because the '" + READONLY_FILE_NAME
+          + "' file exists in " + getRootFolder() + ". Remove that file to allow changes." );
+    }
+  }
+
+  /**
    * @return the rootFolder in use
    */
   public String getRootFolder() {
@@ -82,12 +126,14 @@ public abstract class BaseXmlMetaStore<T> extends BaseMetaStore {
   /**
    * Set the root folder. This will be the exact path that the metastore will operate in (namespaces will be created
    * immediately below this). It will not have XmlUtil.META_FOLDER_NAME appended.
-   *
+   * <p>
+   * Setting the rootFolder clears the .readonly cached value and will check again on first use.
    *
    * @param rootFolder
    */
   public void setRootFolder( String rootFolder ) {
     this.rootFolder.set( Paths.get( rootFolder ).normalize() );
+    readOnly.set( null );
   }
 
   protected Path getRootFolderPath() {
@@ -117,6 +163,7 @@ public abstract class BaseXmlMetaStore<T> extends BaseMetaStore {
 
   @Override
   public synchronized void createNamespace( String namespace ) throws MetaStoreException {
+    assertWritable();
     lockStore();
     try {
       Path path = XmlUtil.getNamespaceFolderPath( rootFolder.get(), namespace );
@@ -133,6 +180,7 @@ public abstract class BaseXmlMetaStore<T> extends BaseMetaStore {
 
   @Override
   public synchronized void deleteNamespace( String namespace ) throws MetaStoreException {
+    assertWritable();
     lockStore();
     try {
       Path path = XmlUtil.getNamespaceFolderPath( rootFolder.get(), namespace );
@@ -262,6 +310,7 @@ public abstract class BaseXmlMetaStore<T> extends BaseMetaStore {
   @Override
   public synchronized void createElementType( String namespace, IMetaStoreElementType elementType )
     throws MetaStoreException {
+    assertWritable();
     lockStore();
     try {
       // In the case of a file, the ID is the name
@@ -302,6 +351,7 @@ public abstract class BaseXmlMetaStore<T> extends BaseMetaStore {
   @Override
   public synchronized void updateElementType( String namespace, IMetaStoreElementType elementType )
     throws MetaStoreException {
+    assertWritable();
     lockStore();
     try {
         Path elementTypeFolder =
@@ -330,6 +380,7 @@ public abstract class BaseXmlMetaStore<T> extends BaseMetaStore {
   @Override
   public synchronized void deleteElementType( String namespace, IMetaStoreElementType elementType )
     throws MetaStoreException {
+    assertWritable();
     lockStore();
     try {
       Path elementTypeFilename = XmlUtil.getElementTypeFilePath( rootFolder.get(), namespace, elementType.getName() );
@@ -523,6 +574,7 @@ public abstract class BaseXmlMetaStore<T> extends BaseMetaStore {
   public synchronized void createElement( String namespace, IMetaStoreElementType elementType,
       IMetaStoreElement element )
     throws MetaStoreException {
+    assertWritable();
     lockStore();
     try {
       // In the case of a file, the ID is the name
@@ -560,7 +612,7 @@ public abstract class BaseXmlMetaStore<T> extends BaseMetaStore {
       throw new MetaStoreException( "The element type '" + elementType.getName()
           + "' needs to explicitly belong to the meta store in which you are updating." );
     }
-
+    assertWritable();
     lockStore();
     try {
         Path elementFilename =
@@ -584,6 +636,7 @@ public abstract class BaseXmlMetaStore<T> extends BaseMetaStore {
   @Override
   public synchronized void deleteElement( String namespace, IMetaStoreElementType elementType, String elementId )
     throws MetaStoreException {
+    assertWritable();
     lockStore();
     try {
         Path elementFilename =
@@ -617,17 +670,18 @@ public abstract class BaseXmlMetaStore<T> extends BaseMetaStore {
 
   /**
    * Create a directory at the provided absolute path
-   *
+   * Write primitive. Callers must call assertWritable() first; do not call from read paths.
    *
    * @param path
    *          absolute path
    * @return true if it was created, false if it already exists
+
    */
   protected abstract boolean createDirectory( String path ) throws MetaStoreException;
 
   /**
    * Delete the target at the provided absolute path. This may fail if the target is a directory and is not empty.
-   *
+   * Write primitive. Callers must call assertWritable() first; do not call from read paths.
    *
    * @param path
    *          absolute path
