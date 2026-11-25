@@ -78,6 +78,7 @@ public class XmlMetaStoreReadOnlyTest {
 
   private void makeReadOnly() throws Exception {
     Files.createFile( readOnlyFile );
+    store = new XmlMetaStore( tmp.getRoot().getAbsolutePath() );   // mode is fixed per instance
   }
 
   /** Simulates another process holding the lock. A locking read would wait the full 10s and fail. */
@@ -173,6 +174,25 @@ public class XmlMetaStoreReadOnlyTest {
     }
   }
 
+  @Test
+  public void unlockStillReleasesOwnLockIfReadOnlyAppearsMidOperation() throws Exception {
+    store.lockStore();                                   // takes a real lock, mode cached as writable
+    assertTrue( Files.exists( lockFile ) );
+    Files.createFile( readOnlyFile );
+    store.unlockStore();
+    assertFalse( Files.exists( lockFile ) );
+  }
+
+  @Test
+  public void unlockDoesNotDeleteAnotherHoldersLockIfReadOnlyIsRemovedMidOperation() throws Exception {
+    makeReadOnly();
+    store.lockStore();                                   // skipped, mode cached as read-only
+    Files.delete( readOnlyFile );
+    simulateHeldLock();
+    store.unlockStore();
+    assertTrue( Files.exists( lockFile ) );
+  }
+
   // ---- writes ---------------------------------------------------------------------------------
 
   @Test
@@ -236,17 +256,18 @@ public class XmlMetaStoreReadOnlyTest {
   // ---- toggling -------------------------------------------------------------------------------
 
   @Test
-  public void storeFlipsModeWithoutRestart() throws Exception {
-    makeReadOnly();
-    assertReadOnlyError( "createNamespace", () -> store.createNamespace( "ns2" ) );
+  public void modeIsFixedPerInstanceAndNewInstancesSeeTheChange() throws Exception {
+    store.createNamespace( "ns2" );                      // first use: writable, now cached
+    Files.createFile( readOnlyFile );                    // marker appears while the instance is live
+    store.createNamespace( "ns3" );                      // existing instance is unaffected
+    assertTrue( store.namespaceExists( "ns3" ) );
 
-    Files.delete( readOnlyFile );
-    store.createNamespace( "ns2" );
-    assertTrue( store.namespaceExists( "ns2" ) );
+    final XmlMetaStore later = new XmlMetaStore( tmp.getRoot().getAbsolutePath() );
+    assertReadOnlyError( "new instance", () -> later.createNamespace( "ns4" ) );
 
-    makeReadOnly();
-    assertReadOnlyError( "deleteNamespace", () -> store.deleteNamespace( "ns2" ) );
-    assertTrue( store.namespaceExists( "ns2" ) );
+    Files.delete( readOnlyFile );                        // removal also only affects new instances
+    assertReadOnlyError( "same instance", () -> later.createNamespace( "ns4" ) );
+    new XmlMetaStore( tmp.getRoot().getAbsolutePath() ).createNamespace( "ns4" );
   }
 
   @Test
